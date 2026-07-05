@@ -118,6 +118,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   const foldType = step.folds[0].type;
   const finished = ui.t >= total;
   const left = total - ui.stepIndex - (ui.fraction >= 1 ? 1 : 0);
+  const pct = (ui.t / total) * 100;
 
   return (
     <div className="screen nav-screen">
@@ -175,6 +176,30 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         )}
       </div>
 
+      <aside className="step-panel">
+        <p className="panel-label">
+          ROUTE <span>・ 工程</span>
+        </p>
+        <ol className="step-list">
+          {model.steps.map((s, i) => {
+            const cls =
+              ui.t >= i + 1 - 1e-6 ? 'done' : i === ui.stepIndex ? 'current' : '';
+            return (
+              <li key={i} className={cls}>
+                <button onClick={() => goTo(i)}>
+                  <span className="sl-num">{String(i + 1).padStart(2, '0')}</span>
+                  <i className={`sl-dot ${s.folds[0].type}`} />
+                  <span className="sl-text">
+                    {s.description.ja}
+                    <em>{s.description.en}</em>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      </aside>
+
       <div className="step-card">
         <p className="step-label">
           {finished ? 'COMPLETE' : `STEP ${String(ui.stepIndex + 1).padStart(2, '0')}`}
@@ -202,6 +227,12 @@ export function Navigator({ model, onExit, onComplete }: Props) {
           value={ui.t}
           onChange={(e) => goTo(Number(e.target.value), true)}
           aria-label="工程スライダー / Step slider"
+          style={{
+            backgroundImage: `linear-gradient(to right, var(--accent) ${pct}%, var(--border) ${pct}%)`,
+            backgroundSize: '100% 2px',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
         />
         <div className="btn-row">
           <button className="btn-sub" onClick={() => goTo(0)}>

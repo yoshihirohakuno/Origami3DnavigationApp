@@ -169,7 +169,7 @@ export default function App() {
       </div>
 
       <p className="footnote">
-        PROTOTYPE — 現在は「犬」のみ収録 / Only “Dog” is available for now.
+        PROTOTYPE — 収録3作品:チューリップ・犬・コップ / 3 models available.
       </p>
     </div>
   );
