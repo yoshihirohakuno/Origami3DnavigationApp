@@ -14,6 +14,8 @@
   --accent: #e0492f; /* 朱 */
   --valley: #38bdf8;
   --mountain: #f43f5e;
+  --reverse-in: #f59e0b;
+  --reverse-out: #a78bfa;
   --font-sans: 'Noto Sans JP', 'Yu Gothic UI', 'Hiragino Kaku Gothic ProN', system-ui, sans-serif;
   --font-latin: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-serif: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', serif;

@@ -4,7 +4,13 @@
  * 3D形状は工程を順番に適用して計算する(動画・画像は持たない)。
  */
 
-export type FoldType = 'valley' | 'mountain';
+/**
+ * 折りの種類。
+ * inside-reverse(中割り折り)/ outside-reverse(かぶせ折り)は、
+ * ほぼ平らに畳まれた多層フラップを折り線を軸に約180°回転させる表現。
+ * レイヤーの前後が入れ替わるため、見える面の色も実物と同様になる。
+ */
+export type FoldType = 'valley' | 'mountain' | 'inside-reverse' | 'outside-reverse';
 
 /** 日英併記テキスト */
 export interface LocalizedText {
@@ -22,6 +28,8 @@ export interface FoldOp {
   type: FoldType;
   /** 折る角度(度)。180に近いほど平らに畳まれる。層の重なりを避けるため175前後を推奨 */
   angle: number;
+  /** 中割り/かぶせ折りの回す向き(省略時 front=手前側を通す) */
+  sweep?: 'front' | 'back';
 }
 
 /**

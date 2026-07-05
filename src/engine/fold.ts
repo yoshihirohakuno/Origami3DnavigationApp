@@ -52,6 +52,9 @@ function foldSign(op: FoldOp, positions: THREE.Vector3[]): number {
     }
   }
   const towardViewer = best > 0 ? 1 : -1;
+  if (op.type === 'inside-reverse' || op.type === 'outside-reverse') {
+    return op.sweep === 'back' ? -towardViewer : towardViewer;
+  }
   return op.type === 'valley' ? towardViewer : -towardViewer;
 }
 

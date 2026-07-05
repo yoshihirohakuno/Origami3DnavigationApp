@@ -7,8 +7,12 @@ const COLOR_FRONT = new THREE.Color('#3f5e94'); // 紙の表(藍)
 const COLOR_FRONT_HL = new THREE.Color('#6c8fc9'); // 表・折る面ハイライト
 const COLOR_BACK = new THREE.Color('#eae5da'); // 紙の裏(生成り)
 const COLOR_BACK_HL = new THREE.Color('#fff4cf');
-const COLOR_VALLEY = new THREE.Color('#38bdf8');
-const COLOR_MOUNTAIN = new THREE.Color('#f43f5e');
+const GUIDE_COLORS: Record<string, THREE.Color> = {
+  valley: new THREE.Color('#38bdf8'),
+  mountain: new THREE.Color('#f43f5e'),
+  'inside-reverse': new THREE.Color('#f59e0b'),
+  'outside-reverse': new THREE.Color('#a78bfa'),
+};
 
 const CAMERA_POS = new THREE.Vector3(0, -2.4, 4.0);
 
@@ -167,7 +171,7 @@ export class PaperScene {
     if (state.fraction >= 1) return;
 
     for (const guide of state.guides) {
-      const color = guide.type === 'valley' ? COLOR_VALLEY : COLOR_MOUNTAIN;
+      const color = GUIDE_COLORS[guide.type];
 
       const [p1, p2] = guide.axisLine;
       const dir = new THREE.Vector3().subVectors(p2, p1);

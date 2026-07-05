@@ -1,14 +1,27 @@
-import type { OrigamiModel } from './engine/types';
+import type { OrigamiModel, FoldType } from './engine/types';
 
-const VALLEY = '#38bdf8';
-const MOUNTAIN = '#f43f5e';
+/** 折り種類ごとの表示色(UI全体で共通) */
+export const FOLD_COLORS: Record<FoldType, string> = {
+  valley: '#38bdf8',
+  mountain: '#f43f5e',
+  'inside-reverse': '#f59e0b',
+  'outside-reverse': '#a78bfa',
+};
 
-interface Segment {
+/** 折り種類ごとの破線パターン(折り図の記法に準拠:谷=破線、山=一点鎖線) */
+const FOLD_DASH: Record<FoldType, string | undefined> = {
+  valley: '4 3',
+  mountain: '6 2.5 1.5 2.5',
+  'inside-reverse': '4 3',
+  'outside-reverse': '6 2.5 1.5 2.5',
+};
+
+export interface Segment {
   x1: number;
   y1: number;
   x2: number;
   y2: number;
-  kind: 'boundary' | 'valley' | 'mountain' | 'crease';
+  kind: 'boundary' | 'crease' | FoldType;
 }
 
 /** 点pが直線(a-b)上にあるか(展開図2D) */
@@ -21,26 +34,26 @@ function onLine(
   return Math.abs(cross) < 1e-6;
 }
 
-function buildSegments(model: OrigamiModel): Segment[] {
+/** 展開図の全エッジを「輪郭/折り線(種類つき)」に分類する */
+export function buildSegments(model: OrigamiModel): Segment[] {
   // 辺の出現回数を数える(1回=紙の輪郭、2回=折り線)
-  const count = new Map<string, [number, number]>();
+  const count = new Map<string, number>();
   for (const face of model.faces) {
     for (let i = 0; i < face.length; i++) {
       const a = face[i];
       const b = face[(i + 1) % face.length];
       const key = a < b ? `${a}-${b}` : `${b}-${a}`;
-      const cur = count.get(key);
-      count.set(key, cur ? [cur[0], cur[1] + 1] : [a < b ? a : b, 1]);
+      count.set(key, (count.get(key) ?? 0) + 1);
     }
   }
   const segs: Segment[] = [];
-  for (const [key, [, n]] of count) {
+  for (const [key, n] of count) {
     const [a, b] = key.split('-').map(Number);
     const pa = model.vertices[a];
     const pb = model.vertices[b];
     let kind: Segment['kind'] = n === 1 ? 'boundary' : 'crease';
     if (n > 1) {
-      // どの折りの折り線上にあるかで山/谷の色を決める
+      // どの折りの折り線上にあるかで種類を決める
       outer: for (const step of model.steps) {
         for (const op of step.folds) {
           const qa = model.vertices[op.axis[0]];
@@ -57,9 +70,16 @@ function buildSegments(model: OrigamiModel): Segment[] {
   return segs;
 }
 
+function segColor(kind: Segment['kind']): string {
+  if (kind === 'boundary') return '#8b8e98';
+  if (kind === 'crease') return '#4a4e58';
+  return FOLD_COLORS[kind];
+}
+
 /**
  * 作品の工程データから展開図(folding diagram)をSVGで描く。
- * サムネイルとして使う:谷折り=シアン破線、山折り=ローズ一点鎖線。
+ * サムネイルとして使う:谷=シアン破線、山=ローズ一点鎖線、
+ * 中割り=琥珀、かぶせ=菫。
  */
 export function CreasePattern({ model, size = 96 }: { model: OrigamiModel; size?: number }) {
   const segs = buildSegments(model);
@@ -67,25 +87,19 @@ export function CreasePattern({ model, size = 96 }: { model: OrigamiModel; size?
   const sy = (y: number) => 50 - y * 42;
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      {segs.map((s, i) => {
-        const stroke =
-          s.kind === 'valley' ? VALLEY : s.kind === 'mountain' ? MOUNTAIN : s.kind === 'boundary' ? '#8b8e98' : '#4a4e58';
-        const dash =
-          s.kind === 'valley' ? '4 3' : s.kind === 'mountain' ? '6 2.5 1.5 2.5' : undefined;
-        return (
-          <line
-            key={i}
-            x1={sx(s.x1)}
-            y1={sy(s.y1)}
-            x2={sx(s.x2)}
-            y2={sy(s.y2)}
-            stroke={stroke}
-            strokeWidth={s.kind === 'boundary' ? 1.4 : 1}
-            strokeDasharray={dash}
-            strokeLinecap="round"
-          />
-        );
-      })}
+      {segs.map((s, i) => (
+        <line
+          key={i}
+          x1={sx(s.x1)}
+          y1={sy(s.y1)}
+          x2={sx(s.x2)}
+          y2={sy(s.y2)}
+          stroke={segColor(s.kind)}
+          strokeWidth={s.kind === 'boundary' ? 1.4 : 1}
+          strokeDasharray={s.kind === 'boundary' || s.kind === 'crease' ? undefined : FOLD_DASH[s.kind]}
+          strokeLinecap="round"
+        />
+      ))}
     </svg>
   );
 }

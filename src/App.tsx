@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Navigator } from './Navigator';
+import { Editor } from './Editor';
 import { dogModel } from './models/dog';
 import { cupModel } from './models/cup';
 import { tulipModel } from './models/tulip';
+import { birdModel } from './models/bird';
 import type { OrigamiModel } from './engine/types';
 import { CreasePattern, GenericPattern } from './CreasePattern';
 import './App.css';
 
-const MODELS: OrigamiModel[] = [tulipModel, dogModel, cupModel];
+const MODELS: OrigamiModel[] = [tulipModel, dogModel, cupModel, birdModel];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ) */
 const COMING_SOON = [
@@ -73,6 +75,7 @@ function Corners() {
 
 export default function App() {
   const [current, setCurrent] = useState<OrigamiModel | null>(null);
+  const [editing, setEditing] = useState(false);
   const [records, setRecords] = useState<Records>(loadRecords);
 
   const recordComplete = (model: OrigamiModel) => {
@@ -85,6 +88,10 @@ export default function App() {
       return next;
     });
   };
+
+  if (editing) {
+    return <Editor onExit={() => setEditing(false)} />;
+  }
 
   if (current) {
     return (
@@ -169,7 +176,10 @@ export default function App() {
       </div>
 
       <p className="footnote">
-        PROTOTYPE — 収録3作品:チューリップ・犬・コップ / 3 models available.
+        PROTOTYPE — 収録4作品 / 4 models available.
+        <button className="editor-link" onClick={() => setEditing(true)}>
+          MODEL EDITOR — 工程データ作成(β)
+        </button>
       </p>
     </div>
   );

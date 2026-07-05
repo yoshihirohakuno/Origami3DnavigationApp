@@ -481,6 +481,14 @@
   background: var(--mountain);
 }
 
+.fold-badge.inside-reverse i {
+  background: var(--reverse-in);
+}
+
+.fold-badge.outside-reverse i {
+  background: var(--reverse-out);
+}
+
 .fold-badge strong {
   display: block;
   font-size: 13px;
@@ -643,6 +651,14 @@
 
 .sl-dot.mountain {
   background: var(--mountain);
+}
+
+.sl-dot.inside-reverse {
+  background: var(--reverse-in);
+}
+
+.sl-dot.outside-reverse {
+  background: var(--reverse-out);
 }
 
 .sl-text {
@@ -896,6 +912,196 @@
   .view-reset {
     top: 20px;
     right: 20px;
+  }
+}
+
+/* ---------- 工程データ作成ツール ---------- */
+.editor-link {
+  display: block;
+  margin: 10px auto 0;
+  font: inherit;
+  font-family: var(--font-latin);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 4px 2px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.editor-link:hover {
+  color: var(--accent);
+}
+
+.editor-screen {
+  max-width: none;
+}
+
+.editor-header {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.preset-select {
+  font: inherit;
+  font-size: 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 9px 10px;
+}
+
+.editor-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 380px 1fr 1.2fr;
+}
+
+.ed-json,
+.ed-sheet {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--border-soft);
+}
+
+.ed-json textarea {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+  background: var(--surface);
+  color: var(--text);
+  border: none;
+  border-top: 1px solid var(--border-soft);
+  padding: 14px 16px;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.ed-json textarea:focus-visible {
+  outline: none;
+  background: var(--surface-2);
+}
+
+.ed-json-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.ed-json-foot .btn-main {
+  flex: 0 0 auto;
+  padding: 9px 22px 7px;
+}
+
+.ed-error {
+  margin: 0;
+  font-size: 11px;
+  color: var(--mountain);
+  line-height: 1.4;
+}
+
+.ed-sheet {
+  padding-bottom: 0;
+}
+
+.sheet-svg {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.sheet-vertex {
+  cursor: pointer;
+}
+
+.sheet-vertex circle {
+  fill: var(--surface-2);
+  stroke: var(--muted);
+  stroke-width: 0.8;
+  transition: fill 0.15s;
+}
+
+.sheet-vertex:hover circle {
+  fill: var(--accent);
+}
+
+.sheet-vertex text {
+  font-family: var(--font-latin);
+  font-size: 9px;
+  fill: var(--muted);
+  pointer-events: none;
+}
+
+.picked-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.picked-bar code {
+  flex: 1;
+  font-family: Consolas, monospace;
+  font-size: 12px;
+  color: var(--accent);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.picked-bar .btn-sub {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+}
+
+.ed-3d {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ed-3d canvas {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  touch-action: none;
+  background: radial-gradient(120% 90% at 50% 30%, #20222a 0%, #131418 70%, #0e0f12 100%);
+}
+
+.ed-3d-foot {
+  padding: 8px 18px 12px;
+  border-top: 1px solid var(--border-soft);
+  background: var(--surface);
+}
+
+.ed-3d-foot .step-label {
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+
+@media (max-width: 899px) {
+  .editor-screen {
+    overflow-y: auto;
+  }
+
+  .editor-body {
+    grid-template-columns: 1fr;
+  }
+
+  .ed-json textarea {
+    min-height: 300px;
+  }
+
+  .ed-3d canvas {
+    min-height: 340px;
   }
 }
 

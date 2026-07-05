@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import type { OrigamiModel } from './engine/types';
+import type { OrigamiModel, FoldType } from './engine/types';
 import { computeFoldState } from './engine/fold';
 import { PaperScene } from './three/PaperScene';
+
+const FOLD_LABEL: Record<FoldType, { ja: string; en: string }> = {
+  valley: { ja: '谷折り', en: 'VALLEY ・ TOWARD YOU' },
+  mountain: { ja: '山折り', en: 'MOUNTAIN ・ BEHIND' },
+  'inside-reverse': { ja: '中割り折り', en: 'INSIDE REVERSE' },
+  'outside-reverse': { ja: 'かぶせ折り', en: 'OUTSIDE REVERSE' },
+};
 
 interface Props {
   model: OrigamiModel;
@@ -154,8 +161,8 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         <div className={`fold-badge ${foldType}`}>
           <i />
           <div>
-            <strong>{foldType === 'valley' ? '谷折り' : '山折り'}</strong>
-            <span>{foldType === 'valley' ? 'VALLEY ・ TOWARD YOU' : 'MOUNTAIN ・ BEHIND'}</span>
+            <strong>{FOLD_LABEL[foldType].ja}</strong>
+            <span>{FOLD_LABEL[foldType].en}</span>
           </div>
         </div>
         <button className="view-reset" onClick={() => sceneRef.current?.resetCamera()}>
