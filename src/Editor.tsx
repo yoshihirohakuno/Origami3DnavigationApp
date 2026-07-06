@@ -15,6 +15,7 @@ const PRESETS: OrigamiModel[] = [tulipModel, dogModel, cupModel, birdModel, squa
 const TYPE_LABEL: Record<FoldType, string> = {
   valley: '谷折り',
   mountain: '山折り',
+  unfold: '開く',
   'inside-reverse': '中割り折り',
   'outside-reverse': 'かぶせ折り',
 };

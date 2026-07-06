@@ -6,6 +6,7 @@ import { PaperScene } from './three/PaperScene';
 const FOLD_LABEL: Record<FoldType, { ja: string; en: string }> = {
   valley: { ja: '谷折り', en: 'VALLEY ・ TOWARD YOU' },
   mountain: { ja: '山折り', en: 'MOUNTAIN ・ BEHIND' },
+  unfold: { ja: '開く', en: 'UNFOLD' },
   'inside-reverse': { ja: '中割り折り', en: 'INSIDE REVERSE' },
   'outside-reverse': { ja: 'かぶせ折り', en: 'OUTSIDE REVERSE' },
 };

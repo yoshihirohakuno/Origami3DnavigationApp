@@ -10,6 +10,7 @@ const COLOR_BACK_HL = new THREE.Color('#fff4cf');
 const GUIDE_COLORS: Record<string, THREE.Color> = {
   valley: new THREE.Color('#38bdf8'),
   mountain: new THREE.Color('#f43f5e'),
+  unfold: new THREE.Color('#94a3b8'),
   'inside-reverse': new THREE.Color('#f59e0b'),
   'outside-reverse': new THREE.Color('#a78bfa'),
 };

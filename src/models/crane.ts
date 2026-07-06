@@ -5,6 +5,7 @@ const COS = Math.cos(ROT);
 const SIN = Math.sin(ROT);
 const S = 2 - Math.SQRT2;
 const H = S / 2;
+const ANGLE = 176;
 
 function r(x: number, y: number): [number, number] {
   return [
@@ -13,149 +14,257 @@ function r(x: number, y: number): [number, number] {
   ];
 }
 
+function step(
+  folds: FoldOp[],
+  description: FoldStep['description'],
+  caution?: FoldStep['caution'],
+): FoldStep {
+  return caution ? { folds, description, caution } : { folds, description };
+}
+
 function oneFold(
   fold: FoldOp,
   description: FoldStep['description'],
   caution?: FoldStep['caution'],
 ): FoldStep {
-  return caution ? { folds: [fold], description, caution } : { folds: [fold], description };
+  return step([fold], description, caution);
 }
 
-const squareBaseSteps: FoldStep[] = [
+function openFold(fold: FoldOp, description: FoldStep['description']): FoldStep {
+  return oneFold(
+    { ...fold, type: 'unfold', direction: fold.direction === 1 ? -1 : 1 },
+    description,
+  );
+}
+
+const creaseSteps: FoldStep[] = [
   oneFold(
+    { axis: [2, 6], moving: [1, 7, 8, 9, 12, 13], type: 'valley', angle: ANGLE, direction: 1 },
+    {
+      ja: '角と角を合わせ、対角線で三角に谷折りして折りすじをつけます。',
+      en: 'Bring opposite corners together and valley-fold a diagonal crease.',
+    },
+    {
+      ja: 'まず、鶴の基本になる折りすじを一般的な順番で作ります。',
+      en: 'First, make the standard creases used for a crane base.',
+    },
+  ),
+  openFold(
+    { axis: [2, 6], moving: [1, 7, 8, 9, 12, 13], type: 'valley', angle: ANGLE, direction: 1 },
+    {
+      ja: '紙を開いて、正方形に戻します。',
+      en: 'Unfold the paper back to a square.',
+    },
+  ),
+  oneFold(
+    { axis: [4, 8], moving: [5, 6, 7, 12], type: 'valley', angle: ANGLE, direction: 1 },
+    {
+      ja: '反対の対角線でも、角と角を合わせて三角に谷折りします。',
+      en: 'Valley-fold the opposite diagonal, again matching corner to corner.',
+    },
+  ),
+  openFold(
+    { axis: [4, 8], moving: [5, 6, 7, 12], type: 'valley', angle: ANGLE, direction: 1 },
+    {
+      ja: 'もう一度開き、2本の対角線の折りすじを残します。',
+      en: 'Unfold again, leaving both diagonal creases.',
+    },
+  ),
+  oneFold(
+    { axis: [5, 1], moving: [2, 3, 4, 10, 11], type: 'mountain', angle: ANGLE, direction: 1 },
+    {
+      ja: '辺と辺を合わせて半分に折り、横の折りすじをつけます。',
+      en: 'Fold edge to edge in half to make the horizontal crease.',
+    },
+  ),
+  openFold(
+    { axis: [5, 1], moving: [2, 3, 4, 10, 11], type: 'mountain', angle: ANGLE, direction: 1 },
+    {
+      ja: '紙を開いて、正方形に戻します。',
+      en: 'Unfold the paper back to a square.',
+    },
+  ),
+  oneFold(
+    { axis: [7, 3], moving: [1, 2, 8, 9, 11, 13], type: 'mountain', angle: ANGLE, direction: -1 },
+    {
+      ja: 'もう一方の辺と辺も合わせて半分に折り、十字の折りすじを完成させます。',
+      en: 'Fold the other pair of edges together to complete the cross crease.',
+    },
+  ),
+  openFold(
+    { axis: [7, 3], moving: [1, 2, 8, 9, 11, 13], type: 'mountain', angle: ANGLE, direction: -1 },
+    {
+      ja: '紙を開きます。対角線2本と十字の折りすじができています。',
+      en: 'Unfold. You now have both diagonals and the cross creases.',
+    },
+  ),
+];
+
+const squareBaseStep: FoldStep = step(
+  [
     {
       axis: [0, 2],
       moving: [3, 4, 5, 6, 7, 8, 10, 12, 13],
       type: 'valley',
-      angle: 176,
+      angle: ANGLE,
       direction: -1,
     },
-    {
-      ja: '1本目の中心から角へ伸びる折りすじで、外側の紙を手前へ倒します。',
-      en: 'Fold the outer paper forward along the first center-to-corner crease.',
-    },
-    {
-      ja: 'ここから正方基本形を1本ずつたたみます。',
-      en: 'From here, collapse the square base one crease at a time.',
-    },
-  ),
-  oneFold(
     {
       axis: [0, 3],
       moving: [4, 5, 6, 7, 8, 12, 13],
       type: 'mountain',
-      angle: 176,
+      angle: ANGLE,
       direction: 1,
     },
-    {
-      ja: '2本目の折りすじで、重なった紙を後ろへ倒します。',
-      en: 'Fold the stacked paper back along the second crease.',
-    },
-  ),
-  oneFold(
     {
       axis: [0, 4],
       moving: [5, 6, 7, 8, 12, 13],
       type: 'valley',
-      angle: 176,
+      angle: ANGLE,
       direction: -1,
     },
-    {
-      ja: '3本目の折りすじで、次の面を手前へ倒します。',
-      en: 'Fold the next section forward along the third crease.',
-    },
-  ),
-  oneFold(
     {
       axis: [0, 5],
       moving: [6, 7, 8, 12, 13],
       type: 'mountain',
-      angle: 176,
+      angle: ANGLE,
       direction: 1,
     },
-    {
-      ja: '4本目の折りすじで、残りの紙を後ろへ倒します。',
-      en: 'Fold the remaining paper back along the fourth crease.',
-    },
-  ),
-  oneFold(
     {
       axis: [0, 6],
       moving: [7, 8, 12, 13],
       type: 'valley',
-      angle: 176,
+      angle: ANGLE,
       direction: -1,
     },
-    {
-      ja: '5本目の折りすじで、細くなった部分を手前へ倒します。',
-      en: 'Fold the narrowing section forward along the fifth crease.',
-    },
-  ),
-  oneFold(
-    { axis: [0, 7], moving: [8, 13], type: 'mountain', angle: 176, direction: 1 },
-    {
-      ja: '最後の折りすじを後ろへ倒し、4つの角を1点に集めます。',
-      en: 'Fold the final crease back, bringing the four corners to one point.',
-    },
-    {
-      ja: 'これで正方基本形になります。',
-      en: 'This completes the square base.',
-    },
-  ),
-];
+    { axis: [0, 7], moving: [8, 13], type: 'mountain', angle: ANGLE, direction: 1 },
+  ],
+  {
+    ja: '折りすじに沿って左右を内側へ寄せ、4つの角を下で合わせて正方基本形にたたみます。',
+    en: 'Collapse along the creases, bringing the side corners inward and the four corners together at the bottom.',
+  },
+  {
+    ja: '鶴でよく使う「正方基本形」です。開いた角が下に来ます。',
+    en: 'This is the square base used for a crane. The open point is at the bottom.',
+  },
+);
+
+const frontRightFold: FoldOp = {
+  axis: [2, 9],
+  moving: [1],
+  type: 'valley',
+  angle: ANGLE,
+  direction: 1,
+};
+const frontLeftFold: FoldOp = {
+  axis: [2, 10],
+  moving: [3],
+  type: 'valley',
+  angle: ANGLE,
+  direction: -1,
+};
+const frontTopFold: FoldOp = {
+  axis: [9, 10],
+  moving: [2],
+  type: 'valley',
+  angle: ANGLE,
+  direction: -1,
+};
 
 const frontPetalSteps: FoldStep[] = [
-  oneFold(
-    { axis: [2, 9], moving: [1], type: 'valley', angle: 176, direction: 1 },
+  oneFold(frontRightFold, {
+    ja: '手前の右下のふちを、中央の線へ合わせて谷折りします。',
+    en: 'Valley-fold the front lower right edge to the center line.',
+  }),
+  openFold(frontRightFold, {
+    ja: 'いったん開き、右側の折りすじだけを残します。',
+    en: 'Unfold, leaving the right crease in place.',
+  }),
+  oneFold(frontLeftFold, {
+    ja: '手前の左下のふちも、中央の線へ合わせて谷折りします。',
+    en: 'Valley-fold the front lower left edge to the center line.',
+  }),
+  openFold(frontLeftFold, {
+    ja: 'いったん開き、左側の折りすじも残します。',
+    en: 'Unfold, leaving the left crease too.',
+  }),
+  oneFold(frontTopFold, {
+    ja: '上の小さな三角を、左右の折りすじの上端に合わせて下へ折ります。',
+    en: 'Fold the small top triangle down across the top of the side creases.',
+  }),
+  openFold(frontTopFold, {
+    ja: '三角を開き、花弁折りに使う横の折りすじを残します。',
+    en: 'Unfold the triangle, leaving the horizontal crease for the petal fold.',
+  }),
+  step(
+    [
+      { axis: [2, 9], moving: [1], type: 'valley', angle: ANGLE, direction: 1 },
+      { axis: [2, 10], moving: [3], type: 'valley', angle: ANGLE, direction: -1 },
+      { axis: [11, 9], moving: [2], type: 'mountain', angle: ANGLE, direction: -1 },
+    ],
     {
-      ja: '手前の右ふちを、中央の線へ合わせるように谷折りします。',
-      en: 'Valley-fold the front right edge inward to meet the center line.',
-    },
-    {
-      ja: '手前の1枚だけを動かします。',
-      en: 'Move only the front layer.',
-    },
-  ),
-  oneFold(
-    { axis: [2, 10], moving: [3], type: 'valley', angle: 176, direction: -1 },
-    {
-      ja: '手前の左ふちも、中央の線へ合わせるように谷折りします。',
-      en: 'Valley-fold the front left edge inward to meet the center line.',
-    },
-  ),
-  oneFold(
-    { axis: [11, 9], moving: [2], type: 'mountain', angle: 176, direction: -1 },
-    {
-      ja: '手前の先端を開き、横の折りすじで平らに倒して花弁折りにします。',
-      en: 'Open the front point and flatten it across the horizontal crease to make the petal fold.',
+      ja: '手前の1枚を下から開き、左右の折りすじを内側へたたみながら上へ花弁折りします。',
+      en: 'Open the front layer from the bottom and petal-fold it upward, tucking the side creases inward.',
     },
   ),
 ];
 
+const backRightFold: FoldOp = {
+  axis: [8, 12],
+  moving: [7],
+  type: 'valley',
+  angle: ANGLE,
+  direction: 1,
+};
+const backLeftFold: FoldOp = {
+  axis: [8, 9],
+  moving: [1],
+  type: 'valley',
+  angle: ANGLE,
+  direction: -1,
+};
+const backTopFold: FoldOp = {
+  axis: [12, 9],
+  moving: [8],
+  type: 'valley',
+  angle: ANGLE,
+  direction: 1,
+};
+
 const backPetalSteps: FoldStep[] = [
-  oneFold(
-    { axis: [8, 12], moving: [7], type: 'valley', angle: 176, direction: 1 },
+  oneFold(backRightFold, {
+    ja: '裏側も同じように、右下のふちを中央の線へ合わせて谷折りします。',
+    en: 'On the back, valley-fold the lower right edge to the center line in the same way.',
+  }),
+  openFold(backRightFold, {
+    ja: 'いったん開き、裏側の右の折りすじを残します。',
+    en: 'Unfold, leaving the back right crease.',
+  }),
+  oneFold(backLeftFold, {
+    ja: '裏側の左下のふちも、中央の線へ合わせて谷折りします。',
+    en: 'Valley-fold the back lower left edge to the center line.',
+  }),
+  openFold(backLeftFold, {
+    ja: 'いったん開き、裏側の左の折りすじも残します。',
+    en: 'Unfold, leaving the back left crease too.',
+  }),
+  oneFold(backTopFold, {
+    ja: '裏側の上の小さな三角を下へ折り、横の折りすじをつけます。',
+    en: 'Fold the small top triangle on the back down to make the horizontal crease.',
+  }),
+  openFold(backTopFold, {
+    ja: '三角を開き、裏側の花弁折りの準備をします。',
+    en: 'Unfold the triangle to prepare the back petal fold.',
+  }),
+  step(
+    [
+      { axis: [8, 12], moving: [7], type: 'valley', angle: ANGLE, direction: 1 },
+      { axis: [8, 9], moving: [1], type: 'valley', angle: ANGLE, direction: -1 },
+      { axis: [13, 12], moving: [8], type: 'mountain', angle: ANGLE, direction: 1 },
+    ],
     {
-      ja: '裏側の右ふちを、中央の線へ合わせるように谷折りします。',
-      en: 'On the back side, valley-fold the right edge inward to the center line.',
-    },
-    {
-      ja: '裏側も同じ順番で1本ずつ折ります。',
-      en: 'Repeat the same sequence on the back, one crease at a time.',
-    },
-  ),
-  oneFold(
-    { axis: [8, 9], moving: [1], type: 'valley', angle: 176, direction: -1 },
-    {
-      ja: '裏側の左ふちも、中央の線へ合わせるように谷折りします。',
-      en: 'Valley-fold the back left edge inward to the center line.',
-    },
-  ),
-  oneFold(
-    { axis: [13, 12], moving: [8], type: 'mountain', angle: 176, direction: 1 },
-    {
-      ja: '裏側の先端を開き、横の折りすじで平らに倒して鶴の基本形にします。',
-      en: 'Open the back point and flatten it across the horizontal crease to form the crane base.',
+      ja: '裏側の1枚も下から開き、左右を内側へたたみながら花弁折りして鶴の基本形にします。',
+      en: 'Open the back layer from the bottom and petal-fold it, tucking the sides inward to form the crane base.',
     },
   ),
 ];
@@ -163,7 +272,8 @@ const backPetalSteps: FoldStep[] = [
 /**
  * 鶴 / Crane
  *
- * 正方基本形から、前後2枚の花弁折りで鶴の基本形へ進めるモデル。
+ * 一般的な鶴の序盤:対角線と十字の折りすじを作る → 正方基本形 →
+ * 前後の花弁折りで鶴の基本形へ進めるモデル。
  * 花弁折りの追加頂点は、未回転の紙座標で s = 2 - sqrt(2) の角度二等分点を
  * 置いてから squareBaseModel と同じ -112.5° 回転をかけている。
  */
@@ -208,5 +318,5 @@ export const craneModel: OrigamiModel = {
     [13, 8, 9],
     [9, 8, 1],
   ],
-  steps: [...squareBaseSteps, ...frontPetalSteps, ...backPetalSteps],
+  steps: [...creaseSteps, squareBaseStep, ...frontPetalSteps, ...backPetalSteps],
 };

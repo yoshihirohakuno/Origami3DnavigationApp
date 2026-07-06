@@ -4,6 +4,7 @@ import type { OrigamiModel, FoldType } from './engine/types';
 export const FOLD_COLORS: Record<FoldType, string> = {
   valley: '#38bdf8',
   mountain: '#f43f5e',
+  unfold: '#94a3b8',
   'inside-reverse': '#f59e0b',
   'outside-reverse': '#a78bfa',
 };
@@ -12,6 +13,7 @@ export const FOLD_COLORS: Record<FoldType, string> = {
 const FOLD_DASH: Record<FoldType, string | undefined> = {
   valley: '4 3',
   mountain: '6 2.5 1.5 2.5',
+  unfold: '2 3',
   'inside-reverse': '4 3',
   'outside-reverse': '6 2.5 1.5 2.5',
 };

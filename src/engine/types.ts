@@ -10,7 +10,7 @@
  * ほぼ平らに畳まれた多層フラップを折り線を軸に約180°回転させる表現。
  * レイヤーの前後が入れ替わるため、見える面の色も実物と同様になる。
  */
-export type FoldType = 'valley' | 'mountain' | 'inside-reverse' | 'outside-reverse';
+export type FoldType = 'valley' | 'mountain' | 'unfold' | 'inside-reverse' | 'outside-reverse';
 
 /** 日英併記テキスト */
 export interface LocalizedText {
@@ -24,7 +24,7 @@ export interface FoldOp {
   axis: [number, number];
   /** この折りで回転する頂点のインデックス(折り線上の頂点は含めなくてよい) */
   moving: number[];
-  /** 谷折り=手前(+z)へ / 山折り=奥(-z)へ。回転の符号はエンジンが自動決定する */
+  /** 谷折り=手前(+z)へ / 山折り=奥(-z)へ / 開く=折りを戻す。回転の符号はエンジンが自動決定する */
   type: FoldType;
   /** 折る角度(度)。180に近いほど平らに畳まれる。層の重なりを避けるため175前後を推奨 */
   angle: number;

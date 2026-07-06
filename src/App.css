@@ -481,6 +481,10 @@
   background: var(--mountain);
 }
 
+.fold-badge.unfold i {
+  background: var(--unfold);
+}
+
 .fold-badge.inside-reverse i {
   background: var(--reverse-in);
 }
@@ -655,6 +659,10 @@
 
 .sl-dot.mountain {
   background: var(--mountain);
+}
+
+.sl-dot.unfold {
+  background: var(--unfold);
 }
 
 .sl-dot.inside-reverse {
