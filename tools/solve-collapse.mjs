@@ -81,3 +81,32 @@ for (const r of results) {
   console.log('signs:', r.signs.join(','), ' M_N/M_W/M_S:', r.sides.join(','), r.mids.join(' '));
 }
 console.log(results.length, 'corner-solutions');
+
+// 採用中の交互符号(モデルと同じ)で176°時の各扇形の層順(z)を出力する。
+// 花弁折り(petal fold)の対象レイヤー特定に使う。
+{
+  const signs = [-1, 1, -1, 1, -1, 1];
+  const pos = base.map(([x, y]) => [x, y, 0]);
+  const deg = (176 * Math.PI) / 180;
+  for (let k = 0; k < OPS.length; k++) {
+    const { axis, moving } = OPS[k];
+    const o = pos[0];
+    const a = pos[axis];
+    const d = [a[0] - o[0], a[1] - o[1], a[2] - o[2]];
+    const len = Math.hypot(...d);
+    const dir = [d[0] / len, d[1] / len, d[2] / len];
+    for (const vi of moving) pos[vi] = rotate(pos[vi], o, dir, signs[k] * deg);
+  }
+  // 各扇形の重心zで層順を判定(S1=(0,1,2)...S8=(0,8,1))
+  const sectors = [
+    [0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 5],
+    [0, 5, 6], [0, 6, 7], [0, 7, 8], [0, 8, 1],
+  ];
+  const zs = sectors.map((f, i) => ({
+    sector: `S${i + 1}`,
+    z: +(f.reduce((s, vi) => s + pos[vi][2], 0) / 3).toFixed(4),
+  }));
+  zs.sort((a, b) => b.z - a.z);
+  console.log('layer order (front->back at 176°, signs -1,1,-1,1,-1,1):');
+  console.log(zs.map((s) => `${s.sector}(z=${s.z})`).join(' > '));
+}
