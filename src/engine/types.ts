@@ -30,6 +30,11 @@ export interface FoldOp {
   angle: number;
   /** 中割り/かぶせ折りの回す向き(省略時 front=手前側を通す) */
   sweep?: 'front' | 'back';
+  /**
+   * 回転符号の明示指定(axis[0]→axis[1] 方向の右ねじ)。
+   * 基本形のたたみ込みなど、連鎖回転で山谷の自動判定が使えない場合に使う。
+   */
+  direction?: 1 | -1;
 }
 
 /**

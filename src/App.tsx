@@ -5,11 +5,12 @@ import { dogModel } from './models/dog';
 import { cupModel } from './models/cup';
 import { tulipModel } from './models/tulip';
 import { birdModel } from './models/bird';
+import { squareBaseModel } from './models/squareBase';
 import type { OrigamiModel } from './engine/types';
 import { CreasePattern, GenericPattern } from './CreasePattern';
 import './App.css';
 
-const MODELS: OrigamiModel[] = [tulipModel, dogModel, cupModel, birdModel];
+const MODELS: OrigamiModel[] = [tulipModel, dogModel, cupModel, birdModel, squareBaseModel];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ) */
 const COMING_SOON = [

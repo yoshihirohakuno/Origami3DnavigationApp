@@ -489,6 +489,10 @@
   background: var(--reverse-out);
 }
 
+.fold-badge.mixed i {
+  background: linear-gradient(135deg, var(--valley) 50%, var(--mountain) 50%);
+}
+
 .fold-badge strong {
   display: block;
   font-size: 13px;

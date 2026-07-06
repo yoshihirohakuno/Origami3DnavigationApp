@@ -8,8 +8,9 @@ import { tulipModel } from './models/tulip';
 import { dogModel } from './models/dog';
 import { cupModel } from './models/cup';
 import { birdModel } from './models/bird';
+import { squareBaseModel } from './models/squareBase';
 
-const PRESETS: OrigamiModel[] = [tulipModel, dogModel, cupModel, birdModel];
+const PRESETS: OrigamiModel[] = [tulipModel, dogModel, cupModel, birdModel, squareBaseModel];
 
 const TYPE_LABEL: Record<FoldType, string> = {
   valley: '谷折り',

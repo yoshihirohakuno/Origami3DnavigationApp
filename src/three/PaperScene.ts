@@ -170,6 +170,9 @@ export class PaperScene {
     this.guideGroup.clear();
     if (state.fraction >= 1) return;
 
+    // 折りが多い工程(基本形のたたみ込み等)は矢印を省略して折り線だけ示す
+    const showArrows = state.guides.length <= 3;
+
     for (const guide of state.guides) {
       const color = GUIDE_COLORS[guide.type];
 
@@ -184,6 +187,7 @@ export class PaperScene {
       );
       foldLine.computeLineDistances();
       this.guideGroup.add(foldLine);
+      if (!showArrows) continue;
 
       const curve = new THREE.CatmullRomCurve3(guide.arrowPath);
       const tube = new THREE.Mesh(

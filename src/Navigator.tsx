@@ -121,8 +121,9 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   };
 
   const step = model.steps[ui.stepIndex];
-  // バッジは工程の代表折り(複数同時折りは同種の前提)
+  // バッジは工程の代表折り。山谷が混在する工程は「たたむ」と表示する
   const foldType = step.folds[0].type;
+  const mixed = step.folds.some((f) => f.type !== foldType);
   const finished = ui.t >= total;
   const left = total - ui.stepIndex - (ui.fraction >= 1 ? 1 : 0);
   const pct = (ui.t / total) * 100;
@@ -158,11 +159,11 @@ export function Navigator({ model, onExit, onComplete }: Props) {
 
       <div className="canvas-wrap">
         <canvas ref={canvasRef} />
-        <div className={`fold-badge ${foldType}`}>
+        <div className={`fold-badge ${mixed ? 'mixed' : foldType}`}>
           <i />
           <div>
-            <strong>{FOLD_LABEL[foldType].ja}</strong>
-            <span>{FOLD_LABEL[foldType].en}</span>
+            <strong>{mixed ? 'たたむ' : FOLD_LABEL[foldType].ja}</strong>
+            <span>{mixed ? 'COLLAPSE' : FOLD_LABEL[foldType].en}</span>
           </div>
         </div>
         <button className="view-reset" onClick={() => sceneRef.current?.resetCamera()}>
