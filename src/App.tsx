@@ -6,15 +6,22 @@ import { cupModel } from './models/cup';
 import { tulipModel } from './models/tulip';
 import { birdModel } from './models/bird';
 import { squareBaseModel } from './models/squareBase';
+import { craneModel } from './models/crane';
 import type { OrigamiModel } from './engine/types';
 import { CreasePattern, GenericPattern } from './CreasePattern';
 import './App.css';
 
-const MODELS: OrigamiModel[] = [tulipModel, dogModel, cupModel, birdModel, squareBaseModel];
+const MODELS: OrigamiModel[] = [
+  tulipModel,
+  dogModel,
+  cupModel,
+  birdModel,
+  squareBaseModel,
+  craneModel,
+];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ) */
 const COMING_SOON = [
-  { ja: '鶴', en: 'Crane', difficulty: 3 },
   { ja: '手裏剣', en: 'Shuriken', difficulty: 2 },
   { ja: '箱', en: 'Box', difficulty: 2 },
   { ja: '兜', en: 'Helmet', difficulty: 2 },
