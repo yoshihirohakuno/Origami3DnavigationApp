@@ -261,20 +261,19 @@ const backPetalSteps: FoldStep[] = [
  * 仕上げ。鳥の基本形の下に残る2本の細い先(角4・6)が首と尾、
  * 花弁折りで持ち上げた先端(2・8)が羽になる。
  */
-const craneNeck: FoldOp = {
-  axis: [9, 13],
-  moving: [6],
-  type: 'inside-reverse',
-  angle: 142,
-  sweep: 'front',
-};
-const craneTail: FoldOp = {
-  axis: [13, 10],
-  moving: [4],
-  type: 'inside-reverse',
-  angle: 142,
-  sweep: 'back',
-};
+/**
+ * 首・尾の中割り折り。ほぼ180°の中割りで垂直に立てたあと、
+ * [11,13](平面視で同一点・奥行き違い=視線方向の軸)まわりの回転で
+ * 体の面内で左右に開かせる。
+ */
+const craneNeck: FoldOp[] = [
+  { axis: [9, 13], moving: [6], type: 'inside-reverse', angle: 172, sweep: 'front' },
+  { axis: [11, 13], moving: [6], type: 'inside-reverse', angle: 30, direction: 1 },
+];
+const craneTail: FoldOp[] = [
+  { axis: [13, 10], moving: [4], type: 'inside-reverse', angle: 172, sweep: 'back' },
+  { axis: [11, 13], moving: [4], type: 'inside-reverse', angle: 30, direction: -1 },
+];
 const frontWing: FoldOp = {
   axis: [9, 10],
   moving: [2, 14, 15],
@@ -300,20 +299,20 @@ const siteCraneSteps: FoldStep[] = [
   squareBaseStep,
   frontPetalSteps[6],
   backPetalSteps[6],
-  oneFold(
+  step(
     craneNeck,
     {
-      ja: '下の細い先の1本を、紙の間へ割り込ませながら上へ中割り折りして首にします。',
-      en: 'Inside-reverse one thin lower point upward between the layers to form the neck.',
+      ja: '下の細い先の1本を、紙の間へ割り込ませながら斜め上へ中割り折りして首にします。',
+      en: 'Inside-reverse one thin lower point diagonally upward between the layers to form the neck.',
     },
     {
       ja: '先端を外へかぶせず、左右の紙の間へ入れます。',
       en: 'Tuck the point between the layers, not over the outside.',
     },
   ),
-  oneFold(craneTail, {
-    ja: 'もう1本の細い先も反対側へ中割り折りして、尾にします。',
-    en: 'Inside-reverse the other thin point the opposite way to form the tail.',
+  step(craneTail, {
+    ja: 'もう1本の細い先も反対側へ斜めに中割り折りして、尾にします。',
+    en: 'Inside-reverse the other thin point diagonally the opposite way to form the tail.',
   }),
   step([frontWing, backWing], {
     ja: '花弁折りで持ち上げた大きな2枚を左右へ開き、羽にして鶴のできあがりです。',
