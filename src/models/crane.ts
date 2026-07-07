@@ -176,25 +176,25 @@ const frontPetalSteps: FoldStep[] = [
     ja: '手前の右下のふちを、中央の線へ合わせて谷折りします。',
     en: 'Valley-fold the front lower right edge to the center line.',
   }),
-  openFold(frontRightFold, {
-    ja: 'いったん開き、右側の折りすじだけを残します。',
-    en: 'Unfold, leaving the right crease in place.',
-  }),
   oneFold(frontLeftFold, {
     ja: '手前の左下のふちも、中央の線へ合わせて谷折りします。',
     en: 'Valley-fold the front lower left edge to the center line.',
-  }),
-  openFold(frontLeftFold, {
-    ja: 'いったん開き、左側の折りすじも残します。',
-    en: 'Unfold, leaving the left crease too.',
   }),
   oneFold(frontTopFold, {
     ja: '上の小さな三角を、左右の折りすじの上端に合わせて下へ折ります。',
     en: 'Fold the small top triangle down across the top of the side creases.',
   }),
   openFold(frontTopFold, {
-    ja: '三角を開き、花弁折りに使う横の折りすじを残します。',
-    en: 'Unfold the triangle, leaving the horizontal crease for the petal fold.',
+    ja: '上の三角を開き、横の折りすじを残します。',
+    en: 'Unfold the top triangle, leaving the horizontal crease.',
+  }),
+  openFold(frontLeftFold, {
+    ja: '左のふちを開き、折りすじを残します。',
+    en: 'Unfold the left edge, leaving its crease.',
+  }),
+  openFold(frontRightFold, {
+    ja: '右のふちも開き、花弁折りの準備をします。',
+    en: 'Unfold the right edge too, preparing for the petal fold.',
   }),
   step(
     [
@@ -236,25 +236,25 @@ const backPetalSteps: FoldStep[] = [
     ja: '裏側も同じように、右下のふちを中央の線へ合わせて谷折りします。',
     en: 'On the back, valley-fold the lower right edge to the center line in the same way.',
   }),
-  openFold(backRightFold, {
-    ja: 'いったん開き、裏側の右の折りすじを残します。',
-    en: 'Unfold, leaving the back right crease.',
-  }),
   oneFold(backLeftFold, {
     ja: '裏側の左下のふちも、中央の線へ合わせて谷折りします。',
     en: 'Valley-fold the back lower left edge to the center line.',
-  }),
-  openFold(backLeftFold, {
-    ja: 'いったん開き、裏側の左の折りすじも残します。',
-    en: 'Unfold, leaving the back left crease too.',
   }),
   oneFold(backTopFold, {
     ja: '裏側の上の小さな三角を下へ折り、横の折りすじをつけます。',
     en: 'Fold the small top triangle on the back down to make the horizontal crease.',
   }),
   openFold(backTopFold, {
-    ja: '三角を開き、裏側の花弁折りの準備をします。',
-    en: 'Unfold the triangle to prepare the back petal fold.',
+    ja: '裏側の上の三角を開き、横の折りすじを残します。',
+    en: 'Unfold the back top triangle, leaving the horizontal crease.',
+  }),
+  openFold(backLeftFold, {
+    ja: '裏側の左のふちを開き、折りすじを残します。',
+    en: 'Unfold the back left edge, leaving its crease.',
+  }),
+  openFold(backRightFold, {
+    ja: '裏側の右のふちも開き、花弁折りの準備をします。',
+    en: 'Unfold the back right edge too, preparing for the petal fold.',
   }),
   step(
     [
