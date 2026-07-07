@@ -69,6 +69,10 @@ export function Navigator({ model, onExit, onComplete }: Props) {
 
     const onResize = () => scene.resize();
     window.addEventListener('resize', onResize);
+    // 完成時に「完了を記録」ボタンが出る等でウィンドウリサイズを伴わずに
+    // canvasの表示サイズが変わるため、要素自体のサイズ変化も監視する
+    const ro = new ResizeObserver(() => scene.resize());
+    ro.observe(canvas);
 
     // ダブルタップ/ダブルクリックで正面表示に戻す
     let lastTap = 0;
@@ -79,18 +83,26 @@ export function Navigator({ model, onExit, onComplete }: Props) {
     };
     canvas.addEventListener('pointerdown', onTap);
 
-    // 検証用フック(E2E・デバッグでタイムラインを直接操作する)
+    // 検証用フック(E2E・デバッグでタイムライン・カメラを直接操作する)
     (window as unknown as Record<string, unknown>).__origami = {
       setT: (v: number) => {
         tRef.current = v;
         targetRef.current = v;
       },
       getT: () => tRef.current,
+      setView: (deg: number) => sceneRef.current?.setViewAngle(deg),
+      getPositions: () =>
+        computeFoldState(model, tRef.current).positions.map((p) => [
+          Math.round(p.x * 1000) / 1000,
+          Math.round(p.y * 1000) / 1000,
+          Math.round(p.z * 1000) / 1000,
+        ]),
     };
 
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
+      ro.disconnect();
       canvas.removeEventListener('pointerdown', onTap);
       scene.dispose();
       sceneRef.current = null;

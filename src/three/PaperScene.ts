@@ -213,7 +213,12 @@ export class PaperScene {
 
   resetCamera(): void {
     // 作品ごとの推奨カメラ角度(垂直軸まわりの水平回転)を反映する
-    const angle = THREE.MathUtils.degToRad(this.model?.cameraAngle ?? 0);
+    this.setViewAngle(this.model?.cameraAngle ?? 0);
+  }
+
+  /** 水平回転角(度)を指定してカメラを配置する(検証・デバッグ用にも使う) */
+  setViewAngle(angleDeg: number): void {
+    const angle = THREE.MathUtils.degToRad(angleDeg);
     this.camera.position.set(
       CAMERA_POS.x * Math.cos(angle) + CAMERA_POS.z * Math.sin(angle),
       CAMERA_POS.y,
