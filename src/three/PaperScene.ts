@@ -3,10 +3,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { OrigamiModel } from '../engine/types';
 import type { FoldState } from '../engine/fold';
 
-const COLOR_FRONT = new THREE.Color('#3f5e94'); // 紙の表(藍)
-const COLOR_FRONT_HL = new THREE.Color('#6c8fc9'); // 表・折る面ハイライト
-const COLOR_BACK = new THREE.Color('#eae5da'); // 紙の裏(生成り)
-const COLOR_BACK_HL = new THREE.Color('#fff4cf');
+const COLOR_FRONT = new THREE.Color('#eda6a2'); // 紙の表(薄い赤)
+const COLOR_FRONT_HL = new THREE.Color('#f5c2bd'); // 表・折る面ハイライト
+const COLOR_BACK = new THREE.Color('#fbfaf7'); // 紙の裏(白)
+const COLOR_BACK_HL = new THREE.Color('#ffffff');
 const GUIDE_COLORS: Record<string, THREE.Color> = {
   valley: new THREE.Color('#38bdf8'),
   mountain: new THREE.Color('#f43f5e'),

@@ -8,7 +8,7 @@ import { birdModel } from './models/bird';
 import { squareBaseModel } from './models/squareBase';
 import { craneModel } from './models/crane';
 import type { OrigamiModel } from './engine/types';
-import { CreasePattern, GenericPattern } from './CreasePattern';
+import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import './App.css';
 
 const MODELS: OrigamiModel[] = [
@@ -151,7 +151,7 @@ export default function App() {
             <span className="card-index">{String(i + 1).padStart(2, '0')}</span>
             <div className="thumb">
               <Corners />
-              <CreasePattern model={m} />
+              <FinalShapePreview model={m} />
             </div>
             <div className="work-row">
               <span className={`work-name serif${m.name.ja.length > 3 ? ' long' : ''}`}>
@@ -184,7 +184,7 @@ export default function App() {
       </div>
 
       <p className="footnote">
-        PROTOTYPE — 収録4作品 / 4 models available.
+        PROTOTYPE — 収録6作品 / 6 models available.
         <button className="editor-link" onClick={() => setEditing(true)}>
           MODEL EDITOR — 工程データ作成(β)
         </button>

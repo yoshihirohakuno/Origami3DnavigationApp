@@ -1,3 +1,4 @@
+import { computeFoldState } from './engine/fold';
 import type { OrigamiModel, FoldType } from './engine/types';
 
 /** 折り種類ごとの表示色(UI全体で共通) */
@@ -100,6 +101,72 @@ export function CreasePattern({ model, size = 96 }: { model: OrigamiModel; size?
           strokeWidth={s.kind === 'boundary' ? 1.4 : 1}
           strokeDasharray={s.kind === 'boundary' || s.kind === 'crease' ? undefined : FOLD_DASH[s.kind]}
           strokeLinecap="round"
+        />
+      ))}
+    </svg>
+  );
+}
+
+function projectedArea(points: { x: number; y: number }[]): number {
+  let area = 0;
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % points.length];
+    area += a.x * b.y - b.x * a.y;
+  }
+  return area / 2;
+}
+
+/** 作品カード用:工程を最後まで適用した完成形をSVGで描く */
+export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; size?: number }) {
+  const state = computeFoldState(model, model.steps.length);
+  const used = new Set<number>();
+  for (const face of model.faces) {
+    for (const vi of face) used.add(vi);
+  }
+  const points = [...used].map((vi) => state.positions[vi]);
+  const minX = Math.min(...points.map((p) => p.x));
+  const maxX = Math.max(...points.map((p) => p.x));
+  const minY = Math.min(...points.map((p) => p.y));
+  const maxY = Math.max(...points.map((p) => p.y));
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const scale = 72 / Math.max(maxX - minX, maxY - minY, 0.001);
+  const sx = (x: number) => 50 + (x - cx) * scale;
+  const sy = (y: number) => 50 - (y - cy) * scale;
+
+  const faces = model.faces
+    .map((face, index) => {
+      const ps = face.map((vi) => state.positions[vi]);
+      const projected = ps.map((p) => ({ x: sx(p.x), y: sy(p.y) }));
+      const area = Math.abs(projectedArea(projected));
+      const p0 = ps[0];
+      const p1 = ps[1];
+      const p2 = ps[2];
+      const nz =
+        (p1.x - p0.x) * (p2.y - p0.y) -
+        (p1.y - p0.y) * (p2.x - p0.x);
+      return {
+        index,
+        area,
+        front: nz >= 0,
+        z: ps.reduce((sum, p) => sum + p.z, 0) / ps.length,
+        points: projected.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' '),
+      };
+    })
+    .filter((face) => face.area > 0.1)
+    .sort((a, b) => a.z - b.z);
+
+  return (
+    <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+      {faces.map((face) => (
+        <polygon
+          key={face.index}
+          points={face.points}
+          fill={face.front ? '#eda6a2' : '#fbfaf7'}
+          stroke="#25262c"
+          strokeWidth="0.85"
+          strokeLinejoin="round"
         />
       ))}
     </svg>

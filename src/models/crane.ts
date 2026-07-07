@@ -5,6 +5,7 @@ const COS = Math.cos(ROT);
 const SIN = Math.sin(ROT);
 const S = 2 - Math.SQRT2;
 const H = S / 2;
+const HEAD_F = 0.28;
 const ANGLE = 176;
 
 function r(x: number, y: number): [number, number] {
@@ -269,18 +270,90 @@ const backPetalSteps: FoldStep[] = [
   ),
 ];
 
+const craneHeadA: FoldOp = {
+  axis: [9, 10],
+  moving: [2, 14, 15],
+  type: 'inside-reverse',
+  angle: 118,
+  sweep: 'front',
+};
+const craneTail: FoldOp = {
+  axis: [12, 9],
+  moving: [8],
+  type: 'inside-reverse',
+  angle: 116,
+  sweep: 'back',
+};
+const craneHeadTip: FoldOp = {
+  axis: [14, 15],
+  moving: [2],
+  type: 'inside-reverse',
+  angle: 112,
+  sweep: 'front',
+};
+const frontWing: FoldOp = {
+  axis: [0, 5],
+  moving: [4],
+  type: 'valley',
+  angle: 82,
+  direction: 1,
+};
+const backWing: FoldOp = {
+  axis: [0, 7],
+  moving: [6],
+  type: 'valley',
+  angle: 82,
+  direction: -1,
+};
+
+const finishSteps: FoldStep[] = [
+  oneFold(
+    craneHeadA,
+    {
+      ja: '右の細い先を紙の間で上へ中割り折りして、首を立てます。',
+      en: 'Inside-reverse the thin right point upward between the layers to raise the neck.',
+    },
+    {
+      ja: '先端を外へかぶせず、左右の紙の間へ割り込ませます。',
+      en: 'Tuck the point between the left and right layers, not over the outside.',
+    },
+  ),
+  oneFold(craneTail, {
+    ja: '反対側の細い先も中割り折りして、尾を少し上げます。',
+    en: 'Inside-reverse the opposite thin point too, lifting it slightly to form the tail.',
+  }),
+  oneFold(
+    craneHeadTip,
+    {
+      ja: '首の先を小さく下へ中割り折りして、頭を作ります。',
+      en: 'Inside-reverse the tip of the neck downward to make the head.',
+    },
+    {
+      ja: '小さく折ると、くちばしが短く整います。',
+      en: 'A small fold keeps the beak short and tidy.',
+    },
+  ),
+  oneFold(frontWing, {
+    ja: '手前の大きな三角を下へ谷折りして、片方の羽を下げます。',
+    en: 'Valley-fold the large front triangle downward to lower one wing.',
+  }),
+  oneFold(backWing, {
+    ja: '反対側の大きな三角も下へ谷折りし、形を整えて鶴の完成です。',
+    en: 'Valley-fold the opposite large triangle downward and shape the finished crane.',
+  }),
+];
 /**
  * 鶴 / Crane
  *
  * 一般的な鶴の序盤:対角線と十字の折りすじを作る → 正方基本形 →
- * 前後の花弁折りで鶴の基本形へ進めるモデル。
+ * 前後の花弁折りで鳥の基本形へ進み、首・尾・頭・羽まで折るモデル。
  * 花弁折りの追加頂点は、未回転の紙座標で s = 2 - sqrt(2) の角度二等分点を
  * 置いてから squareBaseModel と同じ -112.5° 回転をかけている。
  */
 export const craneModel: OrigamiModel = {
   id: 'crane',
-  name: { ja: '鶴の基本形', en: 'Crane Base' },
-  difficulty: 4,
+  name: { ja: '鶴', en: 'Crane' },
+  difficulty: 5,
   vertices: [
     r(0, 0), //  0: 中心O
     r(1, 0), //  1: 辺中点E
@@ -296,6 +369,8 @@ export const craneModel: OrigamiModel = {
     r(H, H), // 11: 前面横折りの対角線交点
     r(0, -S), // 12: 裏面花弁折り点S
     r(H, -H), // 13: 裏面横折りの対角線交点
+    r(1 + HEAD_F * (S - 1), 1 - HEAD_F), // 14: 頭の中割り折り線・右端
+    r(1 - HEAD_F, 1 + HEAD_F * (S - 1)), // 15: 頭の中割り折り線・左端
   ],
   faces: [
     // 前面フラップ S1 + S2。2本の斜線と横折りを事前分割しておく。
@@ -318,5 +393,5 @@ export const craneModel: OrigamiModel = {
     [13, 8, 9],
     [9, 8, 1],
   ],
-  steps: [...creaseSteps, squareBaseStep, ...frontPetalSteps, ...backPetalSteps],
+  steps: [...creaseSteps, squareBaseStep, ...frontPetalSteps, ...backPetalSteps, ...finishSteps],
 };
