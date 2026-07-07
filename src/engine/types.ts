@@ -52,6 +52,8 @@ export interface FoldStep {
 export interface OrigamiModel {
   id: string;
   name: LocalizedText;
+  /** 既定カメラの水平回転角(度)。立体的な完成形を斜めから見せる時に指定 */
+  cameraAngle?: number;
   /** 難易度 1〜5 */
   difficulty: number;
   /** 展開図上の頂点座標。紙は一辺2程度の正方形を想定 */

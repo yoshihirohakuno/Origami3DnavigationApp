@@ -88,6 +88,7 @@ export class PaperScene {
 
   setModel(model: OrigamiModel): void {
     this.model = model;
+    this.resetCamera();
     this.tris = [];
     this.edgePairs = [];
     model.faces.forEach((face, fi) => {
@@ -211,7 +212,13 @@ export class PaperScene {
   }
 
   resetCamera(): void {
-    this.camera.position.copy(CAMERA_POS);
+    // 作品ごとの推奨カメラ角度(垂直軸まわりの水平回転)を反映する
+    const angle = THREE.MathUtils.degToRad(this.model?.cameraAngle ?? 0);
+    this.camera.position.set(
+      CAMERA_POS.x * Math.cos(angle) + CAMERA_POS.z * Math.sin(angle),
+      CAMERA_POS.y,
+      -CAMERA_POS.x * Math.sin(angle) + CAMERA_POS.z * Math.cos(angle),
+    );
     this.controls.target.set(0, 0, 0);
     this.controls.update();
   }

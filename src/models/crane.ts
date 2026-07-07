@@ -1,6 +1,6 @@
 import type { FoldOp, FoldStep, OrigamiModel } from '../engine/types';
 
-const ROT = (-112.5 * Math.PI) / 180;
+const ROT = (-135 * Math.PI) / 180;
 const COS = Math.cos(ROT);
 const SIN = Math.sin(ROT);
 const S = 2 - Math.SQRT2;
@@ -58,14 +58,14 @@ const creaseSteps: FoldStep[] = [
     },
   ),
   oneFold(
-    { axis: [4, 8], moving: [5, 6, 7, 12], type: 'valley', angle: ANGLE, direction: 1 },
+    { axis: [4, 8], moving: [5, 6, 7, 12, 16], type: 'valley', angle: ANGLE, direction: 1 },
     {
       ja: '反対の対角線でも、角と角を合わせて三角に谷折りします。',
       en: 'Valley-fold the opposite diagonal, again matching corner to corner.',
     },
   ),
   openFold(
-    { axis: [4, 8], moving: [5, 6, 7, 12], type: 'valley', angle: ANGLE, direction: 1 },
+    { axis: [4, 8], moving: [5, 6, 7, 12, 16], type: 'valley', angle: ANGLE, direction: 1 },
     {
       ja: 'もう一度開き、2本の対角線の折りすじを残します。',
       en: 'Unfold again, leaving both diagonal creases.',
@@ -101,39 +101,24 @@ const creaseSteps: FoldStep[] = [
   ),
 ];
 
+/**
+ * 正方基本形のたたみ込み。
+ * 本物の正方基本形では対角線は面の中で平ら(180°)のままで、
+ * 折れるのは十字の折りすじ(中線)4本だけ。固定面(S1+S2=前面)から
+ * 中線3本を軸に±176°の連鎖回転でアコーディオン状に畳む。
+ */
 const squareBaseStep: FoldStep = step(
   [
     {
-      axis: [0, 2],
-      moving: [3, 4, 5, 6, 7, 8, 10, 12, 13],
-      type: 'valley',
-      angle: ANGLE,
-      direction: -1,
-    },
-    {
       axis: [0, 3],
-      moving: [4, 5, 6, 7, 8, 12, 13],
+      moving: [4, 5, 6, 7, 8, 12, 13, 16],
       type: 'mountain',
       angle: ANGLE,
       direction: 1,
-    },
-    {
-      axis: [0, 4],
-      moving: [5, 6, 7, 8, 12, 13],
-      type: 'valley',
-      angle: ANGLE,
-      direction: -1,
     },
     {
       axis: [0, 5],
       moving: [6, 7, 8, 12, 13],
-      type: 'mountain',
-      angle: ANGLE,
-      direction: 1,
-    },
-    {
-      axis: [0, 6],
-      moving: [7, 8, 12, 13],
       type: 'valley',
       angle: ANGLE,
       direction: -1,
@@ -259,9 +244,11 @@ const backPetalSteps: FoldStep[] = [
   }),
   step(
     [
-      { axis: [8, 12], moving: [7], type: 'valley', angle: ANGLE, direction: 1 },
-      { axis: [8, 9], moving: [1], type: 'valley', angle: ANGLE, direction: -1 },
-      { axis: [13, 12], moving: [8], type: 'mountain', angle: ANGLE, direction: 1 },
+      // 頂点1・3(外側ページ)は前面の花弁折りで畳み済み。裏面では
+      // 内側ページの側点5・7をタックし、先端8を持ち上げる。
+      { axis: [8, 12], moving: [7], type: 'valley', angle: ANGLE, direction: -1 },
+      { axis: [6, 16], moving: [5], type: 'valley', angle: ANGLE, direction: 1 },
+      { axis: [13, 12], moving: [8], type: 'mountain', angle: ANGLE, direction: -1 },
     ],
     {
       ja: '裏側の1枚も下から開き、左右を内側へたたみながら花弁折りして鶴の基本形にします。',
@@ -270,164 +257,67 @@ const backPetalSteps: FoldStep[] = [
   ),
 ];
 
-const craneHeadA: FoldOp = {
-  axis: [9, 10],
-  moving: [2, 14, 15],
+/**
+ * 仕上げ。鳥の基本形の下に残る2本の細い先(角4・6)が首と尾、
+ * 花弁折りで持ち上げた先端(2・8)が羽になる。
+ */
+const craneNeck: FoldOp = {
+  axis: [9, 13],
+  moving: [6],
   type: 'inside-reverse',
-  angle: 118,
+  angle: 142,
   sweep: 'front',
 };
 const craneTail: FoldOp = {
-  axis: [12, 9],
-  moving: [8],
+  axis: [13, 10],
+  moving: [4],
   type: 'inside-reverse',
-  angle: 116,
+  angle: 142,
   sweep: 'back',
 };
-const craneHeadTip: FoldOp = {
-  axis: [14, 15],
-  moving: [2],
-  type: 'inside-reverse',
-  angle: 112,
-  sweep: 'front',
-};
 const frontWing: FoldOp = {
-  axis: [0, 5],
-  moving: [4],
+  axis: [9, 10],
+  moving: [2, 14, 15],
   type: 'valley',
-  angle: 82,
+  angle: 95,
   direction: 1,
 };
 const backWing: FoldOp = {
-  axis: [0, 7],
-  moving: [6],
+  axis: [9, 10],
+  moving: [8],
   type: 'valley',
-  angle: 82,
+  angle: 95,
   direction: -1,
 };
 
-const finishSteps: FoldStep[] = [
+/**
+ * 工程列。序盤は「折りすじをつけて開く→折りすじに沿って正方基本形にたたむ」
+ * という標準手順(実折りの三角×2からのつぶし折りは連鎖回転で表現できないため、
+ * 幾何的に等価で検証済みのこの手順を採用)。
+ */
+const siteCraneSteps: FoldStep[] = [
+  ...creaseSteps,
+  squareBaseStep,
+  frontPetalSteps[6],
+  backPetalSteps[6],
   oneFold(
-    craneHeadA,
+    craneNeck,
     {
-      ja: '右の細い先を紙の間で上へ中割り折りして、首を立てます。',
-      en: 'Inside-reverse the thin right point upward between the layers to raise the neck.',
+      ja: '下の細い先の1本を、紙の間へ割り込ませながら上へ中割り折りして首にします。',
+      en: 'Inside-reverse one thin lower point upward between the layers to form the neck.',
     },
     {
-      ja: '先端を外へかぶせず、左右の紙の間へ割り込ませます。',
-      en: 'Tuck the point between the left and right layers, not over the outside.',
+      ja: '先端を外へかぶせず、左右の紙の間へ入れます。',
+      en: 'Tuck the point between the layers, not over the outside.',
     },
   ),
   oneFold(craneTail, {
-    ja: '反対側の細い先も中割り折りして、尾を少し上げます。',
-    en: 'Inside-reverse the opposite thin point too, lifting it slightly to form the tail.',
+    ja: 'もう1本の細い先も反対側へ中割り折りして、尾にします。',
+    en: 'Inside-reverse the other thin point the opposite way to form the tail.',
   }),
-  oneFold(
-    craneHeadTip,
-    {
-      ja: '首の先を小さく下へ中割り折りして、頭を作ります。',
-      en: 'Inside-reverse the tip of the neck downward to make the head.',
-    },
-    {
-      ja: '小さく折ると、くちばしが短く整います。',
-      en: 'A small fold keeps the beak short and tidy.',
-    },
-  ),
-  oneFold(frontWing, {
-    ja: '手前の大きな三角を下へ谷折りして、片方の羽を下げます。',
-    en: 'Valley-fold the large front triangle downward to lower one wing.',
-  }),
-  oneFold(backWing, {
-    ja: '反対側の大きな三角も下へ谷折りし、形を整えて鶴の完成です。',
-    en: 'Valley-fold the opposite large triangle downward and shape the finished crane.',
-  }),
-];
-
-const finalShapeFold: FoldOp = {
-  axis: [0, 9],
-  moving: [4, 6],
-  type: 'valley',
-  angle: 12,
-  direction: 1,
-};
-
-const siteCraneSteps: FoldStep[] = [
-  step(creaseSteps[0].folds, {
-    ja: '上下の角を合わせて、三角形に折ります。',
-    en: 'Bring the top and bottom corners together and fold a triangle.',
-  }),
-  step(creaseSteps[2].folds, {
-    ja: '三角形をさらに半分に折ります。',
-    en: 'Fold the triangle in half again.',
-  }),
-  step(squareBaseStep.folds.slice(0, 3), {
-    ja: 'ふくろになっている部分を開き、正方形になるようにつぶして折ります。',
-    en: 'Open the pocket and squash-fold it into a square.',
-  }),
-  oneFold(
-    { axis: [0, 7], moving: [8, 13], type: 'mountain', angle: ANGLE, direction: 1 },
-    {
-      ja: '裏返して、上の1枚を左へめくります。',
-      en: 'Turn it over and swing the top layer to the left.',
-    },
-  ),
-  step(squareBaseStep.folds, {
-    ja: '反対側も同じようにふくろを開き、正方形にたたみます。',
-    en: 'Open and squash-fold the other pocket into a square too.',
-  }),
-  step(
-    [...frontPetalSteps[0].folds, ...frontPetalSteps[1].folds],
-    {
-      ja: '左右のふちを中心の折りすじに合わせ、折りすじをつけて戻します。',
-      en: 'Fold both edges to the center crease, make the creases, then unfold them.',
-    },
-  ),
-  step(
-    [...frontPetalSteps[2].folds, ...frontPetalSteps[6].folds],
-    {
-      ja: '上の三角にも折りすじをつけ、手前を開いて花弁折りします。',
-      en: 'Crease the top triangle, then open the front layer and petal-fold it upward.',
-    },
-  ),
-  step(backPetalSteps[6].folds, {
-    ja: '反対側も同じように開いて、花弁折りします。',
-    en: 'Repeat the same petal fold on the opposite side.',
-  }),
-  step(
-    [...frontPetalSteps[0].folds, ...frontPetalSteps[1].folds],
-    {
-      ja: '手前の左右の下ふちを中心に合わせ、細い形に折ります。',
-      en: 'Fold the front lower edges to the center to narrow the shape.',
-    },
-  ),
-  step(
-    [...backPetalSteps[0].folds, ...backPetalSteps[1].folds],
-    {
-      ja: '裏側も同じように、左右の下ふちを中心へ折ります。',
-      en: 'Fold the lower edges on the back to the center in the same way.',
-    },
-  ),
-  step(
-    [...finishSteps[0].folds, ...finishSteps[1].folds],
-    {
-      ja: '下の細い2本を羽の間へ持ち上げ、首と尾を中割り折りします。',
-      en: 'Lift the two thin lower points between the wings and inside-reverse them for the neck and tail.',
-    },
-  ),
-  step(finishSteps[2].folds, {
-    ja: '片方の先を小さく中割り折りして、頭を作ります。',
-    en: 'Inside-reverse one tip downward to make the head.',
-  }),
-  step(
-    [...finishSteps[3].folds, ...finishSteps[4].folds],
-    {
-      ja: '羽を左右に広げ、胴を少し開いて立体的に整えます。',
-      en: 'Spread the wings and open the body slightly to give the crane volume.',
-    },
-  ),
-  oneFold(finalShapeFold, {
-    ja: '全体の角度を整えたら、鶴のできあがりです。',
-    en: 'Adjust the angles and the crane is complete.',
+  step([frontWing, backWing], {
+    ja: '花弁折りで持ち上げた大きな2枚を左右へ開き、羽にして鶴のできあがりです。',
+    en: 'Open the two large petal flaps outward as the wings — the crane is complete.',
   }),
 ];
 /**
@@ -442,6 +332,7 @@ export const craneModel: OrigamiModel = {
   id: 'crane',
   name: { ja: '鶴', en: 'Crane' },
   difficulty: 5,
+  cameraAngle: 50,
   vertices: [
     r(0, 0), //  0: 中心O
     r(1, 0), //  1: 辺中点E
@@ -459,6 +350,7 @@ export const craneModel: OrigamiModel = {
     r(H, -H), // 13: 裏面横折りの対角線交点
     r(1 + HEAD_F * (S - 1), 1 - HEAD_F), // 14: 頭の中割り折り線・右端
     r(1 - HEAD_F, 1 + HEAD_F * (S - 1)), // 15: 頭の中割り折り線・左端
+    r(-S, 0), // 16: 内側ページ(S4/S5)の花弁折り点(中線O-5上)
   ],
   faces: [
     // 前面フラップ S1 + S2。2本の斜線と横折りを事前分割しておく。
@@ -468,10 +360,12 @@ export const craneModel: OrigamiModel = {
     [0, 11, 10],
     [11, 2, 10],
     [10, 2, 3],
-    // 反対側の層。
+    // 反対側の層。内側ページ(S4/S5)は頂点5のタック用折り線で分割済み。
     [0, 3, 4],
-    [0, 4, 5],
-    [0, 5, 6],
+    [0, 4, 16],
+    [16, 4, 5],
+    [0, 16, 6],
+    [16, 5, 6],
     [0, 6, 7],
     // 裏面フラップ S7 + S8。前面と同じ花弁折りの鏡映。
     [0, 12, 13],
