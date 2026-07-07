@@ -101,9 +101,8 @@ npm run dev
 
 ## 実装メモ:鶴
 
-鶴は完成形まで実装済み。流れは、対角線と十字の折りすじ → 正方基本形 →
-前後の花弁折り → 首・尾・頭の中割り折り → 左右の羽を下げる、の順番。
-花弁折りの厳密点は `tools/solve-crane-petal.mjs` で検算できる。
+鶴は Web Japan Kids Web の鶴ページを基準にした14工程で実装済み。流れは、三角に折る → さらに半分 → ふくろを開いて正方形 → 反対側も正方形 → 花弁折り → 細く折る → 首・尾・頭の中割り折り → 羽を広げる、の順番。
+参照元: https://web-japan.org/kidsweb/ja/virtual/origami/exploring02f.html。花弁折りの厳密点は `tools/solve-crane-petal.mjs` で検算できる。
 
 注意:シート座標は -112.5° 回転済み(squareBase.ts コメント参照)。
 新しい折り線の座標はこの回転後の座標系で与えること。

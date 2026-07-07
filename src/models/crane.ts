@@ -342,6 +342,94 @@ const finishSteps: FoldStep[] = [
     en: 'Valley-fold the opposite large triangle downward and shape the finished crane.',
   }),
 ];
+
+const finalShapeFold: FoldOp = {
+  axis: [0, 9],
+  moving: [4, 6],
+  type: 'valley',
+  angle: 12,
+  direction: 1,
+};
+
+const siteCraneSteps: FoldStep[] = [
+  step(creaseSteps[0].folds, {
+    ja: '上下の角を合わせて、三角形に折ります。',
+    en: 'Bring the top and bottom corners together and fold a triangle.',
+  }),
+  step(creaseSteps[2].folds, {
+    ja: '三角形をさらに半分に折ります。',
+    en: 'Fold the triangle in half again.',
+  }),
+  step(squareBaseStep.folds.slice(0, 3), {
+    ja: 'ふくろになっている部分を開き、正方形になるようにつぶして折ります。',
+    en: 'Open the pocket and squash-fold it into a square.',
+  }),
+  oneFold(
+    { axis: [0, 7], moving: [8, 13], type: 'mountain', angle: ANGLE, direction: 1 },
+    {
+      ja: '裏返して、上の1枚を左へめくります。',
+      en: 'Turn it over and swing the top layer to the left.',
+    },
+  ),
+  step(squareBaseStep.folds, {
+    ja: '反対側も同じようにふくろを開き、正方形にたたみます。',
+    en: 'Open and squash-fold the other pocket into a square too.',
+  }),
+  step(
+    [...frontPetalSteps[0].folds, ...frontPetalSteps[1].folds],
+    {
+      ja: '左右のふちを中心の折りすじに合わせ、折りすじをつけて戻します。',
+      en: 'Fold both edges to the center crease, make the creases, then unfold them.',
+    },
+  ),
+  step(
+    [...frontPetalSteps[2].folds, ...frontPetalSteps[6].folds],
+    {
+      ja: '上の三角にも折りすじをつけ、手前を開いて花弁折りします。',
+      en: 'Crease the top triangle, then open the front layer and petal-fold it upward.',
+    },
+  ),
+  step(backPetalSteps[6].folds, {
+    ja: '反対側も同じように開いて、花弁折りします。',
+    en: 'Repeat the same petal fold on the opposite side.',
+  }),
+  step(
+    [...frontPetalSteps[0].folds, ...frontPetalSteps[1].folds],
+    {
+      ja: '手前の左右の下ふちを中心に合わせ、細い形に折ります。',
+      en: 'Fold the front lower edges to the center to narrow the shape.',
+    },
+  ),
+  step(
+    [...backPetalSteps[0].folds, ...backPetalSteps[1].folds],
+    {
+      ja: '裏側も同じように、左右の下ふちを中心へ折ります。',
+      en: 'Fold the lower edges on the back to the center in the same way.',
+    },
+  ),
+  step(
+    [...finishSteps[0].folds, ...finishSteps[1].folds],
+    {
+      ja: '下の細い2本を羽の間へ持ち上げ、首と尾を中割り折りします。',
+      en: 'Lift the two thin lower points between the wings and inside-reverse them for the neck and tail.',
+    },
+  ),
+  step(finishSteps[2].folds, {
+    ja: '片方の先を小さく中割り折りして、頭を作ります。',
+    en: 'Inside-reverse one tip downward to make the head.',
+  }),
+  step(
+    [...finishSteps[3].folds, ...finishSteps[4].folds],
+    {
+      ja: '羽を左右に広げ、胴を少し開いて立体的に整えます。',
+      en: 'Spread the wings and open the body slightly to give the crane volume.',
+    },
+  ),
+  oneFold(finalShapeFold, {
+    ja: '全体の角度を整えたら、鶴のできあがりです。',
+    en: 'Adjust the angles and the crane is complete.',
+  }),
+];
 /**
  * 鶴 / Crane
  *
@@ -393,5 +481,5 @@ export const craneModel: OrigamiModel = {
     [13, 8, 9],
     [9, 8, 1],
   ],
-  steps: [...creaseSteps, squareBaseStep, ...frontPetalSteps, ...backPetalSteps, ...finishSteps],
+  steps: siteCraneSteps,
 };

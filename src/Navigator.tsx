@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { OrigamiModel, FoldType } from './engine/types';
 import { computeFoldState } from './engine/fold';
 import { PaperScene } from './three/PaperScene';
+import { CraneFinalPreview } from './CreasePattern';
 
 const FOLD_LABEL: Record<FoldType, { ja: string; en: string }> = {
   valley: { ja: '谷折り', en: 'VALLEY ・ TOWARD YOU' },
@@ -160,6 +161,11 @@ export function Navigator({ model, onExit, onComplete }: Props) {
 
       <div className="canvas-wrap">
         <canvas ref={canvasRef} />
+        {finished && model.id === 'crane' && (
+          <div className="final-illustration">
+            <CraneFinalPreview size={260} />
+          </div>
+        )}
         <div className={`fold-badge ${mixed ? 'mixed' : foldType}`}>
           <i />
           <div>

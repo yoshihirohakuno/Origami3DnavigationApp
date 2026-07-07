@@ -117,8 +117,30 @@ function projectedArea(points: { x: number; y: number }[]): number {
   return area / 2;
 }
 
+/** 鶴だけは折り計算の投影ではなく、完成後として読める専用シルエットを使う */
+export function CraneFinalPreview({
+  size = 96,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <svg className={className} viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+      <polygon points="18,56 44,42 38,58" fill="#fbfaf7" stroke="#25262c" strokeWidth="1.2" strokeLinejoin="round" />
+      <polygon points="38,52 58,30 77,61 53,76" fill="#eda6a2" stroke="#25262c" strokeWidth="1.2" strokeLinejoin="round" />
+      <polygon points="44,52 32,87 58,72" fill="#f5c2bd" stroke="#25262c" strokeWidth="1.2" strokeLinejoin="round" />
+      <polygon points="54,43 68,22 83,18 73,29 83,35 67,34" fill="#eda6a2" stroke="#25262c" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M38 52 L54 43 L53 76 Z" fill="#fbfaf7" stroke="#25262c" strokeWidth="1.2" strokeLinejoin="round" />
+      <path d="M31 60 C43 65 55 65 67 60" fill="none" stroke="#25262c" strokeWidth="1" strokeLinecap="round" opacity="0.45" />
+    </svg>
+  );
+}
+
 /** 作品カード用:工程を最後まで適用した完成形をSVGで描く */
 export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; size?: number }) {
+  if (model.id === 'crane') return <CraneFinalPreview size={size} />;
+
   const state = computeFoldState(model, model.steps.length);
   const used = new Set<number>();
   for (const face of model.faces) {

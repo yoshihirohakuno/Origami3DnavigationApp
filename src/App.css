@@ -452,6 +452,22 @@
   background: radial-gradient(120% 90% at 50% 30%, #20222a 0%, #131418 70%, #0e0f12 100%);
 }
 
+.final-illustration {
+  position: absolute;
+  inset: 70px 18px 78px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(14, 15, 18, 0.72);
+  border: 1px solid var(--border-soft);
+  pointer-events: none;
+}
+
+.final-illustration svg {
+  width: min(70%, 320px);
+  max-height: 92%;
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.35));
+}
 .fold-badge {
   position: absolute;
   top: 14px;
