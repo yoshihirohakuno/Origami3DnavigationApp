@@ -9,6 +9,7 @@ const FOLD_LABEL: Record<FoldType, { ja: string; en: string }> = {
   unfold: { ja: '開く', en: 'UNFOLD' },
   'inside-reverse': { ja: '中割り折り', en: 'INSIDE REVERSE' },
   'outside-reverse': { ja: 'かぶせ折り', en: 'OUTSIDE REVERSE' },
+  assemble: { ja: '組み立て', en: 'ASSEMBLE' },
 };
 
 interface Props {

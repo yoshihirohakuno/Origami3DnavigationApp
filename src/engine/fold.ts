@@ -63,7 +63,7 @@ function rotateAbout(out: THREE.Vector3, origin: THREE.Vector3, q: THREE.Quatern
   out.sub(origin).applyQuaternion(q).add(origin);
 }
 
-/** 折り線から最も遠い動く頂点の回転軌道をサンプルする(矢印用) */
+/** 折り線から最も遠い動く頂点の回転(+平行移動)軌道をサンプルする(矢印用) */
 function buildArrowPath(
   op: FoldOp,
   sign: number,
@@ -71,6 +71,9 @@ function buildArrowPath(
   p1: THREE.Vector3,
   axisDir: THREE.Vector3,
 ): THREE.Vector3[] {
+  const translate = op.translate;
+  // 平行移動が主体の組み立てでは、移動量が最大に見える頂点(=軸から遠い頂点)より
+  // 単純に代表頂点でよいが、既存同様「軸から最も遠い頂点」を採用する
   let far = op.moving[0];
   let farDist = -1;
   for (const vi of op.moving) {
@@ -84,9 +87,15 @@ function buildArrowPath(
   const path: THREE.Vector3[] = [];
   const total = sign * THREE.MathUtils.degToRad(op.angle);
   for (let s = 0; s <= 8; s++) {
-    _q.setFromAxisAngle(axisDir, (total * s) / 8);
+    const f = s / 8;
+    _q.setFromAxisAngle(axisDir, total * f);
     const p = positions[far].clone();
     rotateAbout(p, p1, _q);
+    if (translate) {
+      p.x += translate[0] * f;
+      p.y += translate[1] * f;
+      p.z += translate[2] * f;
+    }
     path.push(p);
   }
   return path;
@@ -130,10 +139,17 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
       }
 
       if (a > 0) {
-        const angle = sign * THREE.MathUtils.degToRad(op.angle) * easeInOut(a);
+        const e = easeInOut(a);
+        const angle = sign * THREE.MathUtils.degToRad(op.angle) * e;
         _q.setFromAxisAngle(axisDir, angle);
+        const tr = op.translate;
         for (const vi of op.moving) {
           rotateAbout(positions[vi], p1, _q);
+          if (tr) {
+            positions[vi].x += tr[0] * e;
+            positions[vi].y += tr[1] * e;
+            positions[vi].z += tr[2] * e;
+          }
         }
       }
     }

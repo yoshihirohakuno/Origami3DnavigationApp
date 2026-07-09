@@ -7,6 +7,7 @@ import { tulipModel } from './models/tulip';
 import { birdModel } from './models/bird';
 import { squareBaseModel } from './models/squareBase';
 import { craneModel } from './models/crane';
+import { shurikenModel } from './models/shuriken';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import './App.css';
@@ -18,11 +19,11 @@ const MODELS: OrigamiModel[] = [
   birdModel,
   squareBaseModel,
   craneModel,
+  shurikenModel,
 ];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ) */
 const COMING_SOON = [
-  { ja: '手裏剣', en: 'Shuriken', difficulty: 2 },
   { ja: '箱', en: 'Box', difficulty: 2 },
   { ja: '兜', en: 'Helmet', difficulty: 2 },
   { ja: 'ハート', en: 'Heart', difficulty: 2 },
@@ -184,7 +185,7 @@ export default function App() {
       </div>
 
       <p className="footnote">
-        PROTOTYPE — 収録6作品 / 6 models available.
+        PROTOTYPE — 収録7作品 / 7 models available.
         <button className="editor-link" onClick={() => setEditing(true)}>
           MODEL EDITOR — 工程データ作成(β)
         </button>

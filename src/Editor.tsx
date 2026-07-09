@@ -18,6 +18,7 @@ const TYPE_LABEL: Record<FoldType, string> = {
   unfold: '開く',
   'inside-reverse': '中割り折り',
   'outside-reverse': 'かぶせ折り',
+  assemble: '組み立て',
 };
 
 /** 空の新規モデル(一辺2のひし形) */

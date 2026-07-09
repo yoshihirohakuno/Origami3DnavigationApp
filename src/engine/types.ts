@@ -10,7 +10,13 @@
  * ほぼ平らに畳まれた多層フラップを折り線を軸に約180°回転させる表現。
  * レイヤーの前後が入れ替わるため、見える面の色も実物と同様になる。
  */
-export type FoldType = 'valley' | 'mountain' | 'unfold' | 'inside-reverse' | 'outside-reverse';
+export type FoldType =
+  | 'valley'
+  | 'mountain'
+  | 'unfold'
+  | 'inside-reverse'
+  | 'outside-reverse'
+  | 'assemble';
 
 /** 日英併記テキスト */
 export interface LocalizedText {
@@ -35,6 +41,12 @@ export interface FoldOp {
    * 基本形のたたみ込みなど、連鎖回転で山谷の自動判定が使えない場合に使う。
    */
   direction?: 1 | -1;
+  /**
+   * 剛体の平行移動(組み立て用)。指定すると回転後の `moving` 頂点へ
+   * `translate * ease(a)` を加算する(回転と併用可、単独でも可)。
+   * 2枚組みのユニットを中心へ寄せて交差させる工程で使う。
+   */
+  translate?: [number, number, number];
 }
 
 /**
@@ -54,6 +66,12 @@ export interface OrigamiModel {
   name: LocalizedText;
   /** 既定カメラの水平回転角(度)。立体的な完成形を斜めから見せる時に指定 */
   cameraAngle?: number;
+  /**
+   * 既定カメラ位置の上書き [x,y,z]。平らな作品(手裏剣など)を正面寄りから
+   * 見せたい時に指定(未指定時は全体既定の斜め見下ろし)。cameraAngle の
+   * 水平回転はこの位置に対して適用される。
+   */
+  cameraPos?: [number, number, number];
   /** 難易度 1〜5 */
   difficulty: number;
   /** 展開図上の頂点座標。紙は一辺2程度の正方形を想定 */
@@ -61,4 +79,11 @@ export interface OrigamiModel {
   /** 面(頂点インデックスの多角形、表(+z)から見て反時計回り) */
   faces: number[][];
   steps: FoldStep[];
+  /**
+   * 2枚組み(モジュラー)用。各面がどのシート由来かを 0/1… で示す
+   * (長さ=faces数)。指定時は `sheetColors` の色で塗り分ける。
+   */
+  faceSheet?: number[];
+  /** シートごとの表裏色(faceSheet と対応)。未指定時はグローバル色。 */
+  sheetColors?: { front: string; back: string }[];
 }

@@ -13,6 +13,7 @@ const GUIDE_COLORS: Record<string, THREE.Color> = {
   unfold: new THREE.Color('#94a3b8'),
   'inside-reverse': new THREE.Color('#f59e0b'),
   'outside-reverse': new THREE.Color('#a78bfa'),
+  assemble: new THREE.Color('#c084fc'),
 };
 
 const CAMERA_POS = new THREE.Vector3(0, -2.4, 4.0);
@@ -38,6 +39,10 @@ export class PaperScene {
   private tris: [number, number, number, number][] = [];
   /** 面の輪郭線の頂点ペア */
   private edgePairs: [number, number][] = [];
+  /** 2枚組み用:面→シート番号。null なら単一シート(グローバル色) */
+  private faceSheet: number[] | null = null;
+  /** シートごとの [表, 表HL, 裏, 裏HL] 色 */
+  private sheetPalette: [THREE.Color, THREE.Color, THREE.Color, THREE.Color][] = [];
 
   private canvas: HTMLCanvasElement;
 
@@ -89,6 +94,14 @@ export class PaperScene {
   setModel(model: OrigamiModel): void {
     this.model = model;
     this.resetCamera();
+    // 2枚組みの色分けを準備(ハイライトは白へ寄せた明色)
+    this.faceSheet = model.faceSheet ?? null;
+    this.sheetPalette = (model.sheetColors ?? []).map(({ front, back }) => {
+      const f = new THREE.Color(front);
+      const b = new THREE.Color(back);
+      const white = new THREE.Color('#ffffff');
+      return [f, f.clone().lerp(white, 0.3), b, b.clone().lerp(white, 0.3)];
+    });
     this.tris = [];
     this.edgePairs = [];
     model.faces.forEach((face, fi) => {
@@ -133,7 +146,13 @@ export class PaperScene {
         b.subVectors(p2, p0);
         n.crossVectors(a, b).normalize();
         const hl = state.movingFaces.has(fi) && state.fraction < 1;
-        const col = isFront ? (hl ? COLOR_FRONT_HL : COLOR_FRONT) : hl ? COLOR_BACK_HL : COLOR_BACK;
+        let col: THREE.Color;
+        const pal = this.faceSheet ? this.sheetPalette[this.faceSheet[fi]] : undefined;
+        if (pal) {
+          col = isFront ? (hl ? pal[1] : pal[0]) : hl ? pal[3] : pal[2];
+        } else {
+          col = isFront ? (hl ? COLOR_FRONT_HL : COLOR_FRONT) : hl ? COLOR_BACK_HL : COLOR_BACK;
+        }
         for (const [k, p] of [p0, p1, p2].entries()) {
           const idx = ti * 3 + k;
           pAttr.setXYZ(idx, p.x, p.y, p.z);
@@ -219,10 +238,11 @@ export class PaperScene {
   /** 水平回転角(度)を指定してカメラを配置する(検証・デバッグ用にも使う) */
   setViewAngle(angleDeg: number): void {
     const angle = THREE.MathUtils.degToRad(angleDeg);
+    const base = this.model?.cameraPos ?? [CAMERA_POS.x, CAMERA_POS.y, CAMERA_POS.z];
     this.camera.position.set(
-      CAMERA_POS.x * Math.cos(angle) + CAMERA_POS.z * Math.sin(angle),
-      CAMERA_POS.y,
-      -CAMERA_POS.x * Math.sin(angle) + CAMERA_POS.z * Math.cos(angle),
+      base[0] * Math.cos(angle) + base[2] * Math.sin(angle),
+      base[1],
+      -base[0] * Math.sin(angle) + base[2] * Math.cos(angle),
     );
     this.controls.target.set(0, 0, 0);
     this.controls.update();

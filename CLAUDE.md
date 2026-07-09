@@ -15,6 +15,14 @@ Vite + React + TypeScript + three.js。リモート: https://github.com/yoshihir
 補足: Navigator は ResizeObserver で canvas のサイズ変化を監視(完成時に「完了を記録」ボタンが
 出てウィンドウリサイズ無しに canvas が縮むと、以前は完成形が隅にズレて表示されていた不具合を修正)。
 
+**手裏剣は2枚組み(モジュラー)で実装(3工程)。** おりがみくらぶ基準。2枚を同一 vertices/faces に
+左右に並べて同居させ、各正方形を「四隅を中心へ折る(坐布団折り)」→ 組み立てで中心へ寄せて交差。
+2枚目は45°回した向きに置くので、朱=軸沿いの菱形・藍=対角沿いの正方形になり、重ねると8方向へ
+尖った星になる(組み立ては平行移動だけで済み、面に垂直な回転を避けられる)。2枚組み用のエンジン
+拡張: `FoldOp.translate`(剛体平行移動・組み立て用)、`FoldType 'assemble'`、`OrigamiModel.faceSheet`/
+`sheetColors`(シート別の朱/藍色分け)、`cameraPos`(平らな作品を正面寄りで見せる)。真の編み込みは
+再現せず剛体移動の見た目上の組み(README「既知の制約」)。カードは ShurikenFinalPreview(手描き)。
+
 ## アーキテクチャ(詳細は README)
 
 - 作品 = 工程データ(`src/models/*.ts`)。展開図頂点+面+工程列。動画・画像は持たない

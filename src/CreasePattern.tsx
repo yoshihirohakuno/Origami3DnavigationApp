@@ -8,6 +8,7 @@ export const FOLD_COLORS: Record<FoldType, string> = {
   unfold: '#94a3b8',
   'inside-reverse': '#f59e0b',
   'outside-reverse': '#a78bfa',
+  assemble: '#c084fc',
 };
 
 /** 折り種類ごとの破線パターン(折り図の記法に準拠:谷=破線、山=一点鎖線) */
@@ -17,6 +18,7 @@ const FOLD_DASH: Record<FoldType, string | undefined> = {
   unfold: '2 3',
   'inside-reverse': '4 3',
   'outside-reverse': '6 2.5 1.5 2.5',
+  assemble: undefined,
 };
 
 export interface Segment {
@@ -137,9 +139,48 @@ export function CraneFinalPreview({
   );
 }
 
+/** 手裏剣だけは組み上げ星形を専用シルエットで描く(朱×藍の風車状4つ尖り) */
+export function ShurikenFinalPreview({
+  size = 96,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) {
+  // 上向きの風車ブレードを90°ずつ回して4枚。対で朱/藍に塗り分ける。
+  const blade = '50,50 67,45 50,7 46,43';
+  const colors = ['#e0492f', '#2f4b7c', '#e0492f', '#2f4b7c'];
+  return (
+    <svg className={className} viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+      {colors.map((c, i) => (
+        <polygon
+          key={i}
+          points={blade}
+          fill={c}
+          stroke="#25262c"
+          strokeWidth="1.2"
+          strokeLinejoin="round"
+          transform={`rotate(${i * 90} 50 50)`}
+        />
+      ))}
+      <rect
+        x="44"
+        y="44"
+        width="12"
+        height="12"
+        transform="rotate(45 50 50)"
+        fill="#1c1d22"
+        stroke="#25262c"
+        strokeWidth="1"
+      />
+    </svg>
+  );
+}
+
 /** 作品カード用:工程を最後まで適用した完成形をSVGで描く */
 export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; size?: number }) {
   if (model.id === 'crane') return <CraneFinalPreview size={size} />;
+  if (model.id === 'shuriken') return <ShurikenFinalPreview size={size} />;
 
   const state = computeFoldState(model, model.steps.length);
   const used = new Set<number>();
