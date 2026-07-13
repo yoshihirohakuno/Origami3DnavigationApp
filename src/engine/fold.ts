@@ -30,7 +30,9 @@ export interface FoldState {
 
 const _axisDir = new THREE.Vector3();
 const _q = new THREE.Quaternion();
+const _qSpin = new THREE.Quaternion();
 const _tmp = new THREE.Vector3();
+const Z_AXIS = new THREE.Vector3(0, 0, 1);
 
 /**
  * 谷折り=+z(手前)へ動く回転符号を返す。
@@ -91,6 +93,10 @@ function buildArrowPath(
     _q.setFromAxisAngle(axisDir, total * f);
     const p = positions[far].clone();
     rotateAbout(p, p1, _q);
+    if (op.spinZ) {
+      _qSpin.setFromAxisAngle(Z_AXIS, THREE.MathUtils.degToRad(op.spinZ) * f);
+      rotateAbout(p, p1, _qSpin);
+    }
     if (translate) {
       p.x += translate[0] * f;
       p.y += translate[1] * f;
@@ -142,9 +148,11 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
         const e = easeInOut(a);
         const angle = sign * THREE.MathUtils.degToRad(op.angle) * e;
         _q.setFromAxisAngle(axisDir, angle);
+        if (op.spinZ) _qSpin.setFromAxisAngle(Z_AXIS, THREE.MathUtils.degToRad(op.spinZ) * e);
         const tr = op.translate;
         for (const vi of op.moving) {
           rotateAbout(positions[vi], p1, _q);
+          if (op.spinZ) rotateAbout(positions[vi], p1, _qSpin);
           if (tr) {
             positions[vi].x += tr[0] * e;
             positions[vi].y += tr[1] * e;

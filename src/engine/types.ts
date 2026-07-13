@@ -47,6 +47,12 @@ export interface FoldOp {
    * 2枚組みのユニットを中心へ寄せて交差させる工程で使う。
    */
   translate?: [number, number, number];
+  /**
+   * 面内回転(組み立て用、度)。`axis[0]` の現在位置を通る z 平行軸まわりに
+   * `moving` 頂点を `spinZ * ease(a)` 度回す(+z から見て反時計回りが正)。
+   * 軸回転 → spinZ → translate の順に適用。裏返して向きを変える工程で使う。
+   */
+  spinZ?: number;
 }
 
 /**
