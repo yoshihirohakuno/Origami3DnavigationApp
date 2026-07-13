@@ -98,6 +98,8 @@ export function Navigator({ model, onExit, onComplete }: Props) {
           Math.round(p.y * 1000) / 1000,
           Math.round(p.z * 1000) / 1000,
         ]),
+      // モデルの面データ(層順のデバッグ用)
+      getModel: () => ({ faces: model.faces, faceSheet: model.faceSheet }),
     };
 
     return () => {

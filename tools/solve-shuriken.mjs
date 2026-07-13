@@ -1,177 +1,230 @@
-// 手裏剣(おりがみくらぶ・2枚組み)の折り工程ソルバ。
-// 理想的な180°反転(2D鏡映)で全9工程の頂点位置を計算し、
-// - 各工程後のシルエット(頂点座標)
-// - 組み立て(❺❻)の平行移動ベクトル
-// - 差し込み(❼❾)の折り線と相手ユニットの縁の一致
-// を検証して、shuriken.ts に書くべき数値を出力する。
+// 手裏剣(おりがみくらぶ・2枚組み)の折り工程ソルバ(v3)。
+// 理想的な180°反転(2D鏡映)で全工程を計算し、shuriken.ts に必要な数値を出す。
 //
-// シートのローカル展開図(非鏡映バリアント、帯 = x∈[0,0.5] に畳む):
-//   ❶ 観音折り: x=±0.5 で両端を中心へ(谷)
-//   ❷ 中心 x=0 で左半分を右へ(谷)
-//   ❸ 帯の端を斜め45°に折る: 上 (0,1)-(0.5,0.5) / 下 (0,-0.5)-(0.5,-1)(谷)
-//   ❹ 先端を折る: 上 (0,0)-(0.5,0.5) / 下 (0,-0.5)-(0.5,0)(谷)
-// 完成ユニット: 中央平行四辺形 + 先端 (1,0)・(-0.5,0) の稲妻形(全長1.5)
+// v3 の要点:
+// - ❹の折り線は❸の斜め辺と「平行」。ユニットは翼が斜めにずれた六角Z形
+//   (先端 (-0.5,0.5)・(1,-0.5)、中央の斜め帯 + 翼2枚)
+// - 組み立ては「朱を裏返して中央へ」「藍を朱の上にかさねる」(藍が上)
+// - さしこむ = 下のユニットの翼の先を、上のユニットの縁(=上のユニットの
+//   ❹折り線の像)で180°巻き込み、反対側の自分のポケットに差し込む。
+//   この巻き込み線は各シートの翼を横切る「新しい折り線」なので、
+//   展開図に事前に埋め込む必要がある。その平面位置を層ごとに逆展開して求める。
+//
+// 展開図の頂点は 0.5 刻みの 5×5 格子 + 巻き込み線の交点。
 
-
-// 点pを直線(a→b)で鏡映する
 function reflect(p, a, b) {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const len2 = dx * dx + dy * dy;
   const t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2;
-  const fx = a[0] + t * dx;
-  const fy = a[1] + t * dy;
-  return [2 * fx - p[0], 2 * fy - p[1]];
+  return [2 * (a[0] + t * dx) - p[0], 2 * (a[1] + t * dy) - p[1]];
 }
+const fmt = (p) => `(${+p[0].toFixed(4)}, ${+p[1].toFixed(4)})`;
+const eq = (p, q) => Math.abs(p[0] - q[0]) < 1e-9 && Math.abs(p[1] - q[1]) < 1e-9;
 
-function eq(p, q) {
-  return Math.abs(p[0] - q[0]) < 1e-6 && Math.abs(p[1] - q[1]) < 1e-6;
-}
-function fmt(p) {
-  return `(${(+p[0].toFixed(4))}, ${(+p[1].toFixed(4))})`;
-}
+// 5×5 格子。番号 = 5*ix + iy
+const G = [];
+for (let ix = 0; ix < 5; ix++) for (let iy = 0; iy < 5; iy++) G.push([-1 + ix * 0.5, -1 + iy * 0.5]);
+const id = (x, y) => Math.round((x + 1) / 0.5) * 5 + Math.round((y + 1) / 0.5);
 
-// ローカル展開図の20頂点(非鏡映バリアント)
-const LOCAL = [
-  [-1, 1], // c0
-  [-1, 0], // c1
-  [-1, -0.5], // c2
-  [-1, -1], // c3
-  [-0.5, 1], // c4
-  [-0.5, 0.5], // c5
-  [-0.5, 0], // c6
-  [-0.5, -1], // c7
-  [0, 1], // c8
-  [0, 0], // c9
-  [0, -0.5], // c10
-  [0, -1], // c11
-  [0.5, 1], // c12
-  [0.5, 0.5], // c13
-  [0.5, 0], // c14
-  [0.5, -1], // c15
-  [1, 1], // c16
-  [1, 0], // c17
-  [1, -0.5], // c18
-  [1, -1], // c19
-];
-
-// 折り工程(軸=頂点インデックス2つ、moving=動く頂点)
-const UNIT_STEPS = [
-  // ❶ 観音折り(2オペ)
+// ❶〜❹(軸頂点と moving。非鏡映=藍バリアント)
+const STEPS = [
   [
-    { axis: [4, 7], moving: [0, 1, 2, 3] },
-    { axis: [12, 15], moving: [16, 17, 18, 19] },
+    { axis: [id(-0.5, 1), id(-0.5, -1)], moving: [0, 1, 2, 3, 4].map((i) => id(-1, -1 + i * 0.5)) },
+    { axis: [id(0.5, 1), id(0.5, -1)], moving: [0, 1, 2, 3, 4].map((i) => id(1, -1 + i * 0.5)) },
   ],
-  // ❷ 半分に折る
-  [{ axis: [8, 11], moving: [0, 1, 2, 3, 4, 5, 6, 7] }],
-  // ❸ 端を斜めに折る
+  [{ axis: [id(0, 1), id(0, -1)], moving: [0, 1, 2, 3, 4].map((i) => id(-0.5, -1 + i * 0.5)) }],
   [
-    { axis: [8, 13], moving: [4, 12] },
-    { axis: [10, 15], moving: [3, 11, 19] },
+    { axis: [id(0, 1), id(0.5, 0.5)], moving: [id(-0.5, 1), id(0.5, 1)] },
+    { axis: [id(0, -0.5), id(0.5, -1)], moving: [id(0, -1), id(-1, -1), id(1, -1)] },
   ],
-  // ❹ 先端を折る
   [
-    { axis: [9, 13], moving: [0, 4, 8, 12, 16] },
-    { axis: [10, 14], moving: [3, 7, 11, 15, 19] },
+    { axis: [id(0, 0.5), id(0.5, 0)], moving: [id(0, 1), id(-1, 1), id(1, 1), id(0.5, 0.5), id(-0.5, 0.5)] },
+    { axis: [id(0, 0), id(0.5, -0.5)], moving: [id(0, -0.5), id(-1, -0.5), id(1, -0.5), id(0.5, -1), id(-0.5, -1)] },
   ],
 ];
 
-// 1シートの❶〜❹を理想反転で計算(mirror=trueでx反転バリアント)
+// 頂点の軌跡と、各オペの軸線(実行時位置)を記録しながら折る
 function foldUnit(mirror) {
   const s = mirror ? -1 : 1;
-  const pos = LOCAL.map(([x, y]) => [s * x, y]);
-  for (const step of UNIT_STEPS) {
+  const pos = G.map(([x, y]) => [s * x, y]);
+  const opLines = []; // {a, b, moving:Set}
+  for (const step of STEPS) {
     for (const op of step) {
-      const a = pos[op.axis[0]];
-      const b = pos[op.axis[1]];
+      const a = [...pos[op.axis[0]]];
+      const b = [...pos[op.axis[1]]];
       for (const vi of op.moving) pos[vi] = reflect(pos[vi], a, b);
+      opLines.push({ a, b, moving: new Set(op.moving) });
     }
   }
-  return pos;
+  return { pos, opLines };
 }
 
-console.log('=== ❶〜❹ 後のユニット形状(非鏡映) ===');
-const unit = foldUnit(false);
-unit.forEach((p, i) => console.log(`c${i}: ${fmt(p)}`));
+// 面(20枚)。各列5枚。layer は x 帯で決まる
+const FACES = [];
+for (let col = 0; col < 4; col++) {
+  const x0 = -1 + col * 0.5;
+  const x1 = x0 + 0.5;
+  // 各列の斜め線は同じ向き(すべて傾き±1、列ごとに交互)
+  // 列ごとの5面: 上の三角 / 帯 / 中央帯 / 帯 / 下の三角
+  // 折り線のy切片は列によりミラーされるので、格子頂点で直接書く
+  // 上の三角: {(x0,1),(x1,1),(m)} で m は列の向き次第
+  const up = col % 2 === 0; // 斜線の向き(検証で確認)
+  if (up) {
+    // 斜線: (x0,y)-(x1,y-0.5) 型(左が高い)
+    FACES.push([ [x0, 1], [x1, 1], [x1, 0.5] ]);
+    FACES.push([ [x0, 1], [x1, 0.5], [x1, 0], [x0, 0.5] ]);
+    FACES.push([ [x0, 0.5], [x1, 0], [x1, -0.5], [x0, 0] ]);
+    FACES.push([ [x0, 0], [x1, -0.5], [x1, -1], [x0, -0.5] ]);
+    FACES.push([ [x0, -0.5], [x1, -1], [x0, -1] ]);
+  } else {
+    // 斜線: (x0,y-0.5)-(x1,y) 型(右が高い)
+    FACES.push([ [x0, 0.5], [x0, 1], [x1, 1] ]);
+    FACES.push([ [x0, 0], [x0, 0.5], [x1, 1], [x1, 0.5] ]);
+    FACES.push([ [x0, -0.5], [x0, 0], [x1, 0.5], [x1, 0] ]);
+    FACES.push([ [x0, -1], [x0, -0.5], [x1, 0], [x1, -0.5] ]);
+    FACES.push([ [x0, -1], [x1, -0.5], [x1, -1] ]);
+  }
+}
 
-// 検証: 先端の位置
-console.log('\n--- 検証 ---');
-const checks = [
-  ['c8 (東の先端)', unit[8], [1, 0]],
-  ['c7 (西の先端)', unit[7], [-0.5, 0]],
-  ['c15 (西の先端)', unit[15], [-0.5, 0]],
-  ['c11 (折り込まれた角→中央付近)', unit[11], [0, 0]],
-  ['c0 (紙の角→先端に重なる)', unit[0], [1, 0]],
-  ['c4 (❸で畳んだ角)', unit[4], [0.5, 0]],
-];
+// 検証: 面の頂点が折り線と整合しているか(全頂点が格子上 & ❸❹の線上)
+// ❸t: ジグザグ (-1,1)-(-0.5,0.5)-(0,1)-(0.5,0.5)-(1,1)
+// → 列0(x -1..-0.5) は左が高い(up)、列1 は右が高い… 上のロジックの確認は動かして行う
+
+const { pos: unitB, opLines: opsB } = foldUnit(false);
+const { pos: unitA0, opLines: opsA } = foldUnit(true);
+
+console.log('=== ユニット形状(藍) ===');
 let ok = true;
-for (const [name, p, want] of checks) {
+for (const [name, p, want] of [
+  ['(0,1)', unitB[id(0, 1)], [-0.5, 0.5]],
+  ['(0.5,-1)', unitB[id(0.5, -1)], [1, -0.5]],
+  ['(0.5,0.5)', unitB[id(0.5, 0.5)], [0, 0]],
+]) {
   const good = eq(p, want);
   ok &&= good;
-  console.log(`${good ? 'OK' : 'NG'} ${name}: ${fmt(p)} (期待 ${fmt(want)})`);
+  console.log(`${good ? 'OK' : 'NG'} ${name} → ${fmt(p)} (期待 ${fmt(want)})`);
 }
-
-// 中央平行四辺形(❹の折り線ではさまれた領域)の頂点
-console.log('\n中央部: c9', fmt(unit[9]), 'c13', fmt(unit[13]), 'c14', fmt(unit[14]), 'c10', fmt(unit[10]));
 
 // === 組み立て ===
-// 配置: 朱(A)=鏡映バリアント AX=-1.6 / 藍(B)=非鏡映 BX=+1.6
-const AX = -1.2;
-const BX = 1.2;
+// 朱: 裏返し(縦線 x=-0.25 で鏡映) → +90°回転(中心(-0.25,0)) → 中心を原点へ
+// 藍: 中心(0.25,0)を原点へ(+z 上へ)
+const cA = [-0.25, 0];
+const rot90 = ([x, y], c) => [c[0] - (y - c[1]), c[1] + (x - c[0])];
+const asmAmap = (p) => {
+  const m = [2 * cA[0] - p[0], p[1]]; // 裏返し
+  const r = rot90(m, cA);
+  return [r[0] - cA[0], r[1] - cA[1]];
+};
+const asmA = unitA0.map(asmAmap);
+const asmB = unitB.map(([x, y]) => [x - 0.25, y]);
 
-const unitA = foldUnit(true).map(([x, y]) => [x + AX, y]); // 鏡映
-const unitB = foldUnit(false).map(([x, y]) => [x + BX, y]);
+console.log('\n=== 組み立て(朱=下, 藍=上) ===');
+console.log('朱 先端:', fmt(asmA[id(0, 1)]), fmt(asmA[id(0.5, -1)]));
+console.log('藍 先端:', fmt(asmB[id(0, 1)]), fmt(asmB[id(0.5, -1)]));
 
-// Aの中心・先端
-const tipsA = [unitA[8], unitA[7]]; // 先端2つ(鏡映なので西=c8, 東=c7/c15)
-console.log('\n=== 組み立て前 ===');
-console.log('A 先端:', fmt(tipsA[0]), fmt(tipsA[1]), '中心:', fmt([AX - 0.25, 0]));
-console.log('B 先端:', fmt(unitB[8]), fmt(unitB[7]), '中心:', fmt([BX + 0.25, 0]));
+// === 巻き込み線(さしこむ) ===
+// ❼: 朱の翼の先を「藍の縁」で巻き込む。藍の縁 = 藍の❹折り線の像(2本)
+//    縁1: asmB[(0,0.5)]-asmB[(0.5,0)] / 縁2: asmB[(0,0)]-asmB[(0.5,-0.5)]
+// これを朱のローカル(展開図)へ逆写像し、朱のどの面をどこで割るかを求める。
+const edges = [
+  [asmB[id(0, 0.5)], asmB[id(0.5, 0)]],
+  [asmB[id(0, 0)], asmB[id(0.5, -0.5)]],
+];
+console.log('\n藍の縁1:', fmt(edges[0][0]), '-', fmt(edges[0][1]));
+console.log('藍の縁2:', fmt(edges[1][0]), '-', fmt(edges[1][1]));
 
-// ❺ A: 長軸(y=0)まわりに180°裏返し(2Dでは恒等) + 面内90°回転(pivot=c8A) + 平行移動
-//    B: 中心を原点へ平行移動
-// 目標: A中心 → (0, 1.6) (Bの上に待機)、B中心 → (0,0)
-const pivotA = unitA[8]; // (-2.6, 0)
-function spin90(p, pivot) {
-  return [pivot[0] - (p[1] - pivot[1]), pivot[1] + (p[0] - pivot[0])];
+// 朱の組み立て写像の逆
+const invAsmA = (q) => {
+  const r = [q[0] + cA[0], q[1] + cA[1]];
+  // rot90 の逆(-90°)
+  const m = [cA[0] + (r[1] - cA[1]), cA[1] - (r[0] - cA[0])];
+  return [2 * cA[0] - m[0], m[1]]; // 裏返しの逆 = 同じ鏡映
+};
+
+// 面ごとの「折り履歴」= moving に自面の頂点を含むオペ列
+function faceOps(faceVerts, opLines) {
+  const ids = faceVerts.map(([x, y]) => id(x, y));
+  return opLines
+    .map((op, k) => ({ op, k }))
+    .filter(({ op }) => ids.some((vi) => op.moving.has(vi)));
 }
-const centerA = [AX - 0.25, 0];
-const centerAspun = spin90(centerA, pivotA);
-const STAGE_Y = 1.0;
-const trA5 = [0 - centerAspun[0], STAGE_Y - centerAspun[1]];
-const trB5 = [-(BX + 0.25), 0];
-console.log('\n=== ❺ の数値 ===');
-console.log(`A: spinZ=+90 (pivot=c8A ${fmt(pivotA)}) → translate [${trA5[0]}, ${trA5[1]}]`);
-console.log(`B: translate [${trB5[0]}, ${trB5[1]}]`);
 
-// ❻ A を B の上へ: (0, STAGE_Y) → (0,0)
-console.log(`\n=== ❻ の数値 ===\nA: translate [0, ${-STAGE_Y}]`);
+// 点 q(折り後ローカル) → 面 f の展開図座標(逆展開: 履歴の逆順に鏡映)
+function unfoldPoint(q, hist) {
+  let p = q;
+  for (let i = hist.length - 1; i >= 0; i--) {
+    p = reflect(p, hist[i].op.a, hist[i].op.b);
+  }
+  return p;
+}
 
-// 組み立て後の位置を計算
-const asmA = unitA.map((p) => {
-  const q = spin90(p, pivotA);
-  return [q[0] + trA5[0], q[1] + trA5[1] - STAGE_Y];
-});
-const asmB = unitB.map((p) => [p[0] + trB5[0], p[1] + trB5[1]]);
+// 朱の各面について、藍の縁を展開図へ引き戻し、面と交差するか調べる
+console.log('\n=== 朱の翼を割る巻き込み線(展開図座標) ===');
+const mirror = true; // 朱
+for (const face of FACES) {
+  // 鏡映シートの面頂点(ローカル)
+  const fv = face.map(([x, y]) => [mirror ? -x : x, y]);
+  const hist = faceOps(face, opsA);
+  for (let e = 0; e < 2; e++) {
+    // 縁の2点を朱ローカル(折り後)へ→この面の展開図座標へ
+    const p1 = unfoldPoint(invAsmA(edges[e][0]), hist);
+    const p2 = unfoldPoint(invAsmA(edges[e][1]), hist);
+    // 面(凸多角形)との交差区間を求める(頂点上の通過も含む)
+    const d = [p2[0] - p1[0], p2[1] - p1[1]];
+    const sd = (p) => d[0] * (p[1] - p1[1]) - d[1] * (p[0] - p1[0]); // 符号付き距離
+    const cuts = [];
+    let pos = 0;
+    let neg = 0;
+    for (let i = 0; i < fv.length; i++) {
+      const a = fv[i];
+      const b = fv[(i + 1) % fv.length];
+      const da = sd(a);
+      const db = sd(b);
+      if (Math.abs(da) < 1e-9) cuts.push(a);
+      else if (da > 0) pos++;
+      else neg++;
+      if (Math.abs(da) > 1e-9 && Math.abs(db) > 1e-9 && da * db < 0) {
+        const t = da / (da - db);
+        cuts.push([a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]);
+      }
+    }
+    const uniq = [];
+    for (const c of cuts) if (!uniq.some((u2) => eq(u2, c))) uniq.push(c);
+    // 面の内部を実際に横切る(両側に頂点がある)場合のみ折り線になる
+    if (uniq.length === 2 && pos > 0 && neg > 0) {
+      console.log(`面 [${face.map(fmt).join(' ')}] を縁${e + 1}で割る: ${fmt(uniq[0])} - ${fmt(uniq[1])} (鏡映ローカル)`);
+    }
+  }
+}
 
-console.log('\n=== 組み立て後 ===');
-console.log('A 先端:', fmt(asmA[8]), fmt(asmA[7]), '(北/南のはず)');
-console.log('B 先端:', fmt(asmB[8]), fmt(asmB[7]), '(東/西のはず)');
+// 巻き込み後の先端位置(縁で180°鏡映)と、収まり先の確認
+console.log('\n=== 巻き込み後の先端 ===');
+const tips = [
+  ['朱N', asmA[id(0.5, -1)], edges[0]],
+  ['朱S', asmA[id(0, 1)], edges[1]],
+];
+for (const [name, tip, e] of tips) {
+  const w = reflect(tip, e[0], e[1]);
+  console.log(`${name} ${fmt(tip)} → ${fmt(w)}`);
+}
+console.log(ok ? '\n形状OK' : '\n形状NG');
 
-// ❼ 差し込み: Aの先端三角をベースの折り線(c9-c13 / c10-c14)で相手側へ巻き込む
-//    折り線が B の中央部の縁と一致しているか確認
-console.log('\n=== 差し込みの折り線と相手の縁 ===');
-console.log('A 折り線1: ', fmt(asmA[9]), '-', fmt(asmA[13]));
-console.log('A 折り線2: ', fmt(asmA[10]), '-', fmt(asmA[14]));
-console.log('B 中央部の縁: ', fmt(asmB[9]), '-', fmt(asmB[13]), '/', fmt(asmB[10]), '-', fmt(asmB[14]));
-
-// 巻き込み後のAの先端位置(折り線でもう一度鏡映=展開位置)
-const wrapN = reflect(asmA[8], asmA[9], asmA[13]);
-console.log('\nA北先端の巻き込み後:', fmt(wrapN), '(Bの帯 |y|<=0.5 内に収まるはず)');
-const wrapS = reflect(asmA[11], asmA[10], asmA[14]);
-console.log('A南先端(c11)の巻き込み後:', fmt(wrapS));
-
-// 星の4先端
-console.log('\n=== 完成した星 ===');
-console.log('北:', fmt(asmA[8]), '南:', fmt(asmA[7]), '東西:', fmt(asmB[8]), fmt(asmB[7]));
-console.log(ok ? '\n全チェックOK' : '\nNGあり!');
+// --- デバッグ: 翼まわりの面について引き戻した縁の位置を表示 ---
+console.log('\n=== デバッグ: 引き戻した縁 ===');
+const dbgFaces = [
+  [[0, 0], [0.5, -0.5], [0.5, -1], [0, -0.5]], // 列2の下側の帯(翼になる)
+  [[0, -0.5], [0.5, -1], [0, -1]], // 列2の下の三角(❸フラップ)
+  [[0.5, -1], [1, -0.5], [1, -1]], // 列3の下の三角
+  [[0.5, -0.5], [0.5, 0], [1, 0.5], [1, 0]], // 列3の帯
+  [[0.5, -1], [0.5, -0.5], [1, 0], [1, -0.5]], // 列3の下の帯
+];
+for (const face of dbgFaces) {
+  const fv = face.map(([x, y]) => [-x, y]);
+  const hist = faceOps(face, opsA);
+  for (let e = 0; e < 2; e++) {
+    const p1 = unfoldPoint(invAsmA(edges[e][0]), hist);
+    const p2 = unfoldPoint(invAsmA(edges[e][1]), hist);
+    console.log(`面[${face.map(fmt).join('')}] hist=${hist.length} 縁${e + 1}: ${fmt(p1)}-${fmt(p2)}`);
+  }
+}
