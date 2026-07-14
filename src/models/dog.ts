@@ -6,6 +6,8 @@ import type { OrigamiModel } from '../engine/types';
  * レイヤー(紙の重なり)を区別して折れることを示すサンプル。
  *
  * 展開図はひし形向きの正方形:上(0,1) 右(1,0) 下(0,-1) 左(-1,0)。
+ * 工程1で上半分を手前へ倒して下向き三角にし、左右の角を「下へ垂れる耳」に
+ * 折る。頭(上辺)は広めに残し、鼻先(下の角)を下へ突き出して犬の顔にする。
  * すべての折り線の端点を頂点として事前に埋め込んである。
  */
 export const dogModel: OrigamiModel = {
@@ -17,16 +19,21 @@ export const dogModel: OrigamiModel = {
     [1, 0], //  1: 右の角(右耳)
     [0, -1], //  2: 下の角(あご)
     [-1, 0], //  3: 左の角(左耳)
-    [-0.35, 0], //  4: 左耳折り線・上端
-    [-0.65, -0.35], //  5: 左耳折り線・下端(左下辺上)
-    [0.35, 0], //  6: 右耳折り線・上端
-    [0.65, -0.35], //  7: 右耳折り線・下端(右下辺上)
-    [-0.65, 0.35], //  8: 左耳折り線の鏡映(左上辺上)
-    [0.65, 0.35], //  9: 右耳折り線の鏡映(右上辺上)
-    [-0.25, -0.75], // 10: あご折り線・左端(左下辺上)
-    [0.25, -0.75], // 11: あご折り線・右端(右下辺上)
-    [-0.25, 0.75], // 12: 鼻折り線の鏡映・左(左上辺上)
-    [0.25, 0.75], // 13: 鼻折り線の鏡映・右(右上辺上)
+    // 左耳の折り線:上辺の 4 から左下辺の 5 へ。角3を下へ垂らす
+    [-0.42, 0], //  4: 左耳折り線・上端(上辺上)
+    [-0.72, -0.28], //  5: 左耳折り線・下端(左下辺上)
+    // 右耳(左右対称)
+    [0.42, 0], //  6: 右耳折り線・上端
+    [0.72, -0.28], //  7: 右耳折り線・下端(右下辺上)
+    // 耳折り線の鏡映(上半分、工程1で下へ倒れる側)
+    [-0.72, 0.28], //  8: 左耳折り線の鏡映(左上辺上)
+    [0.72, 0.28], //  9: 右耳折り線の鏡映(右上辺上)
+    // 鼻先の折り線:下の角のまわり(左下辺 10・右下辺 11)
+    [-0.16, -0.84], // 10: あご折り線・左端(左下辺上)
+    [0.16, -0.84], // 11: あご折り線・右端(右下辺上)
+    // 鼻折り線の鏡映(上半分)
+    [-0.16, 0.84], // 12: 鼻折り線の鏡映・左(左上辺上)
+    [0.16, 0.84], // 13: 鼻折り線の鏡映・右(右上辺上)
   ],
   faces: [
     // 下半分
@@ -55,15 +62,15 @@ export const dogModel: OrigamiModel = {
     {
       folds: [{ axis: [4, 5], moving: [3], type: 'valley', angle: 172 }],
       description: {
-        ja: '左の角を斜め下へ谷折りして、耳を作ります。',
-        en: 'Valley-fold the left corner down at an angle to form an ear.',
+        ja: '左の角を下へ垂らすように谷折りして、耳を作ります。',
+        en: 'Valley-fold the left corner downward to make a floppy ear.',
       },
     },
     {
       folds: [{ axis: [6, 7], moving: [1], type: 'valley', angle: 172 }],
       description: {
-        ja: '右の角も同じように谷折りして、耳を作ります。',
-        en: 'Valley-fold the right corner the same way for the other ear.',
+        ja: '右の角も同じように下へ垂らして、耳を作ります。',
+        en: 'Valley-fold the right corner down the same way for the other ear.',
       },
       caution: {
         ja: '左右の耳の大きさをそろえましょう。',
@@ -71,10 +78,10 @@ export const dogModel: OrigamiModel = {
       },
     },
     {
-      folds: [{ axis: [12, 13], moving: [0], type: 'valley', angle: 168 }],
+      folds: [{ axis: [12, 13], moving: [0], type: 'valley', angle: 165 }],
       description: {
-        ja: '手前の1枚だけ、下の角を上へ谷折りします。',
-        en: 'Valley-fold only the front layer, lifting the bottom corner up.',
+        ja: '手前の1枚だけ、下の角を少し上へ谷折りして鼻先にします。',
+        en: 'Valley-fold only the front layer, lifting the bottom corner a little into a snout.',
       },
       caution: {
         ja: '後ろの紙は折らないように注意。',
@@ -84,8 +91,8 @@ export const dogModel: OrigamiModel = {
     {
       folds: [{ axis: [10, 11], moving: [2], type: 'mountain', angle: 150 }],
       description: {
-        ja: '後ろに残った角を、裏側へ山折りします。',
-        en: 'Mountain-fold the remaining back corner behind.',
+        ja: '後ろに残った角を、裏側へ山折りしてあごを整えます。',
+        en: 'Mountain-fold the remaining back corner behind to shape the chin.',
       },
     },
   ],
