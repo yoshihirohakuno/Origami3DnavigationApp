@@ -9,6 +9,7 @@ import { squareBaseModel } from './models/squareBase';
 import { craneModel } from './models/crane';
 import { shurikenModel } from './models/shuriken';
 import { catModel } from './models/cat';
+import { foxModel } from './models/fox';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import './App.css';
@@ -22,6 +23,7 @@ const MODELS: OrigamiModel[] = [
   craneModel,
   shurikenModel,
   catModel,
+  foxModel,
 ];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ) */
