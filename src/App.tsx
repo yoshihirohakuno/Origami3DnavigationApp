@@ -10,6 +10,7 @@ import { craneModel } from './models/crane';
 import { shurikenModel } from './models/shuriken';
 import { catModel } from './models/cat';
 import { foxModel } from './models/fox';
+import { rabbitModel } from './models/rabbit';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import './App.css';
@@ -24,6 +25,7 @@ const MODELS: OrigamiModel[] = [
   shurikenModel,
   catModel,
   foxModel,
+  rabbitModel,
 ];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ) */
@@ -189,7 +191,7 @@ export default function App() {
       </div>
 
       <p className="footnote">
-        PROTOTYPE — 収録7作品 / 7 models available.
+        PROTOTYPE — 収録{MODELS.length}作品 / {MODELS.length} models available.
         <button className="editor-link" onClick={() => setEditing(true)}>
           MODEL EDITOR — 工程データ作成(β)
         </button>
