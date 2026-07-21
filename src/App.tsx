@@ -12,6 +12,7 @@ import { catModel } from './models/cat';
 import { foxModel } from './models/fox';
 import { rabbitModel } from './models/rabbit';
 import { pandaModel } from './models/panda';
+import { whaleModel } from './models/whale';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import './App.css';
@@ -28,6 +29,7 @@ const MODELS: OrigamiModel[] = [
   foxModel,
   rabbitModel,
   pandaModel,
+  whaleModel,
 ];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ) */
