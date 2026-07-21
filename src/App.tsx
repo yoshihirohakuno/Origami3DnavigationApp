@@ -32,9 +32,9 @@ const MODELS: OrigamiModel[] = [
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ) */
 const COMING_SOON = [
+  { ja: 'ハート', en: 'Heart', difficulty: 2 },
   { ja: '箱', en: 'Box', difficulty: 2 },
   { ja: '兜', en: 'Helmet', difficulty: 2 },
-  { ja: 'ハート', en: 'Heart', difficulty: 2 },
 ];
 
 const TITLES: [number, string, string][] = [
