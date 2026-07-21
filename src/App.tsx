@@ -13,6 +13,7 @@ import { foxModel } from './models/fox';
 import { rabbitModel } from './models/rabbit';
 import { pandaModel } from './models/panda';
 import { whaleModel } from './models/whale';
+import { bearModel } from './models/bear';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import './App.css';
@@ -29,6 +30,7 @@ const MODELS: OrigamiModel[] = [
   foxModel,
   rabbitModel,
   pandaModel,
+  bearModel,
   whaleModel,
 ];
 
