@@ -15,6 +15,7 @@ import { pandaModel } from './models/panda';
 import { whaleModel } from './models/whale';
 import { bearModel } from './models/bear';
 import { helmetModel } from './models/helmet';
+import { heartModel } from './models/heart';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import './App.css';
@@ -34,11 +35,11 @@ const MODELS: OrigamiModel[] = [
   bearModel,
   whaleModel,
   helmetModel,
+  heartModel,
 ];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ) */
 const COMING_SOON = [
-  { ja: 'ハート', en: 'Heart', difficulty: 2 },
   { ja: '箱', en: 'Box', difficulty: 2 },
 ];
 
