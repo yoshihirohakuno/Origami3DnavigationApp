@@ -16,6 +16,7 @@ import { whaleModel } from './models/whale';
 import { bearModel } from './models/bear';
 import { helmetModel } from './models/helmet';
 import { heartModel } from './models/heart';
+import { boxModel } from './models/box';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import './App.css';
@@ -36,12 +37,11 @@ const MODELS: OrigamiModel[] = [
   whaleModel,
   helmetModel,
   heartModel,
+  boxModel,
 ];
 
-/** 準備中の作品(ライブラリの見せ方確認用プレースホルダ) */
-const COMING_SOON = [
-  { ja: '箱', en: 'Box', difficulty: 2 },
-];
+/** 準備中の作品(ライブラリの見せ方確認用プレースホルダ)。全作品実装済みで現在は空 */
+const COMING_SOON: { ja: string; en: string; difficulty: number }[] = [];
 
 const TITLES: [number, string, string][] = [
   [100, '神折り職人', 'Grandmaster'],
