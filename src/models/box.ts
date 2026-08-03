@@ -5,21 +5,33 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
  * ふたなしの簡単な箱(トレイ)。アプリ初の「立体」作品で、壁を90°に立てる。
  *
  *   ❶ 上下のふちを立てる(同時) → 手前と奥の壁
- *   ❷ 左右のふちを立てる(同時) → 4つの壁
- *   ❸ 4つの角の耳を、となりの壁に沿わせて折り込む(同時)
+ *   ❷ 左右のふちを立てる(同時) → 4つの壁。四隅の正方形は対角線で
+ *      二つ折りになり、三角の耳が外へ飛び出す
+ *   ❸ 4つの角の耳(2枚重ね)を、左右の壁の内側へたたむ(同時)
  *
  * 展開図は辺が水平の正方形(±1)。中央の底(±0.5)のまわりに4枚の壁、
- * 四隅に耳(角の正方形を対角線で2分割し、隣り合う壁にそれぞれ帰属させる)。
+ * 四隅に角の正方形(対角線で2枚に分かれる=耳)。
+ *
+ * 2026-08-03 修正: 旧版は四隅の耳2枚を**別々の壁**へ折っていた。
+ * これは角の正方形を対角線で切り離すのと同じで、実物の紙では起こらない
+ * (1枚の正方形なので、2枚は必ず対角線でつながったまま重なる)。
+ * 壁を立てると角は自動的に対角線で二つ折りになり、2枚重ねの三角の耳が
+ * 45°方向へ飛び出す。それを1枚の耳としてどちらか一方の壁へたたむのが正しい。
  *
  * エンジン上の要点:
  * - 壁の折りは angle 90(平畳みでなく立体で止める)。アプリ初の90°折り
- * - 角の正方形は対角線で2つの耳に分割し、外側の角の頂点(±1,±1)は
- *   耳ごとに複製する(12〜19)。複製しないと、片方の壁を立てたとき
- *   もう片方の壁に属する耳まで引きずられる
- * - 耳の折り線は「壁を立てた後の角の垂直な稜」になる(例: 右上の角なら
- *   (0.5,0.5,0)-(0.5,0.5,0.5))。折り軸の頂点は壁を立てる工程で自然に
- *   その位置へ来るので、特別な仕込みは不要
- * - 耳は88°で止めて、壁と数度のすき間を残す(z-fighting回避)
+ * - 角の正方形は対角線で2つの面に分割し、外側の角の頂点(±1,±1)は
+ *   面ごとに複製する(12〜19)。複製しないと、片方の壁を立てたとき
+ *   もう片方の壁に属する面まで引きずられる
+ * - 耳の回転軸は「壁を立てた後の角の垂直な稜」(例: 右上の角なら
+ *   (0.5,0.5,0)-(0.5,0.5,0.5))。軸は全て +z 向きなので、回転角は
+ *   +z から見た反時計回りを正として設計できる
+ * - 角が二つ折りになる = 2枚が稜まわりに ±45° 回って 45°方向(対角)で
+ *   出会う。壁を立てる工程(❷)の中で連鎖適用する
+ * - ❸で耳を壁へたたむのは、稜まわりのさらに 137°/139° の回転
+ *   (2枚に2°差をつけて重なり順を作り、壁とも数度離して z-fighting を避ける)。
+ *   回す向きは「もう一方の壁を通り抜けない側」(通り抜ける向きだと
+ *   紙が壁を貫通する)
  *
  * 配色は枡(ます)らしい木の色: 外=濃い茶、内=薄い茶。
  */
@@ -93,35 +105,51 @@ const steps: FoldStep[] = [
     },
   },
   {
-    // ❷ 左右の壁を立てる
+    // ❷ 左右の壁を立てる。同時に四隅の正方形が対角線で二つ折りになり、
+    // 2枚重ねの三角の耳が対角(45°)方向へ飛び出す。
+    // 各耳は稜まわりに ±45° 回って対角方向で出会う(軸は全て +z 向き)
     folds: [
       { axis: [3, 0], moving: [8, 9, 15, 19], type: 'valley', angle: 90 },
       { axis: [2, 1], moving: [10, 11, 13, 17], type: 'valley', angle: 90 },
+      // 右上の角(奥壁の面は +x 向き→+45°、右壁の面は +y 向き→-45°)
+      { axis: [2, 5], moving: [12], type: 'valley', angle: 45, direction: 1 },
+      { axis: [2, 11], moving: [13], type: 'valley', angle: 45, direction: -1 },
+      // 左上の角(奥壁の面は -x 向き→-45°、左壁の面は +y 向き→+45°)
+      { axis: [3, 4], moving: [14], type: 'valley', angle: 45, direction: -1 },
+      { axis: [3, 9], moving: [15], type: 'valley', angle: 45, direction: 1 },
+      // 右下の角(手前壁の面は +x 向き→-45°、右壁の面は -y 向き→+45°)
+      { axis: [1, 7], moving: [16], type: 'valley', angle: 45, direction: -1 },
+      { axis: [1, 10], moving: [17], type: 'valley', angle: 45, direction: 1 },
+      // 左下の角(手前壁の面は -x 向き→+45°、左壁の面は -y 向き→-45°)
+      { axis: [0, 6], moving: [18], type: 'valley', angle: 45, direction: 1 },
+      { axis: [0, 8], moving: [19], type: 'valley', angle: 45, direction: -1 },
     ],
     description: {
-      ja: '左右のふちも、90°立てます。4つの壁ができます。',
-      en: 'Stand the left and right edges up too — four walls.',
+      ja: '左右のふちも90°立てます。四隅は自然に二つ折りになり、三角の耳が飛び出します。',
+      en: 'Stand the left and right edges up too. Each corner folds itself in half, popping out a triangular ear.',
+    },
+    caution: {
+      ja: '角の紙は切れません。2枚が対角線でつながったまま重なります。',
+      en: 'The corner is never cut — the two layers stay joined along the diagonal.',
     },
   },
   {
-    // ❸ 角の耳を、となりの壁の内側に沿わせて折り込む
-    // 各耳のヒンジは、壁を立てた後の「角の垂直な稜」になっている
-    // 各コーナーで2枚の耳(隣り合う壁それぞれの三角)を内側へ折る。壁の稜を軸に
-    // valley を自動判定すると、稜の向きの都合で半数(13/14/16/19)は外へ回るため、
-    // それらは direction:-1 で回転を反転して内側へそろえる(実測で特定)
+    // ❸ 2枚重ねの耳を、左右の壁の内側へたたむ。
+    // 稜まわりにさらに 137°/139°(2枚に2°差=重なり順、壁とも数度離す)。
+    // 回す向きは、もう一方の壁を通り抜けない側を選ぶ
     folds: [
-      { axis: [2, 5], moving: [12], type: 'valley', angle: 88 },
-      { axis: [2, 11], moving: [13], type: 'valley', angle: 88, direction: 1 },
-      { axis: [3, 4], moving: [14], type: 'valley', angle: 88, direction: 1 },
-      { axis: [3, 9], moving: [15], type: 'valley', angle: 88 },
-      { axis: [1, 7], moving: [16], type: 'valley', angle: 88, direction: 1 },
-      { axis: [1, 10], moving: [17], type: 'valley', angle: 88 },
-      { axis: [0, 6], moving: [18], type: 'valley', angle: 88 },
-      { axis: [0, 8], moving: [19], type: 'valley', angle: 88, direction: 1 },
+      { axis: [2, 5], moving: [12], type: 'valley', angle: 137, direction: -1 },
+      { axis: [2, 11], moving: [13], type: 'valley', angle: 139, direction: -1 },
+      { axis: [3, 4], moving: [14], type: 'valley', angle: 137, direction: 1 },
+      { axis: [3, 9], moving: [15], type: 'valley', angle: 139, direction: 1 },
+      { axis: [1, 7], moving: [16], type: 'valley', angle: 137, direction: 1 },
+      { axis: [1, 10], moving: [17], type: 'valley', angle: 139, direction: 1 },
+      { axis: [0, 6], moving: [18], type: 'valley', angle: 137, direction: -1 },
+      { axis: [0, 8], moving: [19], type: 'valley', angle: 139, direction: -1 },
     ],
     description: {
-      ja: '4つの角の耳を、となりの壁に沿わせて内側へ折り込みます。箱のできあがり。',
-      en: 'Fold the corner ears in along the neighboring walls — the box is done.',
+      ja: '飛び出した4つの耳を、左右の壁の内側にたたみます。箱のできあがり。',
+      en: 'Fold the four ears flat against the inside of the left and right walls — the box is done.',
     },
     caution: {
       ja: '耳が壁を支えて、箱がしっかりします。',
