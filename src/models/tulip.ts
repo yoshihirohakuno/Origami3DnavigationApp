@@ -87,10 +87,11 @@ export const tulipModel: OrigamiModel = {
       },
     },
     {
+      // 折るのは❶で奥へ回った層の先端(手前の層ではない)。説明文も合わせてある
       folds: [{ axis: [10, 11], moving: [2], type: 'mountain', angle: 160 }],
       description: {
-        ja: '手前の1枚の先端を、裏側へ山折りして花の谷間を作ります。',
-        en: 'Mountain-fold the tip of the front layer behind to shape the bloom.',
+        ja: '後ろの1枚の先端を、裏側へ山折りして花の谷間を作ります。',
+        en: 'Mountain-fold the tip of the back layer behind to shape the bloom.',
       },
     },
   ],
