@@ -119,7 +119,7 @@ const steps: FoldStep[] = [
   },
   {
     // ❷b 開いて戻す
-    folds: [{ axis: [16, 2], moving: LEFT_HALF, type: 'unfold', angle: 178, direction: -1 }],
+    folds: [{ axis: [16, 2], moving: LEFT_HALF, type: 'unfold', angle: 178, direction: 1 }],
     description: {
       ja: '開いて戻します。まんなかの折り目が目印です。',
       en: 'Unfold. The center crease is your guide.',
