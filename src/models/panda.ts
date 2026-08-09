@@ -245,7 +245,10 @@ export const pandaModel: OrigamiModel = {
   vertices: V,
   faces: F.map(orient),
   faceSheet: F.map(() => 0),
-  // 顔=紙の表(生成り)、耳・鼻=裏(朱)。既定の表裏を反転
-  sheetColors: [{ front: '#f2ede3', back: '#e0492f' }],
+  // 顔=紙の表(生成り)、耳・鼻=裏。既定の表裏を反転。
+  // 裏は原典どおりの黒(2026-08-09 に朱 #e0492f から変更。ぱんだは白黒の作品で、
+  // 朱の耳は原典から離れていた)。真っ黒(#0e0f12=背景の墨)だと背景に溶けるので
+  // わずかに明るい炭色にして輪郭が見えるようにしている
+  sheetColors: [{ front: '#f2ede3', back: '#2a2a2f' }],
   steps,
 };
