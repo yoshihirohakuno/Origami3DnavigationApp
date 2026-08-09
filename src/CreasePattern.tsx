@@ -177,17 +177,75 @@ export function ShurikenFinalPreview({
   );
 }
 
+/** 紙の色の既定値(PaperScene の COLOR_FRONT / COLOR_BACK と合わせる) */
+const PAPER_FRONT = '#eda6a2';
+const PAPER_BACK = '#fbfaf7';
+
 /** 作品カード用:工程を最後まで適用した完成形をSVGで描く */
 export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; size?: number }) {
   if (model.id === 'crane') return <CraneFinalPreview size={size} />;
   if (model.id === 'shuriken') return <ShurikenFinalPreview size={size} />;
+
+  // 作品ごとの紙色(sheetColors)を使う。ハート・箱・くじら・兜などは
+  // 既定の「薄い赤/白」ではないので、既定色のままだと完成形が無色に見える
+  const sheetColorOf = (faceIndex: number): { front: string; back: string } => {
+    const sheet = model.faceSheet?.[faceIndex] ?? 0;
+    return model.sheetColors?.[sheet] ?? { front: PAPER_FRONT, back: PAPER_BACK };
+  };
 
   const state = computeFoldState(model, model.steps.length);
   const used = new Set<number>();
   for (const face of model.faces) {
     for (const vi of face) used.add(vi);
   }
-  const points = [...used].map((vi) => state.positions[vi]);
+  const all = [...used].map((vi) => state.positions[vi]);
+
+  // 立体の作品(箱など)は真正面から見ると平らな四角にしか見えないので、
+  // ナビ画面の既定カメラ(cameraPos を cameraAngle で水平回転)と同じ向きから
+  // 平行投影する。平畳みの作品は今までどおり真正面(xy そのまま)。
+  const zSpan = Math.max(...all.map((p) => p.z)) - Math.min(...all.map((p) => p.z));
+  const view = (() => {
+    if (zSpan <= 0.2) return null;
+    const base = model.cameraPos ?? [0, -2.4, 4.0];
+    const a = ((model.cameraAngle ?? 0) * Math.PI) / 180;
+    // PaperScene.setViewAngle と同じ回転(垂直軸まわり)
+    const eye = [
+      base[0] * Math.cos(a) + base[2] * Math.sin(a),
+      base[1],
+      -base[0] * Math.sin(a) + base[2] * Math.cos(a),
+    ];
+    const norm = (v: number[]) => {
+      const l = Math.hypot(...v) || 1;
+      return v.map((c) => c / l);
+    };
+    const cross = (u: number[], v: number[]) => [
+      u[1] * v[2] - u[2] * v[1],
+      u[2] * v[0] - u[0] * v[2],
+      u[0] * v[1] - u[1] * v[0],
+    ];
+    const zAxis = norm(eye); // 視線の逆向き(手前がプラス)
+    const xAxis = norm(cross([0, 1, 0], zAxis));
+    const yAxis = cross(zAxis, xAxis);
+    return { xAxis, yAxis, zAxis };
+  })();
+
+  const flat = (p: { x: number; y: number; z: number }) =>
+    view
+      ? {
+          x: p.x * view.xAxis[0] + p.y * view.xAxis[1] + p.z * view.xAxis[2],
+          y: p.x * view.yAxis[0] + p.y * view.yAxis[1] + p.z * view.yAxis[2],
+        }
+      : { x: p.x, y: p.y };
+
+  /** 奥から手前へ並べるための深さ(視点座標の z。平畳みならモデルの z) */
+  const depthOf = (ps: { x: number; y: number; z: number }[]) => {
+    const d = view
+      ? ps.map((p) => p.x * view.zAxis[0] + p.y * view.zAxis[1] + p.z * view.zAxis[2])
+      : ps.map((p) => p.z);
+    return d.reduce((s, v) => s + v, 0) / d.length;
+  };
+
+  const points = all.map(flat);
   const minX = Math.min(...points.map((p) => p.x));
   const maxX = Math.max(...points.map((p) => p.x));
   const minY = Math.min(...points.map((p) => p.y));
@@ -201,24 +259,23 @@ export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; s
   const faces = model.faces
     .map((face, index) => {
       const ps = face.map((vi) => state.positions[vi]);
-      const projected = ps.map((p) => ({ x: sx(p.x), y: sy(p.y) }));
+      const fp = ps.map(flat); // 視点座標(x=右, y=上)
+      const projected = fp.map((p) => ({ x: sx(p.x), y: sy(p.y) }));
       const area = Math.abs(projectedArea(projected));
-      const p0 = ps[0];
-      const p1 = ps[1];
-      const p2 = ps[2];
+      // 視点から見た表裏(視点座標での回り方)
       const nz =
-        (p1.x - p0.x) * (p2.y - p0.y) -
-        (p1.y - p0.y) * (p2.x - p0.x);
+        (fp[1].x - fp[0].x) * (fp[2].y - fp[0].y) - (fp[1].y - fp[0].y) * (fp[2].x - fp[0].x);
+      const colors = sheetColorOf(index);
       return {
         index,
         area,
-        front: nz >= 0,
-        z: ps.reduce((sum, p) => sum + p.z, 0) / ps.length,
+        fill: nz >= 0 ? colors.front : colors.back,
+        depth: depthOf(ps),
         points: projected.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' '),
       };
     })
     .filter((face) => face.area > 0.1)
-    .sort((a, b) => a.z - b.z);
+    .sort((a, b) => a.depth - b.depth);
 
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
@@ -226,7 +283,7 @@ export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; s
         <polygon
           key={face.index}
           points={face.points}
-          fill={face.front ? '#eda6a2' : '#fbfaf7'}
+          fill={face.fill}
           stroke="#25262c"
           strokeWidth="0.85"
           strokeLinejoin="round"

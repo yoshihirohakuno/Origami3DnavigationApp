@@ -90,10 +90,13 @@ function orient(f: number[]): number[] {
 
 const steps: FoldStep[] = [
   {
-    // ❶ 奥と手前の壁を立てる(耳も一緒に持ち上がる)
+    // ❶ 奥と手前の壁を立てる。折り線 y=±0.5 より外の帯は**四隅の正方形もふくめて
+    // まるごと**立ち上がる(角の対角線が折れるのは、横の壁を立てる❷のとき)。
+    // 角の頂点は層ごとに複製してあるので、両方の複製をここで動かすこと。
+    // 片方だけ動かすと対角線に沿って紙が 0.707 裂ける(2026-08-09 修正)
     folds: [
-      { axis: [3, 2], moving: [4, 5, 12, 14], type: 'valley', angle: 90 },
-      { axis: [0, 1], moving: [6, 7, 16, 18], type: 'valley', angle: 90 },
+      { axis: [3, 2], moving: [4, 5, 12, 13, 14, 15], type: 'valley', angle: 90 },
+      { axis: [0, 1], moving: [6, 7, 16, 17, 18, 19], type: 'valley', angle: 90 },
     ],
     description: {
       ja: '上下のふちを、手前に90°立てます。',
@@ -105,24 +108,23 @@ const steps: FoldStep[] = [
     },
   },
   {
-    // ❷ 左右の壁を立てる。同時に四隅の正方形が対角線で二つ折りになり、
-    // 2枚重ねの三角の耳が対角(45°)方向へ飛び出す。
-    // 各耳は稜まわりに ±45° 回って対角方向で出会う(軸は全て +z 向き)
+    // ❷ 左右の壁を立てる。❶で立った角の正方形はここで対角線に折れ、2枚重ねの
+    // 三角の耳になって対角(45°)方向へ飛び出す。
+    // ❶の後、角の2枚の頂点はどちらも壁の上の外角(例 (1,0.5,0.5))にあるので、
+    // **2枚を同じ稜まわりに同じだけ回す**(=対角線でつながったまま二つ折りになる)。
+    // 稜は角の垂直な稜(例 右上なら 2-5)で軸は全て +z 向き。
+    // 横の壁の回転(1本目・2本目)に角の頂点を入れてはいけない(箱の内側へ飛ぶ)
     folds: [
-      { axis: [3, 0], moving: [8, 9, 15, 19], type: 'valley', angle: 90 },
-      { axis: [2, 1], moving: [10, 11, 13, 17], type: 'valley', angle: 90 },
-      // 右上の角(奥壁の面は +x 向き→+45°、右壁の面は +y 向き→-45°)
-      { axis: [2, 5], moving: [12], type: 'valley', angle: 45, direction: 1 },
-      { axis: [2, 11], moving: [13], type: 'valley', angle: 45, direction: -1 },
-      // 左上の角(奥壁の面は -x 向き→-45°、左壁の面は +y 向き→+45°)
-      { axis: [3, 4], moving: [14], type: 'valley', angle: 45, direction: -1 },
-      { axis: [3, 9], moving: [15], type: 'valley', angle: 45, direction: 1 },
-      // 右下の角(手前壁の面は +x 向き→-45°、右壁の面は -y 向き→+45°)
-      { axis: [1, 7], moving: [16], type: 'valley', angle: 45, direction: -1 },
-      { axis: [1, 10], moving: [17], type: 'valley', angle: 45, direction: 1 },
-      // 左下の角(手前壁の面は -x 向き→+45°、左壁の面は -y 向き→-45°)
-      { axis: [0, 6], moving: [18], type: 'valley', angle: 45, direction: 1 },
-      { axis: [0, 8], moving: [19], type: 'valley', angle: 45, direction: -1 },
+      { axis: [3, 0], moving: [8, 9], type: 'valley', angle: 90 },
+      { axis: [2, 1], moving: [10, 11], type: 'valley', angle: 90 },
+      // 右上の角: 稜からの向きが 0° → 45°(反時計回り)
+      { axis: [2, 5], moving: [12, 13], type: 'valley', angle: 45, direction: 1 },
+      // 左上の角: 180° → 135°(時計回り)
+      { axis: [3, 4], moving: [14, 15], type: 'valley', angle: 45, direction: -1 },
+      // 右下の角: 0° → -45°(時計回り)
+      { axis: [1, 7], moving: [16, 17], type: 'valley', angle: 45, direction: -1 },
+      // 左下の角: 180° → 225°(反時計回り)
+      { axis: [0, 6], moving: [18, 19], type: 'valley', angle: 45, direction: 1 },
     ],
     description: {
       ja: '左右のふちも90°立てます。四隅は自然に二つ折りになり、三角の耳が飛び出します。',
@@ -134,18 +136,19 @@ const steps: FoldStep[] = [
     },
   },
   {
-    // ❸ 2枚重ねの耳を、左右の壁の内側へたたむ。
-    // 稜まわりにさらに 137°/139°(2枚に2°差=重なり順、壁とも数度離す)。
-    // 回す向きは、もう一方の壁を通り抜けない側を選ぶ
+    // ❸ 2枚重ねの耳を、左右の壁の内側へたたむ。稜まわりにさらに 137°/138.5°
+    // (2枚に 1.5°差=重なり順を作る。同角度だと2枚が完全に重なって z-fighting)。
+    // 回す向きは、もう一方の壁を通り抜けない側を選ぶ。
+    // 軸は❷と同じ稜(2枚とも同じ稜まわり)にすること。別の稜を使うと耳が裂ける
     folds: [
       { axis: [2, 5], moving: [12], type: 'valley', angle: 137, direction: -1 },
-      { axis: [2, 11], moving: [13], type: 'valley', angle: 139, direction: -1 },
+      { axis: [2, 5], moving: [13], type: 'valley', angle: 138.5, direction: -1 },
       { axis: [3, 4], moving: [14], type: 'valley', angle: 137, direction: 1 },
-      { axis: [3, 9], moving: [15], type: 'valley', angle: 139, direction: 1 },
+      { axis: [3, 4], moving: [15], type: 'valley', angle: 138.5, direction: 1 },
       { axis: [1, 7], moving: [16], type: 'valley', angle: 137, direction: 1 },
-      { axis: [1, 10], moving: [17], type: 'valley', angle: 139, direction: 1 },
+      { axis: [1, 7], moving: [17], type: 'valley', angle: 138.5, direction: 1 },
       { axis: [0, 6], moving: [18], type: 'valley', angle: 137, direction: -1 },
-      { axis: [0, 8], moving: [19], type: 'valley', angle: 139, direction: -1 },
+      { axis: [0, 6], moving: [19], type: 'valley', angle: 138.5, direction: -1 },
     ],
     description: {
       ja: '飛び出した4つの耳を、左右の壁の内側にたたみます。箱のできあがり。',
