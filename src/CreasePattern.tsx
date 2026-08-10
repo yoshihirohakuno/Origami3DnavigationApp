@@ -119,26 +119,6 @@ function projectedArea(points: { x: number; y: number }[]): number {
   return area / 2;
 }
 
-/** 鶴だけは折り計算の投影ではなく、完成後として読める専用シルエットを使う */
-export function CraneFinalPreview({
-  size = 96,
-  className,
-}: {
-  size?: number;
-  className?: string;
-}) {
-  return (
-    <svg className={className} viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      <polygon points="18,56 44,42 38,58" fill="#fbfaf7" stroke="#25262c" strokeWidth="1.2" strokeLinejoin="round" />
-      <polygon points="38,52 58,30 77,61 53,76" fill="#eda6a2" stroke="#25262c" strokeWidth="1.2" strokeLinejoin="round" />
-      <polygon points="44,52 32,87 58,72" fill="#f5c2bd" stroke="#25262c" strokeWidth="1.2" strokeLinejoin="round" />
-      <polygon points="54,43 68,22 83,18 73,29 83,35 67,34" fill="#eda6a2" stroke="#25262c" strokeWidth="1.2" strokeLinejoin="round" />
-      <path d="M38 52 L54 43 L53 76 Z" fill="#fbfaf7" stroke="#25262c" strokeWidth="1.2" strokeLinejoin="round" />
-      <path d="M31 60 C43 65 55 65 67 60" fill="none" stroke="#25262c" strokeWidth="1" strokeLinecap="round" opacity="0.45" />
-    </svg>
-  );
-}
-
 /** 手裏剣だけは組み上げ星形を専用シルエットで描く(朱×藍の風車状4つ尖り) */
 export function ShurikenFinalPreview({
   size = 96,
@@ -183,7 +163,9 @@ const PAPER_BACK = '#fbfaf7';
 
 /** 作品カード用:工程を最後まで適用した完成形をSVGで描く */
 export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; size?: number }) {
-  if (model.id === 'crane') return <CraneFinalPreview size={size} />;
+  // 鶴は手描きSVGをやめて工程データから描く(2026-08-10)。15工程の完成形が
+  // 実装済みで、立体なのでナビ画面と同じ視点から投影すれば実物と同じ形になる。
+  // 手描きSVGは羽・首の形が実際の折りと違っていた
   if (model.id === 'shuriken') return <ShurikenFinalPreview size={size} />;
 
   // 作品ごとの紙色(sheetColors)を使う。ハート・箱・くじら・兜などは

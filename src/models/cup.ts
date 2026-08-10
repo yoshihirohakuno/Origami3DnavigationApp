@@ -9,11 +9,16 @@ import type { OrigamiModel } from '../engine/types';
  * 角(±1,0)の折り先が反対側の折り線の上端(∓(√2-1), s)にぴったり重なり、
  * フタの折り線(y=s)とあわせて、はみ出しのない台形のコップになる。
  *
+ * 2026-08-10 修正: ❶を山折り(下半分を奥へ)に変更。谷折りだと手前へ回った下半分が
+ * 裏返って**胴が白く**なり、「動かない側が常に表を向く」という全作品共通の方針と
+ * 逆だった(自動点検で完成形の45%が裏の白と判明)。あわせて前後のフタ(❹❺)と
+ * ❻で開く層を入れ替えた。
+ *
  * 2026-08-09 追加: ❻「口を開く」。工程5までは平畳みなので、完成形が平たい台形で
  * コップに見えなかった(実物は口を開いて使う=原典の完成図も口が開いている)。
  * 前後の層を、コップの底の折り線(y=0、動かない頂点 7-4 を軸)まわりに
  * ±OPEN° 回して口を開く。箱と同じ「平畳みで止めない立体の折り」。
- * - 前の層(❶で手前へ回った下半分: 2/6/9)を手前へ、後ろの層(0/5/8)を奥へ
+ * - 前の層(❶で動かない上半分: 0/5/8)を手前へ、後ろの層(2/6/9)を奥へ
  * - 左右の角(1/3)は前後の層で共有する1点(実物でも側面のタブは1枚)。
  *   そのため側面の小さな三角だけ辺が約4%伸びる。紙が円錐状に曲がる分を
  *   平面の面で近似しているためで、見た目の破綻はない
@@ -55,10 +60,14 @@ export const cupModel: OrigamiModel = {
   ],
   steps: [
     {
-      folds: [{ axis: [3, 1], moving: [2, 6, 9], type: 'valley', angle: 177 }],
+      folds: [{ axis: [3, 1], moving: [2, 6, 9], type: 'mountain', angle: 177 }],
       description: {
-        ja: '下の角を上の角に合わせて、半分に谷折りします。',
-        en: 'Valley-fold in half, bringing the bottom corner up to the top.',
+        ja: '下の角を上の角に合わせて、半分に折ります。',
+        en: 'Fold in half, bringing the bottom corner up to the top.',
+      },
+      caution: {
+        ja: '下半分を奥へ回します。こうすると外側が紙の表の色になります。',
+        en: 'Take the bottom half behind so the outside shows the front of the paper.',
       },
     },
     {
@@ -80,7 +89,7 @@ export const cupModel: OrigamiModel = {
       },
     },
     {
-      folds: [{ axis: [6, 9], moving: [2], type: 'valley', angle: 172 }],
+      folds: [{ axis: [5, 8], moving: [0], type: 'valley', angle: 172 }],
       description: {
         ja: '手前のフタを、折った角にかぶせるように谷折りします。',
         en: 'Valley-fold the front flap down over the folded corners.',
@@ -91,7 +100,7 @@ export const cupModel: OrigamiModel = {
       },
     },
     {
-      folds: [{ axis: [5, 8], moving: [0], type: 'mountain', angle: 172 }],
+      folds: [{ axis: [6, 9], moving: [2], type: 'mountain', angle: 172 }],
       description: {
         ja: '後ろのフタも、裏側へ山折りします。',
         en: 'Mountain-fold the back flap behind as well.',
@@ -104,8 +113,8 @@ export const cupModel: OrigamiModel = {
     {
       // ❻ 口を開く。底の折り線(動かない 7-4)を軸に、前の層を手前・奥の層を奥へ
       folds: [
-        { axis: [7, 4], moving: [2, 6, 9], type: 'valley', angle: OPEN },
-        { axis: [7, 4], moving: [0, 5, 8], type: 'mountain', angle: OPEN },
+        { axis: [7, 4], moving: [0, 5, 8], type: 'valley', angle: OPEN },
+        { axis: [7, 4], moving: [2, 6, 9], type: 'mountain', angle: OPEN },
       ],
       description: {
         ja: '口を開いて、コップの形にします。できあがり。',
