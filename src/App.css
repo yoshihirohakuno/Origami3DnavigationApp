@@ -1453,3 +1453,114 @@
   padding: 12px;
   font-size: 13px;
 }
+
+/* ============================================================
+   言語切り替え(2026-08-10)
+   日英併記をやめて1言語表示にしたので、切り替えを常に見える場所に置く。
+   小さくても押しやすいよう最小44pxのタップ領域を確保する。
+   ============================================================ */
+
+.lib-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.lang-toggle button {
+  font: inherit;
+  font-family: var(--font-latin);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  min-height: 30px;
+  padding: 7px 11px;
+  background: transparent;
+  border: none;
+  color: var(--faint);
+  cursor: pointer;
+  transition: color 0.18s, background 0.18s;
+}
+
+.lang-toggle button + button {
+  border-left: 1px solid var(--border);
+}
+
+.lang-toggle button:hover {
+  color: var(--text);
+}
+
+.lang-toggle button.on {
+  color: var(--bg);
+  background: var(--text);
+}
+
+/* ナビ画面のヘッダーは幅が厳しいので詰めた見た目にする */
+.lang-toggle.compact button {
+  font-size: 9px;
+  padding: 6px 8px;
+  min-height: 26px;
+}
+
+/* 1言語表示になり作品名が短くなったので、ヘッダーで折り返さないようにする
+   (以前は「ぱんだのかお PANDA FACE」が2行に割れていた) */
+.nav-title strong {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+  .nav-title strong {
+    font-size: 17px;
+  }
+  .lib-header-top {
+    gap: 10px;
+  }
+}
+
+/* 欧文の見出しは字面が大きいので少し詰める(日本語の2行組みと高さをそろえる) */
+.lib-header h1.latin {
+  font-size: 40px;
+  line-height: 1.14;
+  letter-spacing: -0.01em;
+  max-width: 9em;
+}
+
+@media (max-width: 640px) {
+  .lib-header h1.latin {
+    font-size: 34px;
+  }
+}
+
+/* ナビ画面ヘッダー: 1言語表示にしたので作品名を優先して見せる。
+   「残り3工程 / 3 to go」は折り返さない。狭い画面では言語切り替えを隠す
+   (言語はライブラリ側で切り替える。両方出すと作品名が潰れる) */
+.nav-title span {
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .nav-header .lang-toggle {
+    display: none;
+  }
+}
+
+/* 折りバッジは名前+向きの2行。欧文が長いので折り返しを許して幅を抑える */
+.fold-badge > div strong {
+  display: block;
+}
+
+.fold-badge {
+  max-width: min(58%, 260px);
+}
+
+.fold-badge > div span {
+  white-space: normal;
+  line-height: 1.35;
+}

@@ -2,14 +2,25 @@ import { useEffect, useRef, useState } from 'react';
 import type { OrigamiModel, FoldType } from './engine/types';
 import { computeFoldState } from './engine/fold';
 import { PaperScene } from './three/PaperScene';
+import { LangToggle, useLang } from './i18n';
 
+/** 折り種類の名前と、動く向きの補足(バッジの2行) */
 const FOLD_LABEL: Record<FoldType, { ja: string; en: string }> = {
-  valley: { ja: '谷折り', en: 'VALLEY ・ TOWARD YOU' },
-  mountain: { ja: '山折り', en: 'MOUNTAIN ・ BEHIND' },
-  unfold: { ja: '開く', en: 'UNFOLD' },
-  'inside-reverse': { ja: '中割り折り', en: 'INSIDE REVERSE' },
-  'outside-reverse': { ja: 'かぶせ折り', en: 'OUTSIDE REVERSE' },
-  assemble: { ja: '組み立て', en: 'ASSEMBLE' },
+  valley: { ja: '谷折り', en: 'Valley fold' },
+  mountain: { ja: '山折り', en: 'Mountain fold' },
+  unfold: { ja: '開く', en: 'Unfold' },
+  'inside-reverse': { ja: '中割り折り', en: 'Inside reverse' },
+  'outside-reverse': { ja: 'かぶせ折り', en: 'Outside reverse' },
+  assemble: { ja: '組み立て', en: 'Assemble' },
+};
+
+const FOLD_HINT: Record<FoldType, { ja: string; en: string }> = {
+  valley: { ja: '手前へ', en: 'toward you' },
+  mountain: { ja: '奥へ', en: 'behind' },
+  unfold: { ja: '折り目をつけて戻す', en: 'crease, then open' },
+  'inside-reverse': { ja: '中へ割り入れる', en: 'tuck inside' },
+  'outside-reverse': { ja: '外へかぶせる', en: 'wrap outside' },
+  assemble: { ja: '重ねる・回す', en: 'layer and turn' },
 };
 
 interface Props {
@@ -28,6 +39,7 @@ interface UiState {
 const PLAY_SPEED = 0.9;
 
 export function Navigator({ model, onExit, onComplete }: Props) {
+  const { t, L, lang } = useLang();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<PaperScene | null>(null);
   const tRef = useRef(0);
@@ -147,15 +159,14 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   return (
     <div className="screen nav-screen">
       <header className="nav-header">
-        <button className="icon-btn" onClick={onExit} aria-label="ライブラリへ戻る / Back to library">
+        <button className="icon-btn" onClick={onExit} aria-label={t('backToLibrary')}>
           ←
         </button>
         <div className="nav-title">
-          <strong className="serif">
-            {model.name.ja} <em>{model.name.en}</em>
-          </strong>
-          <span>{finished ? '完成 COMPLETE' : `残り${left}工程 ・ ${left} TO GO`}</span>
+          <strong className="serif">{L(model.name)}</strong>
+          <span>{finished ? t('complete') : t('toGo', { n: left })}</span>
         </div>
+        <LangToggle className="compact" />
         <div className="step-counter">
           <em>{String(Math.min(ui.stepIndex + 1, total)).padStart(2, '0')}</em>
           <span>/ {String(total).padStart(2, '0')}</span>
@@ -178,12 +189,12 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         <div className={`fold-badge ${mixed ? 'mixed' : foldType}`}>
           <i />
           <div>
-            <strong>{mixed ? 'たたむ' : FOLD_LABEL[foldType].ja}</strong>
-            <span>{mixed ? 'COLLAPSE' : FOLD_LABEL[foldType].en}</span>
+            <strong>{mixed ? t('collapse') : L(FOLD_LABEL[foldType])}</strong>
+            <span>{mixed ? t('collapseHint') : L(FOLD_HINT[foldType])}</span>
           </div>
         </div>
         <button className="view-reset" onClick={() => sceneRef.current?.resetCamera()}>
-          正面 FRONT
+          {t('front')}
         </button>
         {finished && !done && (
           <div className="finish-float">
@@ -194,7 +205,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
                 setDone(true);
               }}
             >
-              完成を記録 <em>MARK FOLDED</em>
+              {t('markFolded')}
             </button>
           </div>
         )}
@@ -202,7 +213,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
 
       <aside className="step-panel">
         <p className="panel-label">
-          ROUTE <span>・ 工程</span>
+          ROUTE{lang === 'ja' && <span>・ {t('route')}</span>}
         </p>
         <ol className="step-list">
           {model.steps.map((s, i) => {
@@ -213,10 +224,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
                 <button onClick={() => goTo(i)}>
                   <span className="sl-num">{String(i + 1).padStart(2, '0')}</span>
                   <i className={`sl-dot ${s.folds[0].type}`} />
-                  <span className="sl-text">
-                    {s.description.ja}
-                    <em>{s.description.en}</em>
-                  </span>
+                  <span className="sl-text">{L(s.description)}</span>
                 </button>
               </li>
             );
@@ -229,16 +237,9 @@ export function Navigator({ model, onExit, onComplete }: Props) {
           {finished ? 'COMPLETE' : `STEP ${String(ui.stepIndex + 1).padStart(2, '0')}`}
         </p>
         <p className="step-desc">
-          {finished ? `「${model.name.ja}」— 完成です。` : step.description.ja}
+          {finished ? t('isComplete', { name: L(model.name) }) : L(step.description)}
         </p>
-        <p className="step-desc-en">
-          {finished ? `Your ${model.name.en} is complete.` : step.description.en}
-        </p>
-        {!finished && step.caution && (
-          <p className="step-caution">
-            ※ {step.caution.ja} — {step.caution.en}
-          </p>
-        )}
+        {!finished && step.caution && <p className="step-caution">※ {L(step.caution)}</p>}
       </div>
 
       <div className="controls">
@@ -250,7 +251,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
           step={0.01}
           value={ui.t}
           onChange={(e) => goTo(Number(e.target.value), true)}
-          aria-label="工程スライダー / Step slider"
+          aria-label={t('stepSlider')}
           style={{
             backgroundImage: `linear-gradient(to right, var(--accent) ${pct}%, var(--border) ${pct}%)`,
             backgroundSize: '100% 2px',
@@ -260,19 +261,19 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         />
         <div className="btn-row">
           <button className="btn-sub" onClick={() => goTo(0)}>
-            最初から<em>RESET</em>
+            {t('reset')}
           </button>
           <button className="btn-main" onClick={prev} disabled={ui.t <= 0}>
-            戻る<em>BACK</em>
+            {t('back')}
           </button>
-          <button className="btn-play" onClick={togglePlay} aria-label={playing ? '一時停止 / Pause' : '再生 / Play'}>
+          <button className="btn-play" onClick={togglePlay} aria-label={playing ? t('pause') : t('play')}>
             {playing ? '❙❙' : '▶'}
           </button>
           <button className="btn-main primary" onClick={next} disabled={finished}>
-            次へ<em>NEXT</em>
+            {t('next')}
           </button>
           <button className="btn-sub" onClick={() => goTo(total)}>
-            完成形<em>FINAL</em>
+            {t('final')}
           </button>
         </div>
       </div>
@@ -280,12 +281,12 @@ export function Navigator({ model, onExit, onComplete }: Props) {
       {done && (
         <div className="overlay">
           <div className="overlay-card">
-            <p className="overlay-eyebrow">COMPLETED</p>
-            <h2 className="serif">完成</h2>
+            <p className="overlay-eyebrow">{t('completedEyebrow')}</p>
+            <h2 className="serif">{t('complete')}</h2>
             <p>
-              「{model.name.ja}」を折りあげました
+              {t('foldedUp', { name: L(model.name) })}
               <br />
-              Beautifully folded.
+              {t('beautifully')}
             </p>
             <button
               className="btn-main primary"
@@ -294,10 +295,10 @@ export function Navigator({ model, onExit, onComplete }: Props) {
                 goTo(0, true);
               }}
             >
-              もう一度折る<em>FOLD AGAIN</em>
+              {t('foldAgain')}
             </button>
             <button className="btn-sub" onClick={onExit}>
-              ライブラリへ戻る<em>LIBRARY</em>
+              {t('library')}
             </button>
           </div>
         </div>

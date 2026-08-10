@@ -319,7 +319,18 @@ movingから除外/非隣接層で共有される折り目縁の頂点複製(❷
 ## 作業ルール
 
 - デザイン: 大人向けダーク和モダン(墨#0e0f12+朱#e0492f、Shippori Mincho / Space Grotesk)。
-  絵文字・ポップな装飾は使わない。全テキストは日英併記(`LocalizedText { ja, en }`)
+  絵文字・ポップな装飾は使わない。
+- **言語は日英の切り替え式(2026-08-10。それまでは日英併記)**。`src/i18n.tsx` に
+  `LangProvider` / `useLang()` / `LangToggle` があり、UI 文言も作品データと同じ
+  `LocalizedText { ja, en }` で持つ。使い方は `const { t, L, lang } = useLang();` で
+  `t('key')` が UI 文言、`L(model.name)` が作品データ。**新しい文言を足すときは
+  i18n.tsx の DICT に ja/en 両方を書く**(片方だけにすると型エラーになる)。
+  初期値は localStorage → `navigator.language` の順で決定し、`<html lang>` と
+  `document.title` も追従する。
+  小さな英字ラベル(ORIGAMI NAVIGATION / RANK / FOLDED / STEP / ROUTE)は
+  デザイン上の記号として両言語で共通。日本語のときだけ添える英字(カードの英名・
+  セクション見出しの SELECT A MODEL など)は `lang === 'ja'` で出し分ける
+  (英語表示のときは同じ語が二重に出るため)
 - 検証: `npx tsc -b` → `npm run dev` でブラウザ確認。ナビ画面では
   `window.__origami.setT(t)` でタイムラインを直接操作できる(E2E検証用フック)
 - 幾何の検証: `node tools/solve-collapse.mjs`(基本形の符号・層順ソルバ)。

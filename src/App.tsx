@@ -19,6 +19,7 @@ import { heartModel } from './models/heart';
 import { boxModel } from './models/box';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
+import { LangToggle, useLang } from './i18n';
 import './App.css';
 
 const MODELS: OrigamiModel[] = [
@@ -67,16 +68,17 @@ function loadRecords(): Records {
   return { total: 0, byModel: {} };
 }
 
-function titleFor(total: number): [string, string] {
+function titleFor(total: number): { ja: string; en: string } {
   for (const [n, ja, en] of TITLES) {
-    if (total >= n) return [ja, en];
+    if (total >= n) return { ja, en };
   }
-  return ['称号未取得', 'Unranked'];
+  return { ja: '称号未取得', en: 'Unranked' };
 }
 
 function Difficulty({ n }: { n: number }) {
+  const { t } = useLang();
   return (
-    <span className="dots" aria-label={`難易度 / Difficulty ${n}/5`}>
+    <span className="dots" aria-label={`${t('difficulty')} ${n}/5`}>
       {Array.from({ length: 5 }, (_, i) => (
         <i key={i} className={i < n ? 'on' : ''} />
       ))}
@@ -97,6 +99,7 @@ function Corners() {
 }
 
 export default function App() {
+  const { t, L, lang } = useLang();
   const [current, setCurrent] = useState<OrigamiModel | null>(null);
   const [editing, setEditing] = useState(false);
   const [records, setRecords] = useState<Records>(loadRecords);
@@ -126,7 +129,7 @@ export default function App() {
     );
   }
 
-  const [titleJa, titleEn] = titleFor(records.total);
+  const rankTitle = titleFor(records.total);
 
   return (
     <div className="screen library-screen">
@@ -135,28 +138,31 @@ export default function App() {
       </div>
 
       <header className="lib-header">
-        <p className="eyebrow">
-          <span className="rule" />
-          ORIGAMI NAVIGATION
-        </p>
-        <h1 className="serif">
-          折り紙、<br />道順で。
+        <div className="lib-header-top">
+          <p className="eyebrow">
+            <span className="rule" />
+            {t('eyebrow')}
+          </p>
+          <LangToggle />
+        </div>
+        <h1 className={`serif${lang === 'en' ? ' latin' : ''}`}>
+          {t('heroLine1')}
+          {lang === 'ja' ? <br /> : ' '}
+          {t('heroLine2')}
         </h1>
-        <p className="hero-en">Every fold, turn by turn.</p>
+        <p className="hero-en">{t('heroSub')}</p>
         <div className="record-chip">
-          <span className="chip-key">RANK</span>
-          <span className="chip-label">
-            {titleJa} <em>{titleEn}</em>
-          </span>
+          <span className="chip-key">{t('rank')}</span>
+          <span className="chip-label">{L(rankTitle)}</span>
           <span className="chip-sep" />
-          <span className="chip-key">FOLDED</span>
+          <span className="chip-key">{t('folded')}</span>
           <span className="chip-label">{records.total}</span>
         </div>
       </header>
 
       <h2 className="section-title">
-        <span>作品を選ぶ</span>
-        <span className="en">SELECT A MODEL</span>
+        <span>{t('selectModel')}</span>
+        {lang === 'ja' && <span className="en">{t('selectModelTag')}</span>}
         <span className="line" />
       </h2>
 
@@ -169,14 +175,14 @@ export default function App() {
               <FinalShapePreview model={m} />
             </div>
             <div className="work-row">
-              <span className={`work-name serif${m.name.ja.length > 3 ? ' long' : ''}`}>
-                {m.name.ja}
+              <span className={`work-name serif${L(m.name).length > 3 ? ' long' : ''}`}>
+                {L(m.name)}
               </span>
               <Difficulty n={m.difficulty} />
             </div>
-            <div className="work-en">{m.name.en}</div>
+            {lang === 'ja' && <div className="work-en">{m.name.en}</div>}
             <div className="work-meta">
-              {m.steps.length} STEPS ・ {m.steps.length} MIN
+              {t('stepsMeta', { n: m.steps.length })} ・ {t('minutesMeta', { n: m.steps.length })}
               {records.byModel[m.id] ? ` ・ ×${records.byModel[m.id]}` : ''}
             </div>
           </button>
@@ -189,19 +195,18 @@ export default function App() {
               <GenericPattern />
             </div>
             <div className="work-row">
-              <span className={`work-name serif${m.ja.length > 3 ? ' long' : ''}`}>{m.ja}</span>
+              <span className={`work-name serif${L(m).length > 3 ? ' long' : ''}`}>{L(m)}</span>
               <Difficulty n={m.difficulty} />
             </div>
-            <div className="work-en">{m.en}</div>
-            <div className="work-meta">COMING SOON ・ 準備中</div>
+            <div className="work-meta">{t('comingSoon')}</div>
           </div>
         ))}
       </div>
 
       <p className="footnote">
-        PROTOTYPE — 収録{MODELS.length}作品 / {MODELS.length} models available.
+        {t('libraryNote', { n: MODELS.length })}
         <button className="editor-link" onClick={() => setEditing(true)}>
-          MODEL EDITOR — 工程データ作成(β)
+          {t('editorLink')}
         </button>
       </p>
     </div>
