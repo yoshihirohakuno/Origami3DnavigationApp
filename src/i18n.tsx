@@ -80,6 +80,18 @@ const DICT = {
   hintList: { ja: '工程の一覧から、好きな工程へ飛べます。', en: 'Jump to any step from the route list.' },
   hintClose: { ja: 'はじめる', en: 'Got it' },
   showHint: { ja: '使い方', en: 'How it works' },
+  hintKeys: {
+    ja: 'キーボード: ← → で工程送り、スペースで再生、Esc で一覧へ。',
+    en: 'Keys: ← → to step, Space to play, Esc for the library.',
+  },
+  share: { ja: '完成をシェア', en: 'Share it' },
+  shareDone: { ja: 'シェアしました', en: 'Shared' },
+  shareCopyHint: { ja: 'この文をコピーしてシェアしてください', en: 'Copy this text to share' },
+  shareTitle: { ja: 'おりがみナビ', en: 'Origami Navi' },
+  shareText: {
+    ja: `おりがみナビで「${'{name}'}」を折りました。`,
+    en: `I folded the ${'{name}'} with Origami Navi.`,
+  },
 } satisfies Record<string, LocalizedText>;
 
 export type DictKey = keyof typeof DICT;
@@ -151,4 +163,16 @@ export function LangToggle({ className }: { className?: string }) {
       ))}
     </div>
   );
+}
+
+/**
+ * このモジュールは React Context を作っているので、HMR で差し替わると
+ * 既存のツリーが古い Context を参照し続けて useLang が例外を投げる
+ * (開発中に文言を1語足しただけで画面が真っ暗になる)。
+ * 変更時はページごと作り直す。
+ */
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    import.meta.hot?.invalidate();
+  });
 }

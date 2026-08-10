@@ -1733,3 +1733,55 @@
     gap: 5px;
   }
 }
+
+/* ============================================================
+   キーボード操作とアクセシビリティ(2026-08-10)
+   ============================================================ */
+
+/* キーボードで操作している人にだけフォーカス枠を出す
+   (マウス操作では出ないので見た目を崩さない) */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.hint-keys {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+/* 動きを減らす設定の環境では、自動再生の補間を最小限にする */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* 完成オーバーレイのボタンが2つになったので間隔を整える */
+.overlay-card .btn-main + .btn-main {
+  margin-top: 10px;
+}
+
+/* 完成オーバーレイの見出しは、日本語「完成」(2文字)を前提に大きくしていたため
+   英語の "Complete" がカードから溢れていた(2026-08-10 修正)。
+   カード幅に収まるよう字を詰め、はみ出しを防ぐ */
+.overlay-card h2 {
+  font-size: clamp(30px, 11vw, 46px);
+  line-height: 1.1;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* 共有の手動コピー用(クリップボードが権限で使えないとき) */
+.share-text {
+  width: 100%;
+  margin-top: 4px;
+  padding: 9px 10px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  text-align: center;
+}

@@ -66,6 +66,39 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   };
 
   const total = model.steps.length;
+  const [shared, setShared] = useState(false);
+  const [shareFallback, setShareFallback] = useState<string | null>(null);
+  /**
+   * 完成をシェアする。Web Share → クリップボード → 手動コピー用の表示、の順に
+   * 段階的に落とす(クリップボードは権限で失敗することがあり、そのとき何も
+   * 起きないと壊れて見えるため、最後は文字列を出して選べるようにする)。
+   */
+  const share = async () => {
+    const text = t('shareText', { name: L(model.name) });
+    const url = typeof location === 'undefined' ? '' : location.href;
+    const full = `${text} ${url}`.trim();
+    const n = navigator as Navigator & { share?: (d: ShareData) => Promise<void> };
+    if (n.share) {
+      try {
+        await n.share({ title: t('shareTitle'), text, url });
+        setShared(true);
+      } catch {
+        /* ユーザーがキャンセルした場合は何も出さない */
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(full);
+      setShared(true);
+    } catch {
+      setShareFallback(full);
+    }
+  };
+  // キーボードハンドラから最新の関数を呼ぶための参照
+  const nextRef = useRef<() => void>(() => {});
+  const prevRef = useRef<() => void>(() => {});
+  const playRef = useRef<() => void>(() => {});
+  const goToRef = useRef<(t: number) => void>(() => {});
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -151,6 +184,44 @@ export function Navigator({ model, onExit, onComplete }: Props) {
     const t = tRef.current;
     goTo(Math.abs(t - Math.round(t)) < 1e-6 ? Math.round(t) - 1 : Math.floor(t));
   };
+  // キーボード操作。PCでは矢印キーで工程を送れるのが自然なので対応する
+  // (入力欄にフォーカスがあるときは邪魔しない)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement as HTMLElement | null;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          e.preventDefault();
+          nextRef.current();
+          break;
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          e.preventDefault();
+          prevRef.current();
+          break;
+        case ' ':
+          e.preventDefault();
+          playRef.current();
+          break;
+        case 'Home':
+          e.preventDefault();
+          goToRef.current(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          goToRef.current(Number.POSITIVE_INFINITY);
+          break;
+        case 'Escape':
+          onExit();
+          break;
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onExit]);
+
   const togglePlay = () => {
     if (playingRef.current) {
       targetRef.current = tRef.current;
@@ -163,6 +234,10 @@ export function Navigator({ model, onExit, onComplete }: Props) {
       setPlaying(true);
     }
   };
+  nextRef.current = next;
+  prevRef.current = prev;
+  playRef.current = togglePlay;
+  goToRef.current = (v: number) => goTo(v);
 
   const step = model.steps[ui.stepIndex];
   // バッジは工程の代表折り。山谷が混在する工程は「たたむ」と表示する
@@ -224,6 +299,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
               <li>{t('hintDrag')}</li>
               <li>{t('hintSlider')}</li>
               <li>{t('hintList')}</li>
+              <li className="hint-keys">{t('hintKeys')}</li>
             </ul>
             <button className="btn-main primary" onClick={closeHint}>
               {t('hintClose')}
@@ -322,8 +398,21 @@ export function Navigator({ model, onExit, onComplete }: Props) {
               <br />
               {t('beautifully')}
             </p>
+            <button className="btn-main primary" onClick={share}>
+              {shared ? t('shareDone') : t('share')}
+            </button>
+            {shareFallback && (
+              <input
+                className="share-text"
+                readOnly
+                value={shareFallback}
+                aria-label={t('shareCopyHint')}
+                onFocus={(e) => e.currentTarget.select()}
+                ref={(el) => el?.select()}
+              />
+            )}
             <button
-              className="btn-main primary"
+              className="btn-main"
               onClick={() => {
                 setDone(false);
                 goTo(0, true);
