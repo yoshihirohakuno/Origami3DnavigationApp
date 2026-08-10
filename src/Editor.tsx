@@ -7,10 +7,10 @@ import { buildSegments, FOLD_COLORS } from './CreasePattern';
 import { tulipModel } from './models/tulip';
 import { dogModel } from './models/dog';
 import { cupModel } from './models/cup';
-import { birdModel } from './models/bird';
+import { chickModel } from './models/chick';
 import { squareBaseModel } from './models/squareBase';
 
-const PRESETS: OrigamiModel[] = [tulipModel, dogModel, cupModel, birdModel, squareBaseModel];
+const PRESETS: OrigamiModel[] = [tulipModel, dogModel, cupModel, chickModel, squareBaseModel];
 
 const TYPE_LABEL: Record<FoldType, string> = {
   valley: '谷折り',

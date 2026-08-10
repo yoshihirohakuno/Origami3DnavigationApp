@@ -4,7 +4,7 @@ import { Editor } from './Editor';
 import { dogModel } from './models/dog';
 import { cupModel } from './models/cup';
 import { tulipModel } from './models/tulip';
-import { birdModel } from './models/bird';
+import { chickModel } from './models/chick';
 import { squareBaseModel } from './models/squareBase';
 import { craneModel } from './models/crane';
 import { shurikenModel } from './models/shuriken';
@@ -25,7 +25,7 @@ const MODELS: OrigamiModel[] = [
   tulipModel,
   dogModel,
   cupModel,
-  birdModel,
+  chickModel,
   squareBaseModel,
   craneModel,
   shurikenModel,
