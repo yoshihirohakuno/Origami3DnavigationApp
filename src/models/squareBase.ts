@@ -14,7 +14,7 @@ import type { OrigamiModel } from '../engine/types';
 export const squareBaseModel: OrigamiModel = {
   id: 'square-base',
   name: { ja: '正方基本形', en: 'Square Base' },
-  difficulty: 2,
+  difficulty: 1,
   // シート全体を-112.5°回転してある:固定扇形の二等分線が真下を向き、
   // 完成形が「閉じた角(O)が上・開いた端が下」の正規の向きになる。
   vertices: [

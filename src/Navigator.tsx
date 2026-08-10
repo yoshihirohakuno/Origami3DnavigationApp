@@ -48,6 +48,22 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   const [ui, setUi] = useState<UiState>({ t: 0, stepIndex: 0, fraction: 0 });
   const [playing, setPlaying] = useState(false);
   const [done, setDone] = useState(false);
+  // 初回だけ操作のヒントを出す(3Dが回せる/スライダーで途中を見られる、が伝わらないため)
+  const [hint, setHint] = useState(() => {
+    try {
+      return localStorage.getItem('origami-hint-seen') !== '1';
+    } catch {
+      return false;
+    }
+  });
+  const closeHint = () => {
+    setHint(false);
+    try {
+      localStorage.setItem('origami-hint-seen', '1');
+    } catch {
+      /* 保存できなくてもその場は閉じる */
+    }
+  };
 
   const total = model.steps.length;
 
@@ -196,6 +212,24 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         <button className="view-reset" onClick={() => sceneRef.current?.resetCamera()}>
           {t('front')}
         </button>
+        {!hint && (
+          <button className="hint-open" onClick={() => setHint(true)} title={t('showHint')}>
+            ?
+          </button>
+        )}
+        {hint && (
+          <div className="hint-card" role="dialog" aria-label={t('hintTitle')}>
+            <p className="hint-title">{t('hintTitle')}</p>
+            <ul>
+              <li>{t('hintDrag')}</li>
+              <li>{t('hintSlider')}</li>
+              <li>{t('hintList')}</li>
+            </ul>
+            <button className="btn-main primary" onClick={closeHint}>
+              {t('hintClose')}
+            </button>
+          </div>
+        )}
         {finished && !done && (
           <div className="finish-float">
             <button

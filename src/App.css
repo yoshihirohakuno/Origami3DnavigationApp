@@ -1564,3 +1564,172 @@
   white-space: normal;
   line-height: 1.35;
 }
+
+/* ============================================================
+   ライブラリの絞り込みと難易度ラベル(2026-08-10)
+   ============================================================ */
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 22px;
+}
+
+.chip {
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 13px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s, background 0.18s;
+}
+
+.chip em {
+  font-style: normal;
+  font-family: var(--font-latin);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--faint);
+}
+
+.chip:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.chip.on {
+  color: var(--text);
+  border-color: var(--accent);
+  background: rgba(224, 73, 47, 0.08);
+}
+
+.chip.on em {
+  color: var(--accent);
+}
+
+.empty-note {
+  grid-column: 1 / -1;
+  margin: 8px 0 0;
+  color: var(--faint);
+  font-size: 13px;
+}
+
+/* 難易度: ドット + 呼び名 */
+.level {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.level-text {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+.level-text.lv3,
+.level-text.lv4,
+.level-text.lv5 {
+  color: var(--accent);
+}
+
+/* ============================================================
+   ナビ画面の初回ガイド(2026-08-10)
+   ============================================================ */
+
+.hint-card {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  max-width: 340px;
+  padding: 16px 18px 14px;
+  background: rgba(14, 15, 18, 0.94);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(6px);
+}
+
+.hint-title {
+  margin: 0 0 10px;
+  font-family: var(--font-latin);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.hint-card ul {
+  margin: 0 0 14px;
+  padding-left: 1.1em;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.hint-card li + li {
+  margin-top: 4px;
+}
+
+.hint-card .btn-main {
+  width: 100%;
+  flex: none;
+}
+
+.hint-open {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 34px;
+  height: 34px;
+  font: inherit;
+  font-family: var(--font-latin);
+  font-size: 13px;
+  color: var(--faint);
+  background: rgba(14, 15, 18, 0.7);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s;
+}
+
+.hint-open:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+/* 見出しは行ごとに折らない。入らない画面では字を詰める(clamp)
+   (「3Dで動く。」が「く。」だけ改行される問題の対策) */
+.lib-header h1 {
+  font-size: clamp(30px, 8.4vw, 44px);
+}
+
+.lib-header h1 > span {
+  white-space: nowrap;
+}
+
+.lib-header h1.latin {
+  font-size: clamp(28px, 7.6vw, 40px);
+}
+
+/* 狭い画面では絞り込みチップを詰めて行数を減らす */
+@media (max-width: 560px) {
+  .filter-row {
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+  .chip {
+    font-size: 11px;
+    padding: 6px 10px;
+    min-height: 32px;
+    gap: 5px;
+  }
+}

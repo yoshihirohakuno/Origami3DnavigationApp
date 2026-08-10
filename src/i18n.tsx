@@ -29,9 +29,12 @@ function detectLang(): Lang {
 /** UI 文言。作品データと同じ LocalizedText で持つ */
 const DICT = {
   eyebrow: { ja: 'ORIGAMI NAVIGATION', en: 'ORIGAMI NAVIGATION' },
-  heroLine1: { ja: '折り紙、', en: 'Origami,' },
-  heroLine2: { ja: '道順で。', en: 'turn by turn.' },
-  heroSub: { ja: 'ひと折りずつ、道順で。', en: 'Every fold, turn by turn.' },
+  heroLine1: { ja: '折り方が、', en: 'Every fold,' },
+  heroLine2: { ja: '3Dで動く。', en: 'in 3D.' },
+  heroSub: {
+    ja: '一工程ずつ再生して、回して確かめながら折れます。',
+    en: 'Play it step by step and turn it to any angle as you fold.',
+  },
   rank: { ja: 'RANK', en: 'RANK' },
   folded: { ja: 'FOLDED', en: 'FOLDED' },
   selectModel: { ja: '作品を選ぶ', en: 'Select a model' },
@@ -67,6 +70,16 @@ const DICT = {
   collapseHint: { ja: '複数の折りを同時に', en: 'several folds at once' },
   difficulty: { ja: '難易度', en: 'Difficulty' },
   langLabel: { ja: '言語', en: 'Language' },
+  filterLabel: { ja: '種類でしぼる', en: 'Filter by kind' },
+  countModels: { ja: `${'{n}'}作品`, en: `${'{n}'} models` },
+  noMatch: { ja: 'この種類の作品はまだありません。', en: 'No models in this category yet.' },
+  levelPrefix: { ja: '難易度', en: 'Level' },
+  hintTitle: { ja: '使い方', en: 'How it works' },
+  hintDrag: { ja: '3Dはドラッグで回せます。ピンチ/ホイールで拡大。', en: 'Drag to turn the model. Pinch or scroll to zoom.' },
+  hintSlider: { ja: 'スライダーで折りの途中まで戻せます。', en: 'Drag the slider to scrub through a fold.' },
+  hintList: { ja: '工程の一覧から、好きな工程へ飛べます。', en: 'Jump to any step from the route list.' },
+  hintClose: { ja: 'はじめる', en: 'Got it' },
+  showHint: { ja: '使い方', en: 'How it works' },
 } satisfies Record<string, LocalizedText>;
 
 export type DictKey = keyof typeof DICT;
@@ -89,7 +102,9 @@ export function LangProvider({ children }: { children: ReactNode }) {
     // ページ全体の言語属性とタイトルも合わせる(スクリーンリーダー・検索向け)
     document.documentElement.lang = lang;
     document.title =
-      lang === 'ja' ? 'おりがみナビ — 折り紙、道順で。' : 'Origami Navi — Every fold, turn by turn.';
+      lang === 'ja'
+        ? 'おりがみナビ — 折り方が3Dで動く'
+        : 'Origami Navi — Every fold, in 3D';
   }, [lang]);
 
   const value = useMemo<LangCtx>(() => {

@@ -333,7 +333,7 @@ const steps: FoldStep[] = [
 export const rabbitModel: OrigamiModel = {
   id: 'rabbit',
   name: { ja: 'うさぎのかお', en: 'Rabbit Face' },
-  difficulty: 1,
+  difficulty: 2,
   cameraAngle: 0,
   vertices: V,
   faces: F.map(orient),

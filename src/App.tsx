@@ -20,6 +20,8 @@ import { boxModel } from './models/box';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import { LangToggle, useLang } from './i18n';
+import { CATEGORIES, categoryOf, levelLabel } from './catalog';
+import type { CategoryId } from './catalog';
 import './App.css';
 
 const MODELS: OrigamiModel[] = [
@@ -76,12 +78,16 @@ function titleFor(total: number): { ja: string; en: string } {
 }
 
 function Difficulty({ n }: { n: number }) {
-  const { t } = useLang();
+  const { t, L } = useLang();
+  // ドットだけでは差が伝わらないので、呼び名(初級/中級…)も添える
   return (
-    <span className="dots" aria-label={`${t('difficulty')} ${n}/5`}>
-      {Array.from({ length: 5 }, (_, i) => (
-        <i key={i} className={i < n ? 'on' : ''} />
-      ))}
+    <span className="level" aria-label={`${t('difficulty')} ${n}/5 — ${L(levelLabel(n))}`}>
+      <span className="dots" aria-hidden="true">
+        {Array.from({ length: 5 }, (_, i) => (
+          <i key={i} className={i < n ? 'on' : ''} />
+        ))}
+      </span>
+      <span className={`level-text lv${n}`}>{L(levelLabel(n))}</span>
     </span>
   );
 }
@@ -102,6 +108,7 @@ export default function App() {
   const { t, L, lang } = useLang();
   const [current, setCurrent] = useState<OrigamiModel | null>(null);
   const [editing, setEditing] = useState(false);
+  const [filter, setFilter] = useState<CategoryId | 'all'>('all');
   const [records, setRecords] = useState<Records>(loadRecords);
 
   const recordComplete = (model: OrigamiModel) => {
@@ -130,6 +137,7 @@ export default function App() {
   }
 
   const rankTitle = titleFor(records.total);
+  const shown = filter === 'all' ? MODELS : MODELS.filter((m) => categoryOf(m.id) === filter);
 
   return (
     <div className="screen library-screen">
@@ -146,9 +154,10 @@ export default function App() {
           <LangToggle />
         </div>
         <h1 className={`serif${lang === 'en' ? ' latin' : ''}`}>
-          {t('heroLine1')}
+          {/* 行の途中で折れると読みにくいので、行ごとに nowrap で包む */}
+          <span>{t('heroLine1')}</span>
           {lang === 'ja' ? <br /> : ' '}
-          {t('heroLine2')}
+          <span>{t('heroLine2')}</span>
         </h1>
         <p className="hero-en">{t('heroSub')}</p>
         <div className="record-chip">
@@ -166,10 +175,29 @@ export default function App() {
         <span className="line" />
       </h2>
 
+      <div className="filter-row" role="group" aria-label={t('filterLabel')}>
+        {CATEGORIES.map((c) => {
+          const n = c.id === 'all' ? MODELS.length : MODELS.filter((m) => categoryOf(m.id) === c.id).length;
+          if (n === 0) return null;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              className={`chip${filter === c.id ? ' on' : ''}`}
+              aria-pressed={filter === c.id}
+              onClick={() => setFilter(c.id)}
+            >
+              {L(c.label)}
+              <em>{n}</em>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="card-grid">
-        {MODELS.map((m, i) => (
+        {shown.map((m) => (
           <button key={m.id} className="work-card" onClick={() => setCurrent(m)}>
-            <span className="card-index">{String(i + 1).padStart(2, '0')}</span>
+            <span className="card-index">{String(MODELS.indexOf(m) + 1).padStart(2, '0')}</span>
             <div className="thumb">
               <Corners />
               <FinalShapePreview model={m} />
@@ -182,8 +210,10 @@ export default function App() {
             </div>
             {lang === 'ja' && <div className="work-en">{m.name.en}</div>}
             <div className="work-meta">
-              {t('stepsMeta', { n: m.steps.length })} ・ {t('minutesMeta', { n: m.steps.length })}
-              {records.byModel[m.id] ? ` ・ ×${records.byModel[m.id]}` : ''}
+              {t('stepsMeta', { n: m.steps.length })}
+              {lang === 'ja' ? ' ・ ' : ' · '}
+              {t('minutesMeta', { n: m.steps.length })}
+              {records.byModel[m.id] ? `${lang === 'ja' ? ' ・ ' : ' · '}×${records.byModel[m.id]}` : ''}
             </div>
           </button>
         ))}
@@ -201,6 +231,7 @@ export default function App() {
             <div className="work-meta">{t('comingSoon')}</div>
           </div>
         ))}
+        {shown.length === 0 && <p className="empty-note">{t('noMatch')}</p>}
       </div>
 
       <p className="footnote">

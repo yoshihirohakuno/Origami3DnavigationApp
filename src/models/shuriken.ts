@@ -323,7 +323,7 @@ const steps: FoldStep[] = [
 export const shurikenModel: OrigamiModel = {
   id: 'shuriken',
   name: { ja: '手裏剣', en: 'Shuriken' },
-  difficulty: 2,
+  difficulty: 3,
   cameraAngle: 0,
   // 平らな作品なのでほぼ正面から(わずかに見下ろす)見せる
   cameraPos: [0, -0.9, 4.6],

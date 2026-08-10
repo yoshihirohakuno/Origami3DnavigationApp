@@ -242,7 +242,7 @@ const steps: FoldStep[] = [
 export const bearModel: OrigamiModel = {
   id: 'bear',
   name: { ja: 'くまのかお', en: 'Bear Face' },
-  difficulty: 2,
+  difficulty: 3,
   cameraAngle: 0,
   vertices: V,
   faces: F.map(orient),
