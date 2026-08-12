@@ -617,10 +617,10 @@
 
 .step-list li button {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
+  align-items: center;
+  gap: 11px;
   width: 100%;
-  padding: 12px 22px;
+  padding: 9px 22px;
   font: inherit;
   text-align: left;
   background: transparent;
@@ -660,6 +660,31 @@
   letter-spacing: 0.12em;
   flex-shrink: 0;
   width: 30px;
+}
+
+/* 工程の折り図サムネイル(折る前の紙+これから入れる折り線) */
+.sl-thumb {
+  display: block;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  transition:
+    border-color 0.15s,
+    opacity 0.15s;
+}
+
+.sl-thumb svg {
+  display: block;
+}
+
+.step-list li.done .sl-thumb {
+  opacity: 0.5;
+}
+
+.step-list li.current .sl-thumb {
+  border-color: var(--accent);
 }
 
 .sl-dot {

@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { OrigamiModel, FoldType } from './engine/types';
 import { computeFoldState } from './engine/fold';
+import { buildStepDiagrams } from './CreasePattern';
 import { PaperScene } from './three/PaperScene';
 import { LangToggle, useLang } from './i18n';
 
@@ -66,6 +67,10 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   };
 
   const total = model.steps.length;
+  // 工程一覧の折り図サムネイル。ナビ画面は毎フレーム再描画されるので、
+  // 作品ごとに1回だけ作って要素をそのまま使い回す(同じ要素なら React が
+  // その部分木の再描画を省く)
+  const stepDiagrams = useMemo(() => buildStepDiagrams(model), [model]);
   const [shared, setShared] = useState(false);
   const [shareFallback, setShareFallback] = useState<string | null>(null);
   /**
@@ -333,6 +338,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
               <li key={i} className={cls}>
                 <button onClick={() => goTo(i)}>
                   <span className="sl-num">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="sl-thumb">{stepDiagrams[i]}</span>
                   <i className={`sl-dot ${s.folds[0].type}`} />
                   <span className="sl-text">{L(s.description)}</span>
                 </button>
