@@ -594,6 +594,65 @@
   display: none;
 }
 
+/* ---------- 工程一覧(スマホ:横スクロールの帯) ---------- */
+.route-rail {
+  display: flex;
+  gap: 8px;
+  padding: 10px 18px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  background: var(--bg);
+  border-top: 1px solid var(--border-soft);
+  scrollbar-width: none;
+}
+
+.route-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.rail-item {
+  position: relative;
+  flex: none;
+  padding: 0;
+  font: inherit;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  color: var(--faint);
+  scroll-snap-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    opacity 0.15s;
+}
+
+.rail-item svg {
+  display: block;
+}
+
+.rail-item span {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 1px 3px;
+  font-family: var(--font-latin);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  background: rgba(14, 15, 18, 0.72);
+}
+
+.rail-item.done {
+  opacity: 0.5;
+}
+
+.rail-item.current {
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.rail-item.current span {
+  color: var(--accent);
+}
+
 .panel-label {
   margin: 0;
   padding: 18px 22px 10px;
@@ -928,6 +987,11 @@
   }
 
   .progress-track {
+    display: none;
+  }
+
+  /* PCでは右のパネルに工程一覧が出るので帯は要らない */
+  .route-rail {
     display: none;
   }
 

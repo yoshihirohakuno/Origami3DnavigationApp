@@ -53,6 +53,8 @@ const DICT = {
   front: { ja: '正面', en: 'Front' },
   markFolded: { ja: '完成を記録', en: 'Mark folded' },
   route: { ja: '工程', en: 'Route' },
+  routeList: { ja: '工程一覧', en: 'Step list' },
+  stepN: { ja: `工程${'{n}'}`, en: `Step ${'{n}'}` },
   reset: { ja: '最初から', en: 'Reset' },
   back: { ja: '戻る', en: 'Back' },
   next: { ja: '次へ', en: 'Next' },

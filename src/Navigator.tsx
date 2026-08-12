@@ -42,6 +42,7 @@ const PLAY_SPEED = 0.9;
 export function Navigator({ model, onExit, onComplete }: Props) {
   const { t, L, lang } = useLang();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const railRef = useRef<HTMLElement>(null);
   const sceneRef = useRef<PaperScene | null>(null);
   const tRef = useRef(0);
   const targetRef = useRef(0);
@@ -227,6 +228,19 @@ export function Navigator({ model, onExit, onComplete }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onExit]);
 
+  // 横スクロールの工程一覧(スマホ)は、工程が進んだら今の工程を中央へ寄せる。
+  // scrollIntoView はページごと縦に動くことがあるので scrollLeft を直接指定する
+  useEffect(() => {
+    const rail = railRef.current;
+    const item = rail?.children[ui.stepIndex];
+    if (!rail || !(item instanceof HTMLElement)) return;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    rail.scrollTo({
+      left: item.offsetLeft - (rail.clientWidth - item.clientWidth) / 2,
+      behavior: reduce ? 'auto' : 'smooth',
+    });
+  }, [ui.stepIndex]);
+
   const togglePlay = () => {
     if (playingRef.current) {
       targetRef.current = tRef.current;
@@ -325,6 +339,26 @@ export function Navigator({ model, onExit, onComplete }: Props) {
           </div>
         )}
       </div>
+
+      {/* スマホでは工程一覧のパネルが入らないので、サムネイルだけを横スクロールの
+          帯にして出す(PCでは右のパネルがあるので非表示) */}
+      <nav className="route-rail" aria-label={t('routeList')} ref={railRef}>
+        {model.steps.map((s, i) => {
+          const cls = ui.t >= i + 1 - 1e-6 ? 'done' : i === ui.stepIndex ? 'current' : '';
+          return (
+            <button
+              key={i}
+              className={`rail-item ${cls}`}
+              onClick={() => goTo(i)}
+              aria-label={`${t('stepN', { n: i + 1 })} — ${L(s.description)}`}
+              aria-current={i === ui.stepIndex ? 'step' : undefined}
+            >
+              {stepDiagrams[i]}
+              <span>{String(i + 1).padStart(2, '0')}</span>
+            </button>
+          );
+        })}
+      </nav>
 
       <aside className="step-panel">
         <p className="panel-label">
