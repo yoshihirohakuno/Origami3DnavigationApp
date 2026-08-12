@@ -38,6 +38,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   panda: 'face',
   bear: 'face',
   chick: 'animal',
+  penguin: 'animal',
   whale: 'animal',
   crane: 'animal',
   yacht: 'vehicle',
