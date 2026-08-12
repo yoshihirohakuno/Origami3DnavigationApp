@@ -1785,3 +1785,53 @@
   border: 1px solid var(--border);
   text-align: center;
 }
+
+/* ============================================================
+   絞り込みが2軸(種類・難易度)になったので行ごとにラベルを付ける(2026-08-12)
+   ============================================================ */
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 22px;
+}
+
+.filters .filter-row {
+  margin: 0;
+  align-items: center;
+}
+
+.filter-key {
+  font-family: var(--font-latin);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--faint);
+  min-width: 3.4em;
+  flex-shrink: 0;
+}
+
+/* 相手の絞り込みで0件になったチップは押せなくする(当たりが読めるように残す) */
+.chip.off {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.chip.clear {
+  border-style: dashed;
+  color: var(--faint);
+}
+
+.chip.clear:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+@media (max-width: 560px) {
+  .filter-key {
+    min-width: 0;
+    width: 100%;
+    margin-bottom: -2px;
+  }
+}

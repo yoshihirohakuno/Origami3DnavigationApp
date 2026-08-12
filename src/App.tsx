@@ -20,7 +20,7 @@ import { boxModel } from './models/box';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import { LangToggle, useLang } from './i18n';
-import { CATEGORIES, categoryOf, levelLabel } from './catalog';
+import { CATEGORIES, categoryOf, levelLabel, usedLevels } from './catalog';
 import type { CategoryId } from './catalog';
 import './App.css';
 
@@ -109,6 +109,7 @@ export default function App() {
   const [current, setCurrent] = useState<OrigamiModel | null>(null);
   const [editing, setEditing] = useState(false);
   const [filter, setFilter] = useState<CategoryId | 'all'>('all');
+  const [level, setLevel] = useState<number | 'all'>('all');
   const [records, setRecords] = useState<Records>(loadRecords);
 
   const recordComplete = (model: OrigamiModel) => {
@@ -137,7 +138,15 @@ export default function App() {
   }
 
   const rankTitle = titleFor(records.total);
-  const shown = filter === 'all' ? MODELS : MODELS.filter((m) => categoryOf(m.id) === filter);
+  const matchesKind = (m: OrigamiModel) => filter === 'all' || categoryOf(m.id) === filter;
+  const matchesLevel = (m: OrigamiModel) => level === 'all' || m.difficulty === level;
+  const shown = MODELS.filter((m) => matchesKind(m) && matchesLevel(m));
+  // 件数は「相手の絞り込みを適用した数」を出す(選ぶ前に結果が読める)
+  const kindCount = (id: CategoryId | 'all') =>
+    MODELS.filter((m) => (id === 'all' || categoryOf(m.id) === id) && matchesLevel(m)).length;
+  const levelCount = (lv: number | 'all') =>
+    MODELS.filter((m) => matchesKind(m) && (lv === 'all' || m.difficulty === lv)).length;
+  const filtered = filter !== 'all' || level !== 'all';
 
   return (
     <div className="screen library-screen">
@@ -175,23 +184,72 @@ export default function App() {
         <span className="line" />
       </h2>
 
-      <div className="filter-row" role="group" aria-label={t('filterLabel')}>
-        {CATEGORIES.map((c) => {
-          const n = c.id === 'all' ? MODELS.length : MODELS.filter((m) => categoryOf(m.id) === c.id).length;
-          if (n === 0) return null;
-          return (
+      <div className="filters">
+        <div className="filter-row" role="group" aria-label={t('filterLabel')}>
+          <span className="filter-key">{t('filterKind')}</span>
+          {CATEGORIES.map((c) => {
+            // 全体で0件の分類はそもそも出さない(相手の絞り込みで0になった場合は
+            // 押せない状態で残し、絞り込みの当たりが読めるようにする)
+            const inCatalog =
+              c.id === 'all' ? MODELS.length : MODELS.filter((m) => categoryOf(m.id) === c.id).length;
+            if (inCatalog === 0) return null;
+            const n = kindCount(c.id);
+            return (
+              <button
+                key={c.id}
+                type="button"
+                className={`chip${filter === c.id ? ' on' : ''}${n === 0 ? ' off' : ''}`}
+                aria-pressed={filter === c.id}
+                disabled={n === 0 && filter !== c.id}
+                onClick={() => setFilter(c.id)}
+              >
+                {L(c.label)}
+                <em>{n}</em>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="filter-row" role="group" aria-label={t('filterLevelLabel')}>
+          <span className="filter-key">{t('filterLevel')}</span>
+          <button
+            type="button"
+            className={`chip${level === 'all' ? ' on' : ''}`}
+            aria-pressed={level === 'all'}
+            onClick={() => setLevel('all')}
+          >
+            {t('filterAll')}
+            <em>{levelCount('all')}</em>
+          </button>
+          {usedLevels(MODELS).map((lv) => {
+            const n = levelCount(lv);
+            return (
+              <button
+                key={lv}
+                type="button"
+                className={`chip${level === lv ? ' on' : ''}${n === 0 ? ' off' : ''}`}
+                aria-pressed={level === lv}
+                disabled={n === 0 && level !== lv}
+                onClick={() => setLevel(lv)}
+              >
+                {L(levelLabel(lv))}
+                <em>{n}</em>
+              </button>
+            );
+          })}
+          {filtered && (
             <button
-              key={c.id}
               type="button"
-              className={`chip${filter === c.id ? ' on' : ''}`}
-              aria-pressed={filter === c.id}
-              onClick={() => setFilter(c.id)}
+              className="chip clear"
+              onClick={() => {
+                setFilter('all');
+                setLevel('all');
+              }}
             >
-              {L(c.label)}
-              <em>{n}</em>
+              {t('filterReset')}
             </button>
-          );
-        })}
+          )}
+        </div>
       </div>
 
       <div className="card-grid">

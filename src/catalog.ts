@@ -63,3 +63,8 @@ export const LEVEL_LABEL: Record<number, LocalizedText> = {
 export function levelLabel(n: number): LocalizedText {
   return LEVEL_LABEL[n] ?? LEVEL_LABEL[1];
 }
+
+/** 実際に使われている難易度を小さい順に返す(絞り込みチップ用) */
+export function usedLevels(models: { difficulty: number }[]): number[] {
+  return [...new Set(models.map((m) => m.difficulty))].sort((a, b) => a - b);
+}
