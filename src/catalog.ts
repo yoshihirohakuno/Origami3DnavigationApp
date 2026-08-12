@@ -9,12 +9,21 @@ import type { LocalizedText } from './engine/types';
  * 出るので画面から消えることはない)。
  */
 
-export type CategoryId = 'face' | 'animal' | 'useful' | 'play' | 'decorate' | 'basic' | 'other';
+export type CategoryId =
+  | 'face'
+  | 'animal'
+  | 'vehicle'
+  | 'useful'
+  | 'play'
+  | 'decorate'
+  | 'basic'
+  | 'other';
 
 export const CATEGORIES: { id: CategoryId | 'all'; label: LocalizedText }[] = [
   { id: 'all', label: { ja: 'すべて', en: 'All' } },
   { id: 'face', label: { ja: 'かお', en: 'Faces' } },
   { id: 'animal', label: { ja: 'どうぶつ', en: 'Animals' } },
+  { id: 'vehicle', label: { ja: 'のりもの', en: 'Vehicles' } },
   { id: 'useful', label: { ja: 'つかう', en: 'Useful' } },
   { id: 'play', label: { ja: 'あそぶ', en: 'Play' } },
   { id: 'decorate', label: { ja: 'かざる', en: 'Decorate' } },
@@ -31,6 +40,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   chick: 'animal',
   whale: 'animal',
   crane: 'animal',
+  yacht: 'vehicle',
   cup: 'useful',
   box: 'useful',
   shuriken: 'play',
