@@ -21,6 +21,7 @@ import { yachtModel } from './models/yacht';
 import { penguinModel } from './models/penguin';
 import { shipModel } from './models/ship';
 import { rocketModel } from './models/rocket';
+import { envelopeModel } from './models/envelope';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import { LangToggle, useLang } from './i18n';
@@ -49,6 +50,7 @@ const MODELS: OrigamiModel[] = [
   penguinModel,
   shipModel,
   rocketModel,
+  envelopeModel,
 ];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ)。全作品実装済みで現在は空 */
