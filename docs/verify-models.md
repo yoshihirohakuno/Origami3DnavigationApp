@@ -44,15 +44,15 @@
 | rabbit | うさぎのかお | 8 | easy/animal-face/rabbit | 2026-08-13 照合済み。一致 |
 | panda | ぱんだのかお | 9 | easy/animal-face/panda | 2026-08-13 照合済み。一致 |
 | bear | くまのかお | 9 | easy/animal-face/bear | 2026-08-13 照合済み。一致 |
-| chick | ひよこ | 7 | easy/animal/chick | 2026-08-13 照合済み。一致。「たてよこ」の横は意図的省略 |
+| chick | ひよこ | 7 | easy/animal/chick | 2026-08-13 照合済み。一致。「たてよこ」の横は意図的省略。表裏表示修正済み |
 | whale | くじら | 6 | easy/sea/whale | 2026-08-13 照合済み。折り方一致。色は現状維持(§6参照) |
 | penguin | ぺんぎん | 9 | easy/sea/penguin | 2026-08-13 照合済み。一致。「たてよこ」の片方は意図的省略 |
-| yacht | ヨット | 3 | easy/vehicle/yacht | 2026-08-13 照合済み。一致。7.3°傾きは決定済み維持 |
-| ship | ふね | 3 | easy/vehicle/ship | 2026-08-13 照合済み。一致 |
+| yacht | ヨット | 3 | easy/vehicle/yacht | 2026-08-13 照合済み。一致。7.3°傾きは決定済み維持。表裏表示修正済み |
+| ship | ふね | 3 | easy/vehicle/ship | 2026-08-13 照合済み。一致。表裏表示修正済み |
 | rocket | ろけっと | 8 | easy/vehicle/rocket | 2026-08-13 照合済み。一致。「たてよこ」の片方は意図的省略 |
 | helmet | 兜 | 7 | fun/kabuto | 2026-08-13 照合済み。一致 |
-| shuriken | 手裏剣 | 9 | fun/cross | 2026-08-13 照合済み。一致。2枚組み。中央の白のぞきは決定済み許容 |
-| heart | ハート | 7 | valentine/easyheart | 2026-08-13 照合済み。一致 |
+| shuriken | 手裏剣 | 9 | fun/cross | 2026-08-13 照合済み。一致。2枚組み。中央の白のぞきは決定済み許容。表裏表示修正済み |
+| heart | ハート | 7 | valentine/easyheart | 2026-08-13 照合済み。一致。表裏表示修正済み |
 | crane | 鶴 | 15 | **traditional/crane** | 2026-08-13 照合済み。段階Aの相違あり(原典は三角2回→袋開き、現行は折りすじ先行collapse)。詳細は `docs/model-verification-report.md` |
 | cup | コップ | 6 | **fun/cup** | 2026-08-13 照合済み。一致 |
 | box | 箱 | 3 | **traditional/box** | 2026-08-13 照合済み。段階Aの相違あり(原典は「はこ1」、現行は3工程トレイ)。詳細は `docs/model-verification-report.md` |
@@ -60,6 +60,10 @@
 
 **優先順位**: 全20作品の照合は2026-08-13に完了。今後は段階Aの相違が残る
 鶴・箱の修正方針決定を最優先にする。
+
+**追加進捗(2026-08-13)**: 表裏表示の追加点検で、ハート・ひよこ・ふね・ヨット・手裏剣を修正済み。
+`sheetColors` は `front=色面 / back=白い裏面` のままにし、白面スタートは面の初期向き
+または `displaySideSwapFromStep` で表す。詳細は `docs/model-verification-report.md`。
 
 ---
 
