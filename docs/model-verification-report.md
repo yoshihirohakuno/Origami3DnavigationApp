@@ -113,6 +113,145 @@
 - 判定: 一致。中央のわずかな白のぞきは `docs/verify-models.md` §6 の決定済み許容事項(C: 見た目の粗)として扱う。
 - 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
 
+### tulip チューリップ
+
+- 見本: https://www.origami-club.com/easy/flowers/tulips/zu.html
+- 取得画像: `tools/.zu/tulip.png` / `tools/.zu/tulip.bmp`
+- 工程の対応: 花の部分のみ。見本の折りすじ→左右の花びら→下の先、という流れがapp6工程に対応。
+- 折り線の照合: 2026-08-09に原典どおり作り直し済み。花びらは中心を越えて反対側へ折る60度線、下の先は `y=0.2` で後ろへ折る構成。
+- 完成形: 左右の花びら先が横へ張り、下の先を折った花形。原典の花の部分と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### dog 犬
+
+- 見本: https://www.origami-club.com/easy/animal-face/dogfase/zu.html
+- 取得画像: `tools/.zu/dog.png` / `tools/.zu/dog.bmp`
+- 工程の対応: 見本の半分折り、耳、折り目をつけて戻す、手前/奥のマズル折りがapp6工程に対応。
+- 折り線の照合: 2026-08-03に原典どおり作り直し済み。耳の折り線、マズルの手前1枚/奥1枚の層分けは `CLAUDE.md` 記載の実測値に基づく。
+- 完成形: たれ耳、白いマズル、鼻先の表色の出方が原典と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### cat ねこのかお
+
+- 見本: https://www.origami-club.com/easy/animal-face/cat/zu.html
+- 取得画像: `tools/.zu/cat.png` / `tools/.zu/cat.bmp`
+- 工程の対応: 半分折り→縦の折り目→両耳→てっぺん→裏返しがapp7工程に対応。
+- 折り線の照合: 2026-08-09に耳角度とてっぺん位置を実測修正済み。耳の折り線があご先から出る構造。
+- 完成形: あごがとがったV字、左右耳、裏返し後の表色が原典と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### fox きつねのかお
+
+- 見本: https://www.origami-club.com/easy/animal-face/fox/zu.html
+- 取得画像: `tools/.zu/fox.png` / `tools/.zu/fox.bmp`
+- 工程の対応: てっぺんを折り下げ、両耳を折る流れがapp6工程に対応。
+- 折り線の照合: 2026-08-09に鼻先 `y=0.5` と耳線の平行オフセットを実測修正済み。
+- 完成形: 鼻先が下のふち中央へ届き、耳の切れこみ幅も原典と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### rabbit うさぎのかお
+
+- 見本: https://www.origami-club.com/easy/animal-face/rabbit/zu.html
+- 取得画像: `tools/.zu/rabbit.png` / `tools/.zu/rabbit.bmp`
+- 工程の対応: 下端の帯→耳→てっぺん→下の先を後ろへ、がapp8工程に対応。
+- 折り線の照合: 2026-08-04/09に原典の帯幅 `B=0.155` と最終あご折り `y=2B` で作り直し済み。
+- 完成形: 細い帯2本が耳になり、下の先を後ろへ折った顔形が原典と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### panda ぱんだのかお
+
+- 見本: https://www.origami-club.com/easy/animal-face/panda/zu.html
+- 取得画像: `tools/.zu/panda.png` / `tools/.zu/panda.bmp`
+- 工程の対応: 左右の角を中央へ→上半分を後ろへ→左右を後ろへ→鼻まわり、がapp9工程に対応。
+- 折り線の照合: 2026-08-04に原典どおり作り直し済み。左右の角 `x=±0.6`、側面 `x=±0.477`、鼻の折り線 `y=-0.72/-0.585`。
+- 完成形: 耳、白黒配色、鼻の裏色の出方が原典と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### bear くまのかお
+
+- 見本: https://www.origami-club.com/easy/animal-face/bear/zu.html
+- 取得画像: `tools/.zu/bear.png` / `tools/.zu/bear.bmp`
+- 工程の対応: 半分折りから、中心を越える耳フラップ、耳先丸め、マズル、あご折りまでapp9工程に対応。
+- 折り線の照合: 2026-08-04に原典どおり作り直し済み。耳は❸❹の2段階で作る。
+- 完成形: 大きい耳、耳先の丸め、白いマズル、下の処理が原典と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### chick ひよこ
+
+- 見本: https://www.origami-club.com/easy/animal/chick/zu.html
+- 取得画像: `tools/.zu/chick.png` / `tools/.zu/chick.bmp`
+- 工程の対応: 折り目→左角1/3→くちばし→半分→下の先→向き調整がapp7工程に対応。
+- 折り線の照合: 2026-08-10に原典どおり新規追加済み。横の折り目は後続の折り線そのものなので独立工程にしていない。
+- 完成形: くちばし先 `x=-5/6`、下の先の内折り、完成傾き `spinZ=-14` が原典と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### whale くじら
+
+- 見本: https://www.origami-club.com/easy/sea/whale/zu.html
+- 取得画像: `tools/.zu/whale.png` / `tools/.zu/whale.bmp`
+- 工程の対応: 横半分の折り目→凧折り→頭の先→半分→尾のかぶせ折りがapp6工程に対応。
+- 折り線の照合: 2026-08-03に頭と尾の向きを原典どおり修正済み。凧折りは `K=sqrt(2)-1`、頭先は `x=-1/sqrt(2)`。
+- 完成形: 鈍角の左が頭、鋭い右が尾になる構造は原典と一致。
+- 判定: 折り方は一致。色は原典と異なるが、`docs/verify-models.md` §6 の決定済み事項として現状維持。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### penguin ぺんぎん
+
+- 見本: https://www.origami-club.com/easy/sea/penguin/zu.html
+- 取得画像: `tools/.zu/penguin.png` / `tools/.zu/penguin.bmp`
+- 工程の対応: 原典8工程に、折り目の戻しを分けたapp9工程が対応。
+- 折り線の照合: 2026-08-12に実測検証済み。下角 `F=0.2`、左右折り `x=±0.4`、羽折り返し `x=±0.2`。
+- 完成形: 頭・腹・左右の羽の張り出しと縦横比が原典と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### yacht ヨット
+
+- 見本: https://www.origami-club.com/easy/vehicle/yacht/zu.html
+- 取得画像: `tools/.zu/yacht.bmp` は既存作業コピーを使用。現在のサイト再取得では `zu.html` が見つからないが、2026-08-12時点で実測済み。
+- 工程の対応: 対角線で半分→上の1枚だけを角の二等分線で左へ→下を折り上げる、がapp3工程に対応。
+- 折り線の照合: 2026-08-12に実測検証済み。❷の下辺交点 `K=3-2sqrt(2)`、折られた角は `(1-sqrt(2), 1-sqrt(2))` に着地。
+- 完成形: 帆と船体の色分け、完成形の7.3度傾きが原典解釈と一致。傾きは回す工程ではなく作図上の向きなので維持。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### ship ふね
+
+- 見本: https://www.origami-club.com/easy/vehicle/ship/zu.html
+- 取得画像: `tools/.zu/ship.png` / `tools/.zu/ship.bmp`
+- 工程の対応: 下1/3を折り上げ→左上を後ろへ→へさきを後ろへ、がapp3工程に対応。
+- 折り線の照合: 2026-08-12に実測検証済み。下帯 `y=-1/3`、船室前の45度線、へさきの45度線。
+- 完成形: 白い船室、橙の船体、へさきの切り落としが原典と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### rocket ろけっと
+
+- 見本: https://www.origami-club.com/easy/vehicle/rocket/zu.html
+- 取得画像: `tools/.zu/rocket.png` / `tools/.zu/rocket.bmp`
+- 工程の対応: 原典7工程に、折り目の戻しを分けたapp8工程が対応。
+- 折り線の照合: 2026-08-12に実測検証済み。上帯 `y=0.5`、屋根の45度線、左右 `x=±0.5`、尾翼 `x=±1/3`。
+- 完成形: 中央の機体色、外側の白い尾翼、縦横比が原典と一致。
+- 判定: 一致。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
+### square-base 正方基本形
+
+- 見本: 単体原典なし。
+- 工程の対応: 現行 `square-base` は鶴モデルの正方基本形collapse工程と同じ考え方の単一工程。
+- 折り線の照合: 対角線を面内で平らに保ち、中線3本の連鎖回転で正方基本形へ畳む。現行鶴app9と一致。
+- 完成形: 鶴の現行中間形としての正方基本形とは一致。ただし原典 `traditional/crane` の三角2回→袋開きルートとは別手順。
+- 判定: 単体原典なしのため「鶴の現行中間形と一致」として照合済み。原典鶴との手順差は `crane` の段階A相違に含める。
+- 対応: `docs/verify-models.md` に照合済みを追記。コード変更なし。
+
 ## 相違があった作品
 
 - `box`: `traditional/box` 原典と現行3工程モデルが別手順。

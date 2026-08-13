@@ -37,30 +37,29 @@
 
 | id | 名前 | 工程数 | 見本のパス | 備考 |
 |---|---|---|---|---|
-| tulip | チューリップ | 6 | easy/flowers/tulips | 花の部分だけ |
-| dog | 犬(いぬのかお) | 6 | easy/animal-face/dogfase | |
-| cat | ねこのかお | 7 | easy/animal-face/cat | |
-| fox | きつねのかお | 6 | easy/animal-face/fox | |
-| rabbit | うさぎのかお | 8 | easy/animal-face/rabbit | |
-| panda | ぱんだのかお | 9 | easy/animal-face/panda | |
-| bear | くまのかお | 9 | easy/animal-face/bear | |
-| chick | ひよこ | 7 | easy/animal/chick | |
-| whale | くじら | 6 | easy/sea/whale | 色は現状維持(§6参照) |
-| penguin | ぺんぎん | 9 | easy/sea/penguin | 2026-08-12 追加 |
-| yacht | ヨット | 3 | easy/vehicle/yacht | 2026-08-12 追加 |
-| ship | ふね | 3 | easy/vehicle/ship | 2026-08-12 追加 |
-| rocket | ろけっと | 8 | easy/vehicle/rocket | 2026-08-12 追加 |
+| tulip | チューリップ | 6 | easy/flowers/tulips | 2026-08-13 照合済み。一致。花の部分だけ |
+| dog | 犬(いぬのかお) | 6 | easy/animal-face/dogfase | 2026-08-13 照合済み。一致 |
+| cat | ねこのかお | 7 | easy/animal-face/cat | 2026-08-13 照合済み。一致 |
+| fox | きつねのかお | 6 | easy/animal-face/fox | 2026-08-13 照合済み。一致 |
+| rabbit | うさぎのかお | 8 | easy/animal-face/rabbit | 2026-08-13 照合済み。一致 |
+| panda | ぱんだのかお | 9 | easy/animal-face/panda | 2026-08-13 照合済み。一致 |
+| bear | くまのかお | 9 | easy/animal-face/bear | 2026-08-13 照合済み。一致 |
+| chick | ひよこ | 7 | easy/animal/chick | 2026-08-13 照合済み。一致。「たてよこ」の横は意図的省略 |
+| whale | くじら | 6 | easy/sea/whale | 2026-08-13 照合済み。折り方一致。色は現状維持(§6参照) |
+| penguin | ぺんぎん | 9 | easy/sea/penguin | 2026-08-13 照合済み。一致。「たてよこ」の片方は意図的省略 |
+| yacht | ヨット | 3 | easy/vehicle/yacht | 2026-08-13 照合済み。一致。7.3°傾きは決定済み維持 |
+| ship | ふね | 3 | easy/vehicle/ship | 2026-08-13 照合済み。一致 |
+| rocket | ろけっと | 8 | easy/vehicle/rocket | 2026-08-13 照合済み。一致。「たてよこ」の片方は意図的省略 |
 | helmet | 兜 | 7 | fun/kabuto | 2026-08-13 照合済み。一致 |
 | shuriken | 手裏剣 | 9 | fun/cross | 2026-08-13 照合済み。一致。2枚組み。中央の白のぞきは決定済み許容 |
 | heart | ハート | 7 | valentine/easyheart | 2026-08-13 照合済み。一致 |
 | crane | 鶴 | 15 | **traditional/crane** | 2026-08-13 照合済み。段階Aの相違あり(原典は三角2回→袋開き、現行は折りすじ先行collapse)。詳細は `docs/model-verification-report.md` |
 | cup | コップ | 6 | **fun/cup** | 2026-08-13 照合済み。一致 |
 | box | 箱 | 3 | **traditional/box** | 2026-08-13 照合済み。段階Aの相違あり(原典は「はこ1」、現行は3工程トレイ)。詳細は `docs/model-verification-report.md` |
-| square-base | 正方基本形 | 1 | (なし) | 基本形なので単体の折り図はない。鶴の折り図の途中と一致するか見る |
+| square-base | 正方基本形 | 1 | (なし) | 2026-08-13 照合済み。単体原典なし。鶴の現行collapse工程と一致 |
 
-**優先順位**: ①照合済み相違の2作品(鶴・箱)の修正方針決定→ ②2026-08-03 以前に作られた作品
-(犬・ねこ・きつね・うさぎ・ぱんだ・くま・くじら・兜・ハート・手裏剣・チューリップ)→
-③2026-08-12 追加分(ヨット・ふね・ぺんぎん・ろけっと。追加時に実測検証済み)。
+**優先順位**: 全20作品の照合は2026-08-13に完了。今後は段階Aの相違が残る
+鶴・箱の修正方針決定を最優先にする。
 
 ---
 
