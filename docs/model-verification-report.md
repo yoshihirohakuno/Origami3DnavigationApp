@@ -34,6 +34,19 @@
   - `npm run build` 成功、`npm run lint` は既存警告のみ。
 - 判定: 新規作品として追加完了。おりがみくらぶ等の原典との照合は未実施。
 
+### wallet さいふ
+
+- 追加ファイル: `src/models/wallet.ts`
+- 分類: `useful`
+- 工程数: 4
+- 内容: 3x3格子の正方形から、左右の1/3、下の1/3、上の1/3を順に畳む平たい財布。
+- 色: `sheetColors` は `front=#3c8f8f / back=#f6f2e8`。白い裏面を上にして始めるため、
+  `faces: backSideUp(F.map(orient))` を使用。
+- 検証:
+  - Playwright で一覧表示、工程0/2/4、完成形をスクリーンショット確認。
+  - `npm run build` 成功、`npm run lint` は既存警告のみ。
+- 判定: 新規作品として追加完了。おりがみくらぶ等の原典との照合は未実施。
+
 ## 2026-08-13
 
 ### cup コップ
