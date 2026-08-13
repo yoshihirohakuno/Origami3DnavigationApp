@@ -26,8 +26,7 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
  *   ちょうど乗る(左は y=-x-1、右は y=x-1)。下の角 (0,-1) だけが線より外側なので、
  *   前後2枚の角(0 と 8)を1本の折りでまとめてうしろへ回せる
  *
- * 色: 白い面を上にして始め、❹で折り返した面(裏=黄)が体の色になる
- * (折り図も❸までは白く、❹から黄色くなる)。
+ * 色: 紙の表は黄、裏は白で扱う。折った層の裏だけが白として出る。
  *
  * 層: ❹で手前へ回る上半分が常に手前に来るので、z 補正は不要
  * (谷折りの残差角でそのまま層順ができる)。くちばしのプリーツは
@@ -98,8 +97,8 @@ const steps: FoldStep[] = [
       en: 'Fold in half to crease the center line.',
     },
     caution: {
-      ja: '白い面を上にして始めます。あとで折り返す裏の色が、ひよこの体になります。',
-      en: 'Start white side up — the back you fold over becomes the chick’s body.',
+      ja: '色の面を表、裏を白として扱います。',
+      en: 'Treat the colored side as the front and the reverse as white.',
     },
   },
   {
@@ -135,15 +134,15 @@ const steps: FoldStep[] = [
     },
   },
   {
-    // ❹ はんぶんに おる(上半分を手前へ)。裏の色が出て体になる
+    // ❹ はんぶんに おる(上半分を手前へ)
     folds: [{ axis: [3, 1], moving: UPPER, type: 'valley', angle: 177 }],
     description: {
       ja: '上半分を手前へ、はんぶんに折ります。',
       en: 'Fold the top half toward you, in half.',
     },
     caution: {
-      ja: '裏の色が出て体になり、くちばしは左に残ります。',
-      en: 'The back color becomes the body, and the beak stays at the left.',
+      ja: '体の色が前に出て、くちばしは左に残ります。',
+      en: 'The body color comes to the front, and the beak stays at the left.',
     },
   },
   {
@@ -189,7 +188,7 @@ export const chickModel: OrigamiModel = {
   vertices: V,
   faces: F.map(orient),
   faceSheet: F.map(() => 0),
-  // 白い面を上にして始め、折り返した裏(黄)が体の色になる
-  sheetColors: [{ front: '#f6f2e8', back: '#e8b93c' }],
+  // 紙の表=黄、裏=白。色の意味を反転させない
+  sheetColors: [{ front: '#e8b93c', back: '#f6f2e8' }],
   steps,
 };

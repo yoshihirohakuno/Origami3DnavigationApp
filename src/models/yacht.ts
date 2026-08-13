@@ -22,9 +22,9 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
  * - 折り図❹のできあがりは、❸の折り線(=船底)が水平になるように 7.3° 回して
  *   描かれているだけで、折り自体は❸で終わり
  *
- * 色: 白い面を上にして始め、❶で折り返した裏(藍)が船体の色になる。
- * ❷で上の1枚が左へ動くと、その下から白い面(=帆)が出てくる。
- * 船体は❸で下の層が持ち上がって前に来るので、裏の藍が全面に出る(折り図と同じ)。
+ * 色: 紙の表は藍、裏は白で扱う。❷で上の1枚が左へ動くと、
+ * その下から白い裏面(=帆)が出てくる。
+ * 船体は❸で下の層が持ち上がって前に来る。
  *
  * 層: ❶で手前へ回った上の層が常に手前。❸は約180°回転なので z の前後が入れ替わり、
  * 下の層(❶で動かなかった側)が船体の表になる。残差角のままで層順は正しく出る。
@@ -97,8 +97,8 @@ const steps: FoldStep[] = [
       en: 'Fold in half along the diagonal.',
     },
     caution: {
-      ja: '白い面を上にして始めます。折り返した裏の色が、船体になります。',
-      en: 'Start white side up — the back you fold over becomes the hull.',
+      ja: '色の面を表、裏を白として扱います。',
+      en: 'Treat the colored side as the front and the reverse as white.',
     },
   },
   {
@@ -121,8 +121,8 @@ const steps: FoldStep[] = [
       en: 'Fold the bottom up to make the hull — the yacht is done.',
     },
     caution: {
-      ja: '全部の層をまとめて折ります。持ち上がった下の層が前に出て、船体が裏の色になります。',
-      en: 'Fold every layer together; the bottom layer comes to the front, so the hull shows the back color.',
+      ja: '全部の層をまとめて折ります。持ち上がった下の層が前に出て、船体になります。',
+      en: 'Fold every layer together; the bottom layer comes to the front and forms the hull.',
     },
   },
 ];
@@ -135,7 +135,7 @@ export const yachtModel: OrigamiModel = {
   vertices: V,
   faces: F.map(orient),
   faceSheet: F.map(() => 0),
-  // 折り図の紙の色(実測 RGB(65,184,212))。白い面を上にして始める
-  sheetColors: [{ front: '#f6f2e8', back: '#41b8d4' }],
+  // 折り図の紙の色(実測 RGB(65,184,212))。紙の表=藍、裏=白
+  sheetColors: [{ front: '#41b8d4', back: '#f6f2e8' }],
   steps,
 };

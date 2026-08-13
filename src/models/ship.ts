@@ -20,7 +20,7 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
  * - 展開図では、帯(下の層)の折り線は❶の折り線で鏡映して **(-1,-1)→(-1/3,-1/3)**、
  *   白い層に残る分は **(-2/3,0)→(-1/3,-1/3)**(❷の折り線との交点から)になる
  *
- * 色: 白い面を上にして始め、❶で折り上げた裏(橙 #ffa800、折り図の実測)が船体になる。
+ * 色: 紙の表は橙 #ffa800(折り図の実測)、裏は白で扱う。
  * 船室は白いまま(折り図❹と同じ)。
  *
  * 層: ❶で手前に来た帯が常に手前。❷❸はどちらもうしろへ折るので、
@@ -72,15 +72,15 @@ function orient(f: number[]): number[] {
 
 const steps: FoldStep[] = [
   {
-    // ❶ 下から 1/3 を手前へ折り上げる(裏の色が出る)
+    // ❶ 下から 1/3 を手前へ折り上げる
     folds: [{ axis: [6, 3], moving: [7, 8], type: 'valley', angle: 176 }],
     description: {
       ja: '下から 3分の1 を、手前へ折り上げます。',
       en: 'Fold the bottom third up toward you.',
     },
     caution: {
-      ja: '白い面を上にして始めます。折り上げた裏の色が船体になります。',
-      en: 'Start white side up — the back you fold up becomes the hull.',
+      ja: '色の面を表、裏を白として扱います。船室は白いまま残ります。',
+      en: 'Treat the colored side as the front and the reverse as white. The cabin remains white.',
     },
   },
   {
@@ -117,7 +117,7 @@ export const shipModel: OrigamiModel = {
   vertices: V,
   faces: F.map(orient),
   faceSheet: F.map(() => 0),
-  // 折り図の紙の色(実測 RGB(255,168,0))。白い面を上にして始める
-  sheetColors: [{ front: '#f6f2e8', back: '#ffa800' }],
+  // 折り図の紙の色(実測 RGB(255,168,0))。紙の表=橙、裏=白
+  sheetColors: [{ front: '#ffa800', back: '#f6f2e8' }],
   steps,
 };

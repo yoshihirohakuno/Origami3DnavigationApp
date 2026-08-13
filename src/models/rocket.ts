@@ -27,10 +27,10 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
  *   ❹の帯側は (0,0.5)→(±0.5,1)、❺のフラップ側は y=0 の (±0.5,0)-(±1,0)、
  *   ❻は❺の折り線で鏡映して **x=±2/3**(y=-1〜-1/6)
  *
- * 色: 白い面を上にして始め、❷で折り下げた裏(緑 #63c09f、折り図の実測)が出る。
- * ❸でうらがえすと主の層の裏(緑)が正面になり、❹で折った角は表(白)を見せる。
- * 折り図❻で「まん中が緑・外側が白」に見えるのは、❹で一緒に回った**帯の層**が
- * 主の層より手前に来るため(帯のフラップが緑、主の層のフラップが白)。
+ * 色: 紙の表は緑 #63c09f(折り図の実測)、裏は白で扱う。
+ * ❸でうらがえすと主の層の白い裏面が正面になり、❹で折った角は表の緑を見せる。
+ * 折り図❻で色面と白面が層ごとに出るのは、❹で一緒に回った**帯の層**が
+ * 主の層より手前に来るため。
  *
  * 層: どの折りも手前へ回すので残差角のままで層順が出る。
  * ❻で動く尾翼は、❹のフラップと (±1,-0.5) を共有すると引きずられるので、
@@ -124,8 +124,8 @@ const steps: FoldStep[] = [
       en: 'Fold in half crosswise to crease the middle.',
     },
     caution: {
-      ja: '白い面を上にして始めます。この折り目が、次の工程で合わせる目印になります。',
-      en: 'Start white side up. This crease is the guide for the next fold.',
+      ja: '色の面を表、裏を白として扱います。この折り目が、次の工程で合わせる目印になります。',
+      en: 'Treat the colored side as the front and the reverse as white. This crease is the guide for the next fold.',
     },
   },
   {
@@ -144,8 +144,8 @@ const steps: FoldStep[] = [
       en: 'Fold the top edge down to the middle crease.',
     },
     caution: {
-      ja: '折り下げた帯に、裏の色が出ます。',
-      en: 'The band you fold down shows the back color.',
+      ja: '折り下げた帯は、層の表裏が見える目印になります。',
+      en: 'The folded band becomes a guide for which side of the layer is showing.',
     },
   },
   {
@@ -159,7 +159,7 @@ const steps: FoldStep[] = [
   {
     // ❹ 上の両角を中心へ(角がちょうど中心線に来る)
     // 帯の層(26/22・27/23)は残差角を浅くして、主の層のフラップより手前に出す。
-    // 折り図❻の「まん中が緑・外側が白」はこの層順で決まる(同じ角度だと z 差が
+    // 折り図❻の表裏の出方はこの層順で決まる(同じ角度だと z 差が
     // 0.001 しかなく、主の層の白が勝ってしまう)
     folds: [
       { axis: [0, 8], moving: [1, 3], type: 'valley', angle: 176 },
@@ -224,7 +224,7 @@ export const rocketModel: OrigamiModel = {
   vertices: V,
   faces: F.map(orient),
   faceSheet: F.map(() => 0),
-  // 折り図の紙の色(実測 RGB(99,192,159))。白い面を上にして始める
-  sheetColors: [{ front: '#f6f2e8', back: '#63c09f' }],
+  // 折り図の紙の色(実測 RGB(99,192,159))。紙の表=緑、裏=白
+  sheetColors: [{ front: '#63c09f', back: '#f6f2e8' }],
   steps,
 };

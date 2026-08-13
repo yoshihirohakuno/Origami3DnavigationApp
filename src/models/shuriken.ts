@@ -22,7 +22,8 @@ import type { FoldOp, FoldStep, OrigamiModel } from '../engine/types';
  * 帯の上へかぶせ直す(相手のツメの下に入る)。エンジンでは小さな開き回転で
  * 表現する(README「既知の制約」)。
  *
- * 紙は白い面を上にして始める(観音折りで裏の色が表に出る=折り図と同じ)。
+ * 紙の表は色、裏は白で扱う。折り図上は白面スタートに見えるが、アプリでは
+ * 表裏の意味を崩さず、折った層の裏だけが白として出るようにする。
  */
 
 const AX = -1.2; // 朱の展開図での中心x
@@ -126,10 +127,11 @@ const faces: number[][] = [
 
 const faceSheet = [...LOCAL_FACES.map(() => 0), ...LOCAL_FACES.map(() => 1)];
 
-// 白い面を上にして始める(折り図と同じ。観音折りで裏の色が表に出る)
+// 紙の表=色、裏=白。白面スタートの見た目を sheetColors の反転で表現しない
+// (途中工程で表面が白く描かれてしまうため)。
 const sheetColors = [
-  { front: '#f2ede3', back: '#e0492f' }, // 朱
-  { front: '#f2ede3', back: '#2f4b7c' }, // 藍
+  { front: '#e0492f', back: '#f2ede3' }, // 朱
+  { front: '#2f4b7c', back: '#f2ede3' }, // 藍
 ];
 
 /** 両シートへ同じ折りを作るヘルパ */
@@ -155,8 +157,8 @@ const steps: FoldStep[] = [
       en: 'On both sheets, fold the left and right edges in to the center line.',
     },
     caution: {
-      ja: '手裏剣は2枚の紙で作ります。白い面を上にして始めます。',
-      en: 'The shuriken uses two sheets. Start with the white side up.',
+      ja: '手裏剣は2枚の紙で作ります。色の面を表、裏を白として扱います。',
+      en: 'The shuriken uses two sheets. The colored side is the front and the reverse is white.',
     },
   },
   {
