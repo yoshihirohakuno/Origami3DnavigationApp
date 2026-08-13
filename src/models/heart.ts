@@ -3,7 +3,8 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
 /**
  * ハート / Heart(全7工程)
  * https://www.origami-club.com/valentine/easyheart/ の折り図に忠実な
- * 組み立て型のハート。紙の表は朱、裏は白で扱う。
+ * 組み立て型のハート。紙の表は朱、裏は白で扱い、折り図に合わせて
+ * 白い裏面を上にして始める。
  *
  *   ❶ 縦半分に折って折り目をつけ、開いて戻す(2工程)
  *   ❷ 上の角を、まんなかへ折り下げる
@@ -121,6 +122,8 @@ function orient(f: number[]): number[] {
   return a >= 0 ? f : [...f].reverse();
 }
 
+const backSideUp = (faces: number[][]) => faces.map((face) => [...face].reverse());
+
 // ❶の縦折りで動く左半分
 const LEFT_HALF = [3, 4, 8, 11, 13, 15, 16, 21, 22, 23, 24, 25, 26];
 
@@ -133,8 +136,8 @@ const steps: FoldStep[] = [
       en: 'Fold in half sideways to crease the center line.',
     },
     caution: {
-      ja: '色の面を表、裏を白として扱います。',
-      en: 'Treat the colored side as the front and the reverse as white.',
+      ja: '紙の表は色面、裏は白です。折り図に合わせて白い裏面を上にして始めます。',
+      en: 'The colored side is the front and the reverse is white. Start with the white reverse side up.',
     },
   },
   {
@@ -225,7 +228,7 @@ export const heartModel: OrigamiModel = {
   difficulty: 1,
   cameraAngle: 0,
   vertices: V,
-  faces: F.map(orient),
+  faces: backSideUp(F.map(orient)),
   faceSheet: F.map(() => 0),
   // 紙の表=朱、裏=白。色の意味を反転させない
   sheetColors: [{ front: '#e0492f', back: '#f2ede3' }],

@@ -22,8 +22,7 @@ import type { FoldOp, FoldStep, OrigamiModel } from '../engine/types';
  * 帯の上へかぶせ直す(相手のツメの下に入る)。エンジンでは小さな開き回転で
  * 表現する(README「既知の制約」)。
  *
- * 紙の表は色、裏は白で扱う。折り図上は白面スタートに見えるが、アプリでは
- * 表裏の意味を崩さず、折った層の裏だけが白として出るようにする。
+ * 紙の表は色、裏は白で扱う。`sheetColors` の front/back は反転しない。
  */
 
 const AX = -1.2; // 朱の展開図での中心x
@@ -127,8 +126,7 @@ const faces: number[][] = [
 
 const faceSheet = [...LOCAL_FACES.map(() => 0), ...LOCAL_FACES.map(() => 1)];
 
-// 紙の表=色、裏=白。白面スタートの見た目を sheetColors の反転で表現しない
-// (途中工程で表面が白く描かれてしまうため)。
+// 紙の表=色、裏=白。
 const sheetColors = [
   { front: '#e0492f', back: '#f2ede3' }, // 朱
   { front: '#2f4b7c', back: '#f2ede3' }, // 藍
@@ -157,7 +155,7 @@ const steps: FoldStep[] = [
       en: 'On both sheets, fold the left and right edges in to the center line.',
     },
     caution: {
-      ja: '手裏剣は2枚の紙で作ります。色の面を表、裏を白として扱います。',
+      ja: '手裏剣は2枚の紙で作ります。紙の表は色面、裏は白です。',
       en: 'The shuriken uses two sheets. The colored side is the front and the reverse is white.',
     },
   },
@@ -333,5 +331,6 @@ export const shurikenModel: OrigamiModel = {
   faces,
   faceSheet,
   sheetColors,
+  displaySideSwapFromStep: 8,
   steps,
 };

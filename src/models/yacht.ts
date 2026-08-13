@@ -22,7 +22,8 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
  * - 折り図❹のできあがりは、❸の折り線(=船底)が水平になるように 7.3° 回して
  *   描かれているだけで、折り自体は❸で終わり
  *
- * 色: 紙の表は藍、裏は白で扱う。❷で上の1枚が左へ動くと、
+ * 色: 紙の表は藍、裏は白で扱い、折り図に合わせて白い裏面を上にして始める。
+ * ❷で上の1枚が左へ動くと、
  * その下から白い裏面(=帆)が出てくる。
  * 船体は❸で下の層が持ち上がって前に来る。
  *
@@ -88,6 +89,8 @@ function orient(f: number[]): number[] {
   return a >= 0 ? f : [...f].reverse();
 }
 
+const backSideUp = (faces: number[][]) => faces.map((face) => [...face].reverse());
+
 const steps: FoldStep[] = [
   {
     // ❶ 対角線で半分に折る(左上の角 TL が右下の角 BR に重なる)
@@ -97,8 +100,8 @@ const steps: FoldStep[] = [
       en: 'Fold in half along the diagonal.',
     },
     caution: {
-      ja: '色の面を表、裏を白として扱います。',
-      en: 'Treat the colored side as the front and the reverse as white.',
+      ja: '紙の表は色面、裏は白です。折り図に合わせて白い裏面を上にして始めます。',
+      en: 'The colored side is the front and the reverse is white. Start with the white reverse side up.',
     },
   },
   {
@@ -133,7 +136,7 @@ export const yachtModel: OrigamiModel = {
   difficulty: 1,
   cameraAngle: 0,
   vertices: V,
-  faces: F.map(orient),
+  faces: backSideUp(F.map(orient)),
   faceSheet: F.map(() => 0),
   // 折り図の紙の色(実測 RGB(65,184,212))。紙の表=藍、裏=白
   sheetColors: [{ front: '#41b8d4', back: '#f6f2e8' }],

@@ -133,8 +133,11 @@ export class PaperScene {
     const a = new THREE.Vector3();
     const b = new THREE.Vector3();
     const n = new THREE.Vector3();
+    const swapDisplaySides =
+      this.model.displaySideSwapFromStep !== undefined && state.stepIndex >= this.model.displaySideSwapFromStep;
     for (const mesh of [this.frontMesh, this.backMesh]) {
       const isFront = mesh === this.frontMesh;
+      const useFrontColor = swapDisplaySides ? !isFront : isFront;
       const pAttr = mesh.geometry.getAttribute('position') as THREE.BufferAttribute;
       const nAttr = mesh.geometry.getAttribute('normal') as THREE.BufferAttribute;
       const cAttr = mesh.geometry.getAttribute('color') as THREE.BufferAttribute;
@@ -149,9 +152,9 @@ export class PaperScene {
         let col: THREE.Color;
         const pal = this.faceSheet ? this.sheetPalette[this.faceSheet[fi]] : undefined;
         if (pal) {
-          col = isFront ? (hl ? pal[1] : pal[0]) : hl ? pal[3] : pal[2];
+          col = useFrontColor ? (hl ? pal[1] : pal[0]) : hl ? pal[3] : pal[2];
         } else {
-          col = isFront ? (hl ? COLOR_FRONT_HL : COLOR_FRONT) : hl ? COLOR_BACK_HL : COLOR_BACK;
+          col = useFrontColor ? (hl ? COLOR_FRONT_HL : COLOR_FRONT) : hl ? COLOR_BACK_HL : COLOR_BACK;
         }
         for (const [k, p] of [p0, p1, p2].entries()) {
           const idx = ti * 3 + k;

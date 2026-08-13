@@ -26,7 +26,7 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
  *   ちょうど乗る(左は y=-x-1、右は y=x-1)。下の角 (0,-1) だけが線より外側なので、
  *   前後2枚の角(0 と 8)を1本の折りでまとめてうしろへ回せる
  *
- * 色: 紙の表は黄、裏は白で扱う。折った層の裏だけが白として出る。
+ * 色: 紙の表は黄、裏は白で扱い、折り図に合わせて白い裏面を上にして始める。
  *
  * 層: ❹で手前へ回る上半分が常に手前に来るので、z 補正は不要
  * (谷折りの残差角でそのまま層順ができる)。くちばしのプリーツは
@@ -83,6 +83,8 @@ function orient(f: number[]): number[] {
   return a >= 0 ? f : [...f].reverse();
 }
 
+const backSideUp = (faces: number[][]) => faces.map((face) => [...face].reverse());
+
 // ❶の縦折りで動く左半分(x<0)
 const LEFT_HALF = [2, 4, 5, 6, 7, 9, 10, 11, 13];
 // ❹で手前へ回る上半分(y>0)
@@ -97,8 +99,8 @@ const steps: FoldStep[] = [
       en: 'Fold in half to crease the center line.',
     },
     caution: {
-      ja: '色の面を表、裏を白として扱います。',
-      en: 'Treat the colored side as the front and the reverse as white.',
+      ja: '紙の表は色面、裏は白です。折り図に合わせて白い裏面を上にして始めます。',
+      en: 'The colored side is the front and the reverse is white. Start with the white reverse side up.',
     },
   },
   {
@@ -186,7 +188,7 @@ export const chickModel: OrigamiModel = {
   difficulty: 1,
   cameraAngle: 0,
   vertices: V,
-  faces: F.map(orient),
+  faces: backSideUp(F.map(orient)),
   faceSheet: F.map(() => 0),
   // 紙の表=黄、裏=白。色の意味を反転させない
   sheetColors: [{ front: '#e8b93c', back: '#f6f2e8' }],

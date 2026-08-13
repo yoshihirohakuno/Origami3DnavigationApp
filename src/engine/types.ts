@@ -92,4 +92,10 @@ export interface OrigamiModel {
   faceSheet?: number[];
   /** シートごとの表裏色(faceSheet と対応)。未指定時はグローバル色。 */
   sheetColors?: { front: string; back: string }[];
+  /**
+   * 指定した工程(0-based)以降、表示上の表裏色を反対側から見たものとして扱う。
+   * 2枚組みの組み立てで、工程として全体を裏返した後も、完成確認では反対面を
+   * 正面として見せたい場合に使う。紙そのものの front/back 定義は変えない。
+   */
+  displaySideSwapFromStep?: number;
 }
