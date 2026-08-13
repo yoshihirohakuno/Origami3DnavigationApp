@@ -2,7 +2,7 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
 
 /**
  * ハート / Heart(全7工程)
- * https://www.origami-club.com/valentine/easyheart/easyheart/ の折り図に忠実な
+ * https://www.origami-club.com/valentine/easyheart/ の折り図に忠実な
  * 組み立て型のハート。白い面を上にして始め、折り返しの裏(朱)が表に出て
  * ハートの色になる。
  *
