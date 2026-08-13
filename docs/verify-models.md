@@ -51,7 +51,7 @@
 | ship | ふね | 3 | easy/vehicle/ship | 2026-08-12 追加 |
 | rocket | ろけっと | 8 | easy/vehicle/rocket | 2026-08-12 追加 |
 | helmet | 兜 | 7 | fun/kabuto | 2026-08-13 照合済み。一致 |
-| shuriken | 手裏剣 | 9 | fun/cross | 2枚組み |
+| shuriken | 手裏剣 | 9 | fun/cross | 2026-08-13 照合済み。一致。2枚組み。中央の白のぞきは決定済み許容 |
 | heart | ハート | 7 | valentine/easyheart | 2026-08-13 照合済み。一致 |
 | crane | 鶴 | 15 | **traditional/crane** | 2026-08-13 照合済み。段階Aの相違あり(原典は三角2回→袋開き、現行は折りすじ先行collapse)。詳細は `docs/model-verification-report.md` |
 | cup | コップ | 6 | **fun/cup** | 2026-08-13 照合済み。一致 |
