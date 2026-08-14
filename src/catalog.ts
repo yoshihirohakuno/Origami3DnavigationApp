@@ -47,7 +47,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   cup: 'useful',
   box: 'useful',
   envelope: 'useful',
-  wallet: 'useful',
+  piano: 'decorate',
   shuriken: 'play',
   helmet: 'play',
   tulip: 'decorate',
