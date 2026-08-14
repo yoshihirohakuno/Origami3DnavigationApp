@@ -69,7 +69,9 @@ const steps: FoldStep[] = [
     },
   },
   {
-    folds: [{ axis: [id(0, 1), id(3, 1)], moving: BOTTOM, type: 'valley', angle: 176 }],
+    // 軸は❶❷で動いていない内側の格子点で取る(外周の id(0,1)/id(3,1) は左右の折りで
+    // 動いているので、そのまま軸にすると軸が z 方向に傾いて完成形が破綻する)
+    folds: [{ axis: [id(1, 1), id(2, 1)], moving: BOTTOM, type: 'valley', angle: 176 }],
     description: {
       ja: '下の3分の1を、上へ折ります。',
       en: 'Fold the bottom third upward.',
@@ -80,7 +82,7 @@ const steps: FoldStep[] = [
     },
   },
   {
-    folds: [{ axis: [id(0, 2), id(3, 2)], moving: TOP, type: 'valley', angle: 176 }],
+    folds: [{ axis: [id(1, 2), id(2, 2)], moving: TOP, type: 'valley', angle: 174 }],
     description: {
       ja: '上の3分の1を下へ折って、さいふのできあがり。',
       en: 'Fold the top third down to finish the wallet.',
