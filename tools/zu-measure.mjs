@@ -168,9 +168,13 @@ function probe(file, X0, Y0, X1, Y1, spec) {
   }
 }
 
-const [cmd, ...rest] = process.argv.slice(2);
+// import して readBmp などを使う場合は CLI を動かさない
+const isMain = process.argv[1] && import.meta.url.endsWith(process.argv[1].split('/').pop());
+const [cmd, ...rest] = isMain ? process.argv.slice(2) : ['__lib__'];
 const n = (i) => Number(rest[i]);
-if (cmd === 'fetch') fetchZu(rest[0]);
+if (cmd === '__lib__') {
+  /* ライブラリとして読み込まれた */
+} else if (cmd === 'fetch') fetchZu(rest[0]);
 else if (cmd === 'map') map(rest[0]);
 else if (cmd === 'bbox') bbox(rest[0], n(1), n(2), n(3), n(4));
 else if (cmd === 'runs') runs(rest[0], n(1), n(2), n(3), n(4), rest[5] ? n(5) : 4);

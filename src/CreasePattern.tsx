@@ -251,6 +251,15 @@ function frameFor(states: Point3[][], view: View, fill: number): Frame {
 const toSvgX = (x: number, frame: Frame) => 50 + (x - frame.cx) * frame.scale;
 const toSvgY = (y: number, frame: Frame) => 50 - (y - frame.cy) * frame.scale;
 
+/**
+ * `displaySideSwapFromStep` の工程に達しているか(達していれば表示上の表裏を入れ替える)。
+ * PaperScene.update と同じ判定にしないと、3D画面と一覧カード・工程サムネイルで
+ * 色が食い違う。
+ */
+function swapsSides(model: OrigamiModel, stepIndex: number): boolean {
+  return model.displaySideSwapFromStep !== undefined && stepIndex >= model.displaySideSwapFromStep;
+}
+
 /** 紙をSVGのポリゴン列にする(奥から手前の順。表裏で色を変える) */
 function polygonsOf(
   model: OrigamiModel,
@@ -258,6 +267,7 @@ function polygonsOf(
   view: View,
   frame: Frame,
   edge: { color: string; width: number } = { color: '#25262c', width: 0.85 },
+  swapSides = false,
 ): ReactElement[] {
   // 作品ごとの紙色(sheetColors)を使う。ハート・箱・くじら・兜などは
   // 既定の「薄い赤/白」ではないので、既定色のままだと完成形が無色に見える
@@ -276,10 +286,11 @@ function polygonsOf(
       const nz =
         (fp[1].x - fp[0].x) * (fp[2].y - fp[0].y) - (fp[1].y - fp[0].y) * (fp[2].x - fp[0].x);
       const colors = sheetColorOf(index);
+      const showFront = swapSides ? nz < 0 : nz >= 0;
       return {
         index,
         area,
-        fill: nz >= 0 ? colors.front : colors.back,
+        fill: showFront ? colors.front : colors.back,
         depth: depthOf(ps, view),
         points: projected.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' '),
       };
@@ -312,7 +323,7 @@ export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; s
 
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      {polygonsOf(model, positions, view, frame)}
+      {polygonsOf(model, positions, view, frame, undefined, swapsSides(model, model.steps.length - 1))}
     </svg>
   );
 }
@@ -362,7 +373,14 @@ export function buildStepDiagrams(model: OrigamiModel, size = 44): ReactElement[
       <svg key={i} viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
         {/* 面の境目(=すでについている折りすじ)は細く薄く。小さいサムネイルでは
             事前分割の線まで濃く出ると網目に見えて形が読めなくなる */}
-        {polygonsOf(model, positions, view, frame, { color: 'rgba(37,38,44,0.4)', width: 0.5 })}
+        {polygonsOf(
+          model,
+          positions,
+          view,
+          frame,
+          { color: 'rgba(37,38,44,0.4)', width: 0.5 },
+          swapsSides(model, i),
+        )}
         {step.folds.map((op, k) => {
           const a = line(positions[op.axis[0]]);
           const b = line(positions[op.axis[1]]);
