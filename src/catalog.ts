@@ -40,6 +40,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   chick: 'animal',
   penguin: 'animal',
   whale: 'animal',
+  turtle: 'animal',
   crane: 'animal',
   yacht: 'vehicle',
   ship: 'vehicle',
