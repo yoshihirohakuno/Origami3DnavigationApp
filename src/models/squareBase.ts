@@ -1,27 +1,36 @@
-import type { FoldOp, FoldStep, OrigamiModel } from '../engine/types';
+import type { FoldStep, OrigamiModel } from '../engine/types';
 
 /**
- * 正方基本形 / Square Base(全9工程)— 鶴への第一歩。
+ * 正方基本形 / Square Base(全5工程)— 鶴への第一歩。
+ * 原典 https://www.origami-club.com/traditional/crane/zu.html の❶〜❻と同じ手順。
  *
- *   ❶ 対角線で三角に折って、折りすじをつけて開く(2工程)
- *   ❷ もう1本の対角線でも同じように(2工程)
- *   ❸ 辺と辺を合わせて半分に折り、折りすじをつけて開く(2工程)
- *   ❹ もう一方の辺どうしでも同じように(2工程)
- *   ❺ 折りすじに沿ってたたみ、4つの角を下で合わせる
+ *   ❶ はんぶんに おる(対角線で三角に)
+ *   ❷ はんぶんに おる(さらに半分の三角に)
+ *   ❸ ふくろを ひらいて つぶす
+ *   ❹ うらがえす
+ *   ❺ おなじように ふくろを つぶす
  *
- * **2026-08-15 に作り直した。** それまでは「たたむ」1工程だけで、しかも
- * 中心まわりの8つの扇形を**全部**畳んでいたため、完成形が45°の三角形になっていた。
- * 本物の正方基本形は**ひし形**で、対角線は面の中で平ら(180°)のままになり、
- * 折れるのは十字の折りすじ(中線)だけ。鶴の `squareBaseStep` と同じ
- * 「中線3本の連鎖回転」に直し、折りすじをつける工程も順番に見せるようにした。
+ * **2026-08-15 に作り直した(2回目)。** それまでは「対角線と十字の折りすじを
+ * つけて戻す」を4本ぶん(8工程)並べてから1工程で畳んでいたが、
+ * **原典には折りすじをつけて戻す工程が無い**。三角に2回折ってから袋を開いてつぶす
+ * のが本来の手順で、戻す工程は要らない(ユーザー指摘 2026-08-15)。
  *
- * 幾何は鶴(`src/models/crane.ts`)の❶〜❾とまったく同じ。頂点も同じ並びで、
- * 鶴の展開図から花弁折り・首・頭のための点を落としたもの。
- * シート全体を -135° 回転してあるのも鶴と同じで、これで完成形が
- * 「閉じた角が上・開いた角が下」の正規の向きになる。
+ * 幾何(紙は [-1,1] の正方形。O=中心、E/N/W/S=辺の中点、NE/NW/SW/SE=角):
+ * - ❶ 対角線 NE-SW で、北西の半分を南東へ折る。N→E / NW→SE / W→S に重なる
+ * - ❷ 対角線 O-SE で、南西の半分を北東へ折る。**4つの辺の中点が1点(E)に重なり、
+ *   角は NE と SE の2点に2枚ずつ重なる**四分の一の三角形になる
+ * - ❸ **袋を開いてつぶす**。エンジンでは2回の連鎖回転で表す:
+ *   ①手前の層を❷の折り線(O-SE)で開き(SW角とS中点が回る)、
+ *   ②できた折り目 O-S で角を折り返す。SW角が SE角に重なり、S中点が紙の S の位置へ戻る
+ * - ❺ うらがえしたあと、まったく同じ2回の回転で反対側の袋をつぶす(NE角とN中点)
+ * - 完成形は一辺 √2 のひし形。閉じた角が O、開いた4つの角(紙の4隅)が反対の頂点。
+ *   シート全体を -45° 回転してあるので、画面では閉じた角が上・開いた角が下になる
+ *
+ * 鶴(`src/models/crane.ts`)は折りすじ先行の collapse で正方基本形を作っており、
+ * ルートが違う(2026-08-13 にユーザー判断で現行維持と決定済み)。
  */
 
-const ROT = (-135 * Math.PI) / 180;
+const ROT = (-45 * Math.PI) / 180;
 const COS = Math.cos(ROT);
 const SIN = Math.sin(ROT);
 const ANGLE = 176;
@@ -33,61 +42,64 @@ function r(x: number, y: number): [number, number] {
   ];
 }
 
-/** 折って戻す2工程を作る(戻しの符号は鶴と同じ規則) */
-function crease(fold: FoldOp, ja: string, en: string, backJa: string, backEn: string): FoldStep[] {
-  return [
-    { folds: [fold], description: { ja, en } },
-    {
-      folds: [{ ...fold, type: 'unfold', direction: fold.direction === 1 ? -1 : 1 }],
-      description: { ja: backJa, en: backEn },
-    },
-  ];
-}
-
 const steps: FoldStep[] = [
-  ...crease(
-    { axis: [2, 6], moving: [1, 7, 8], type: 'valley', angle: ANGLE, direction: 1 },
-    '角と角を合わせ、対角線で三角に折ります。',
-    'Bring opposite corners together and fold a diagonal.',
-    '開いて、正方形に戻します。',
-    'Unfold back to a square.',
-  ),
-  ...crease(
-    { axis: [4, 8], moving: [5, 6, 7], type: 'valley', angle: ANGLE, direction: 1 },
-    'もう1本の対角線でも、角と角を合わせて折ります。',
-    'Fold the other diagonal, matching corner to corner.',
-    'もう一度開きます。対角線の折りすじが2本できました。',
-    'Unfold again — both diagonal creases are now in place.',
-  ),
-  ...crease(
-    { axis: [5, 1], moving: [2, 3, 4], type: 'mountain', angle: ANGLE, direction: 1 },
-    '辺と辺を合わせて半分に折り、よこの折りすじをつけます。',
-    'Fold edge to edge in half for the horizontal crease.',
-    '開いて、正方形に戻します。',
-    'Unfold back to a square.',
-  ),
-  ...crease(
-    { axis: [7, 3], moving: [1, 2, 8], type: 'mountain', angle: ANGLE, direction: -1 },
-    'もう一方の辺どうしも合わせて半分に折り、十字の折りすじにします。',
-    'Fold the other pair of edges together to complete the cross crease.',
-    '開きます。対角線2本と十字の折りすじがそろいました。',
-    'Unfold. You now have both diagonals and the cross creases.',
-  ),
   {
-    // ❺ たたみ込み。対角線は面の中で平ら(180°)のままで、折れるのは中線だけ。
-    // 固定面(前面)から中線3本を軸に ±176° の連鎖回転でアコーディオン状に畳む
-    folds: [
-      { axis: [0, 3], moving: [4, 5, 6, 7, 8], type: 'mountain', angle: ANGLE, direction: 1 },
-      { axis: [0, 5], moving: [6, 7, 8], type: 'valley', angle: ANGLE, direction: -1 },
-      { axis: [0, 7], moving: [8], type: 'mountain', angle: ANGLE, direction: 1 },
-    ],
+    // ❶ 対角線 NE-SW で三角に折る(北西の半分が南東へ回る)
+    folds: [{ axis: [2, 6], moving: [3, 4, 5], type: 'valley', angle: ANGLE }],
     description: {
-      ja: '折りすじに沿って左右を内側へ寄せ、4つの角を下で合わせてたたみます。',
-      en: 'Collapse along the creases, bringing the four corners together at the bottom.',
+      ja: '角と角を合わせて、対角線で三角に折ります。',
+      en: 'Bring opposite corners together and fold into a triangle.',
     },
     caution: {
-      ja: '鶴でよく使う「正方基本形」です。閉じた角が上、開いた4つの角が下に来ます。',
-      en: 'This is the square base used for the crane: closed point up, four open corners down.',
+      ja: '鶴の土台になる「正方基本形」を作ります。折りすじをつけて戻す必要はありません。',
+      en: 'We are making the square base for the crane — no pre-creasing needed.',
+    },
+  },
+  {
+    // ❷ もう半分。4つの辺の中点が1点に重なる
+    folds: [{ axis: [0, 8], moving: [5, 6, 7], type: 'valley', angle: ANGLE }],
+    description: {
+      ja: 'もう一度はんぶんに折って、小さな三角にします。',
+      en: 'Fold in half again into a smaller triangle.',
+    },
+    caution: {
+      ja: '4つの辺の中点がぴったり1点に重なります。',
+      en: 'All four edge midpoints stack up on a single point.',
+    },
+  },
+  {
+    // ❸ 袋を開いてつぶす(①❷の折り線で開く → ②できた折り目で角を折り返す)
+    folds: [
+      { axis: [0, 8], moving: [6, 7], type: 'valley', angle: ANGLE },
+      { axis: [0, 7], moving: [6], type: 'valley', angle: ANGLE },
+    ],
+    description: {
+      ja: '手前のふくろを開いて、四角くつぶします。',
+      en: 'Open the front pocket and squash it flat into a square.',
+    },
+    caution: {
+      ja: '中に指を入れて開き、角どうしが合うように押しつぶします。',
+      en: 'Slip a finger inside, open it up, and press it flat so the corners meet.',
+    },
+  },
+  {
+    // ❹ うらがえす(軸は完成形の対称軸=O と 4隅の重なる点を結ぶ線)
+    folds: [{ axis: [0, 8], moving: [1, 2, 3, 4, 5, 6, 7], type: 'assemble', angle: 180, direction: 1 }],
+    description: { ja: 'うらがえします。', en: 'Turn it over.' },
+  },
+  {
+    // ❺ 反対側のふくろも同じようにつぶす
+    folds: [
+      { axis: [0, 8], moving: [2, 3], type: 'valley', angle: ANGLE },
+      { axis: [0, 3], moving: [2], type: 'valley', angle: ANGLE },
+    ],
+    description: {
+      ja: 'こちらのふくろも同じように開いて、つぶします。正方基本形のできあがり。',
+      en: 'Open and squash this pocket the same way — the square base is done.',
+    },
+    caution: {
+      ja: '閉じた角が上、開いた4つの角が下のひし形になります。',
+      en: 'You get a diamond: closed point up, four open corners down.',
     },
   },
 ];
@@ -97,15 +109,15 @@ export const squareBaseModel: OrigamiModel = {
   name: { ja: '正方基本形', en: 'Square Base' },
   difficulty: 1,
   vertices: [
-    r(0, 0), //  0: 中心O(完成形の閉じた角・上)
+    r(0, 0), //  0: 中心O(完成形の閉じた角)
     r(1, 0), //  1: 辺中点E
-    r(1, 1), //  2: 角NE
+    r(1, 1), //  2: 角NE(❺でつぶす側)
     r(0, 1), //  3: 辺中点N
     r(-1, 1), //  4: 角NW
     r(-1, 0), //  5: 辺中点W
-    r(-1, -1), //  6: 角SW
+    r(-1, -1), //  6: 角SW(❸でつぶす側)
     r(0, -1), //  7: 辺中点S
-    r(1, -1), //  8: 角SE
+    r(1, -1), //  8: 角SE(❷❸❺の軸。完成形で4隅が重なる点)
   ],
   faces: [
     [0, 1, 2],
