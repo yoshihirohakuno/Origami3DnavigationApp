@@ -98,6 +98,9 @@ const F: number[][] = [
   [0, 21, 19],
 ];
 
+/** 白い面を上にして始める(折り図❶❷が白。面の初期向きを反転して表す) */
+const backSideUp = (faces: number[][]) => faces.map((face) => [...face].reverse());
+
 /** 反時計回り(表=+z)へ揃える */
 function orient(f: number[]): number[] {
   let a = 0;
@@ -222,9 +225,10 @@ export const rocketModel: OrigamiModel = {
   difficulty: 2,
   cameraAngle: 0,
   vertices: V,
-  faces: F.map(orient),
+  faces: backSideUp(F.map(orient)),
   faceSheet: F.map(() => 0),
-  // 折り図の紙の色(実測 RGB(99,192,159))。紙の表=緑、裏=白
+  // 折り図の紙の色(実測 RGB(99,192,159))。紙の表=緑、裏=白。
+  // **白い面を上にして始める**(折り図❶❷が白い正方形。2026-08-15 に修正)
   sheetColors: [{ front: '#63c09f', back: '#f6f2e8' }],
   steps,
 };

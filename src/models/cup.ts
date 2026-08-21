@@ -45,12 +45,18 @@ export const cupModel: OrigamiModel = {
     [-X_BASE, 0], //  7: 左折り線・軸上の端点
     [-X_TOP, S], //  8: 左折り線・上端(左上辺上)
     [-X_TOP, -S], //  9: 左折り線の鏡映(左下辺上)
+    // 2026-08-15 追加: 角のフラップは2枚重ねで、折ると前後が入れ替わる(下の層が前に出る)。
+    // 折り線の端点 6/9 は中央の面と共有していて動かせないので、**角の面だけの複製**を作り、
+    // ❷❸で上の層の折り線(4-5 / 7-8)を軸に回して z を反転させる。
+    // これをしないと上の層(裏=白)が前に残り、折り図❹(全面が紙の色)と逆になる
+    [X_TOP, -S], // 10: 6 の複製(右の角の面だけが使う)
+    [-X_TOP, -S], // 11: 9 の複製(左の角の面だけ)
   ],
   faces: [
     // 下半分(工程1で手前に折り上げる側)
     [2, 6, 9], // 下の角(手前フタになる)
-    [1, 4, 6], // 右角(下層)
-    [3, 9, 7], // 左角(下層)
+    [1, 4, 10], // 右角(下層。複製頂点10)
+    [3, 11, 7], // 左角(下層。複製頂点11)
     [4, 7, 9, 6], // 中央(下層)
     // 上半分
     [0, 8, 5], // 上の角(裏フタ)
@@ -60,7 +66,7 @@ export const cupModel: OrigamiModel = {
   ],
   steps: [
     {
-      folds: [{ axis: [3, 1], moving: [2, 6, 9], type: 'mountain', angle: 177 }],
+      folds: [{ axis: [3, 1], moving: [2, 6, 9, 10, 11], type: 'mountain', angle: 177 }],
       description: {
         ja: '下の角を上の角に合わせて、半分に折ります。',
         en: 'Fold in half, bringing the bottom corner up to the top.',
@@ -71,7 +77,8 @@ export const cupModel: OrigamiModel = {
       },
     },
     {
-      folds: [{ axis: [4, 6], moving: [1], type: 'valley', angle: 175 }],
+      // 軸は**上の層の折り線 4-5**(z=0)。複製10も回して z を反転させ、下の層を前に出す
+      folds: [{ axis: [4, 5], moving: [1, 10], type: 'valley', angle: 175 }],
       description: {
         ja: '右の角を、反対側の斜め辺に届くまで谷折りします。',
         en: 'Valley-fold the right corner across until it reaches the opposite slanted edge.',
@@ -82,7 +89,7 @@ export const cupModel: OrigamiModel = {
       },
     },
     {
-      folds: [{ axis: [7, 9], moving: [3], type: 'valley', angle: 173 }],
+      folds: [{ axis: [7, 8], moving: [3, 11], type: 'valley', angle: 173 }],
       description: {
         ja: '左の角も同じように、反対側へ谷折りして重ねます。',
         en: 'Valley-fold the left corner across the same way, overlapping the first.',
@@ -114,7 +121,7 @@ export const cupModel: OrigamiModel = {
       // ❻ 口を開く。底の折り線(動かない 7-4)を軸に、前の層を手前・奥の層を奥へ
       folds: [
         { axis: [7, 4], moving: [0, 5, 8], type: 'valley', angle: OPEN },
-        { axis: [7, 4], moving: [2, 6, 9], type: 'mountain', angle: OPEN },
+        { axis: [7, 4], moving: [2, 6, 9, 10, 11], type: 'mountain', angle: OPEN },
       ],
       description: {
         ja: '口を開いて、コップの形にします。できあがり。',
