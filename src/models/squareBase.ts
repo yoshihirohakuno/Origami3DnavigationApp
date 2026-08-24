@@ -30,6 +30,24 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
  * ルートが違う(2026-08-13 にユーザー判断で現行維持と決定済み)。
  */
 
+/**
+ * 白い面を上にして始める(2026-08-24)。実物の折り紙と同じで、**色を出したいときは
+ * 白い面を上にして折り始める**(❶で半分に折った時点で色の面が外に出る)。
+ * 色面スタートにすると、正しく折るほど完成形は白い面が外になる。
+ */
+const backSideUp = (faces: number[][]) => faces.map((face) => [...face].reverse());
+
+const F: number[][] = [
+  [0, 1, 2],
+  [0, 2, 3],
+  [0, 3, 4],
+  [0, 4, 5],
+  [0, 5, 6],
+  [0, 6, 7],
+  [0, 7, 8],
+  [0, 8, 1],
+];
+
 const ROT = (-45 * Math.PI) / 180;
 const COS = Math.cos(ROT);
 const SIN = Math.sin(ROT);
@@ -122,16 +140,7 @@ export const squareBaseModel: OrigamiModel = {
     r(0, -1), //  7: 辺中点S
     r(1, -1), //  8: 角SE(❷❸❺の軸。完成形で4隅が重なる点)
   ],
-  faces: [
-    [0, 1, 2],
-    [0, 2, 3],
-    [0, 3, 4],
-    [0, 4, 5],
-    [0, 5, 6],
-    [0, 6, 7],
-    [0, 7, 8],
-    [0, 8, 1],
-  ],
+  faces: backSideUp(F),
   faceSheet: [0, 0, 0, 0, 0, 0, 0, 0],
   steps,
 };
