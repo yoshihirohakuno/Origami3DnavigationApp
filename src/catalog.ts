@@ -56,6 +56,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   tulip: 'decorate',
   heart: 'decorate',
   'square-base': 'basic',
+  'waterbomb-base': 'basic',
 };
 
 export function categoryOf(id: string): CategoryId {

@@ -89,9 +89,12 @@ const steps: FoldStep[] = [
   },
   {
     // ❺ 反対側のふくろも同じようにつぶす
+    // 2本目の軸は **N(3) ではなく、平らなまま残っている中点 S(7)**(水風船基本形と同じ話。
+    // N は1本目の折りで持ち上がるので軸が傾き、フラップが束の上に乗って完成形の
+    // 表裏が❸と食い違う)。❹のうらがえしで束が -z 側へ移るので direction も明示する。
     folds: [
       { axis: [0, 8], moving: [2, 3], type: 'valley', angle: ANGLE },
-      { axis: [0, 3], moving: [2], type: 'valley', angle: ANGLE },
+      { axis: [0, 7], moving: [2], type: 'valley', angle: ANGLE, direction: -1 },
     ],
     description: {
       ja: 'こちらのふくろも同じように開いて、つぶします。正方基本形のできあがり。',
