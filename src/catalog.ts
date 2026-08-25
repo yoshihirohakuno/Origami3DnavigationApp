@@ -16,6 +16,7 @@ export type CategoryId =
   | 'useful'
   | 'play'
   | 'decorate'
+  | 'food'
   | 'basic'
   | 'other';
 
@@ -27,6 +28,7 @@ export const CATEGORIES: { id: CategoryId | 'all'; label: LocalizedText }[] = [
   { id: 'useful', label: { ja: 'つかう', en: 'Useful' } },
   { id: 'play', label: { ja: 'あそぶ', en: 'Play' } },
   { id: 'decorate', label: { ja: 'かざる', en: 'Decorate' } },
+  { id: 'food', label: { ja: 'たべもの', en: 'Food' } },
   { id: 'basic', label: { ja: 'きほん', en: 'Basics' } },
 ];
 
@@ -55,6 +57,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   helmet: 'play',
   tulip: 'decorate',
   heart: 'decorate',
+  riceball: 'food',
   'square-base': 'basic',
   'waterbomb-base': 'basic',
 };
