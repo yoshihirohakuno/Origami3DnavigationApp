@@ -29,6 +29,7 @@ import { bootsModel } from './models/boots';
 import { waterbombBaseModel } from './models/waterbombBase';
 import { riceballModel } from './models/riceball';
 import { tadpoleModel } from './models/tadpole';
+import { carModel } from './models/car';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import { LangToggle, useLang } from './i18n';
@@ -65,6 +66,7 @@ const MODELS: OrigamiModel[] = [
   waterbombBaseModel,
   riceballModel,
   tadpoleModel,
+  carModel,
 ];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ)。全作品実装済みで現在は空 */

@@ -28,7 +28,7 @@
 const IDS = [
   'tulip', 'dog', 'cup', 'chick', 'squareBase', 'crane', 'shuriken', 'cat', 'fox',
   'rabbit', 'panda', 'bear', 'whale', 'helmet', 'heart', 'box', 'yacht', 'penguin',
-  'ship', 'rocket', 'envelope', 'piano', 'turtle', 'sinkansen', 'boots', 'waterbombBase', 'riceball', 'tadpole',
+  'ship', 'rocket', 'envelope', 'piano', 'turtle', 'sinkansen', 'boots', 'waterbombBase', 'riceball', 'tadpole', 'car',
 ];
 
 /** 面の法線の z 成分(Newell法)。負なら back(裏)が見えている */
