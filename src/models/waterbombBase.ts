@@ -1,30 +1,8 @@
 import type { FoldStep, OrigamiModel } from '../engine/types';
 
-/**
- * 水風船基本形 / Water-bomb Base(全5工程)— ふうせん・かえるの土台。
- * 原典 https://www.origami-club.com/fun/balloon/zu.html の❶〜❻と同じ手順。
- *
- *   ❶ はんぶんに おる(辺と辺を合わせて)
- *   ❷ はんぶんに おる(さらに半分。小さな正方形に)
- *   ❸ ふくろを ひらいて つぶす
- *   ❹ うらがえす
- *   ❺ おなじように ふくろを つぶす
- *
- * **正方基本形と対になる基本形**。正方基本形が対角線で2回折るのに対し、
- * こちらは辺と辺(中線)で2回折る。折り線の役割がちょうど入れ替わっていて、
- * 手順・たたみ方はまったく同じ形になる(`src/models/squareBase.ts` と読み比べると
- * 軸の頂点が1つずれているだけ)。
- *
- * 幾何(紙は [-1,1] の正方形。O=中心、E/N/W/S=辺の中点、NE/NW/SW/SE=角):
- * - ❶ 中線 E-W(y=0)で上半分を下へ。N→S / NE→SE / NW→SW に重なる
- * - ❷ 中線 O-S で左半分を右へ。**4つの角が1点(SE)に重なり、辺の中点は
- *   E と S の2点に2枚ずつ重なる**小さな正方形になる
- * - ❸ **袋を開いてつぶす**。正方基本形と同じく1軸回転2回の連鎖:
- *   ①手前の層を❷の折り線(O-S)で開き、②できた折り目 O-SW で角を折り返す
- * - ❺ うらがえしたあと、同じ2回の回転で反対側の袋をつぶす
- * - 完成形は直角二等辺三角形。**頂点が紙の中心O(上)、底辺の両端に紙の4隅が
- *   2枚ずつ、底辺の中点に4つの辺の中点が集まる**。この形のまま
- *   角を持ち上げて折れば ふうせん(fun/balloon ❼〜⓭)になる
+/** 水風船基本形。辺を合わせて半分、さらに半分、袋を開いてつぶす、裏返す、反対も同様。
+ * 2026-09-06: 正方基本形と同じ pocket の拘束式を使う。
+ * 二つの連鎖回転による中間形の伸びを解消し、開口とつぶしで停止できる。
  */
 
 const ANGLE = 176;
@@ -46,7 +24,7 @@ const F: number[][] = [
 const steps: FoldStep[] = [
   {
     // ❶ 中線 E-W で上半分を下へ
-    folds: [{ axis: [1, 5], moving: [2, 3, 4], type: 'valley', angle: ANGLE }],
+    folds: [{ axis: [1, 5], moving: [2, 3, 4], type: 'valley', angle: 180 }],
     description: {
       ja: '辺と辺を合わせて、はんぶんに折ります。',
       en: 'Fold in half, edge to edge.',
@@ -58,7 +36,7 @@ const steps: FoldStep[] = [
   },
   {
     // ❷ もう半分。4つの角が1点に重なる
-    folds: [{ axis: [0, 7], moving: [4, 5, 6], type: 'valley', angle: ANGLE }],
+    folds: [{ axis: [0, 7], moving: [4, 5, 6], type: 'valley', angle: 180 }],
     description: {
       ja: 'もう一度はんぶんに折って、小さな正方形にします。',
       en: 'Fold in half again into a small square.',
@@ -69,10 +47,10 @@ const steps: FoldStep[] = [
     },
   },
   {
-    // ❸ 袋を開いてつぶす(①❷の折り線で開く → ②できた折り目で角を折り返す)
+    // ❸ 口の点をヒンジ周りに動かし、先端を面の辺長拘束で追従させる。
     folds: [
-      { axis: [0, 7], moving: [5, 6], type: 'valley', angle: ANGLE },
-      { axis: [0, 6], moving: [5], type: 'valley', angle: ANGLE },
+      { axis: [0, 7], moving: [5, 6], type: 'valley', angle: ANGLE,
+        pocket: { rim: 6, tip: 5, pivot: 8 } },
     ],
     description: {
       ja: '手前のふくろを開いて、三角につぶします。',
@@ -91,15 +69,10 @@ const steps: FoldStep[] = [
     description: { ja: 'うらがえします。', en: 'Turn it over.' },
   },
   {
-    // ❺ 反対側のふくろも同じようにつぶす
-    // 2本目の軸は **NE(2) ではなく、平らなまま残っている角 SW(6)** を使う。
-    // NE は1本目の折りで z=+0.139 まで持ち上がるので、軸にすると z 方向に傾き、
-    // つぶしたフラップが紙束の上に乗って白い裏面が外に出る(折り図❻は一面が桃色)。
-    // また❹のうらがえしで束が -z 側へ移るため、連鎖回転の自動符号は使えない。
-    // direction を明示してフラップを束の中へ倒す(types.ts の direction の用途そのもの)。
+    // ❺ 裏返した反対側も、同じ4面の拘束を保ってつぶす。
     folds: [
-      { axis: [0, 7], moving: [1, 2], type: 'valley', angle: ANGLE, direction: -1 },
-      { axis: [0, 6], moving: [1], type: 'valley', angle: ANGLE, direction: -1 },
+      { axis: [0, 7], moving: [1, 2], type: 'valley', angle: ANGLE,
+        pocket: { rim: 2, tip: 1, pivot: 4 } },
     ],
     description: {
       ja: 'こちらのふくろも同じように開いて、つぶします。水風船基本形のできあがり。',

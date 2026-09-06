@@ -34,6 +34,9 @@ export function withRigidFolds(source: OrigamiModel, tuckUnder: Record<number, P
       if (raw.type !== 'assemble') for (let j = oi + 1; j < ops.length; j++) {
         const other = ops[j];
         if (other.type === raw.type && other.axis.every(onAxis) &&
+          // Collinear creases on opposite corners are independent actions.
+          // Merge only layers that actually overlap away from the hinge.
+          other.moving.some(vi => !onAxis(vi) && raw.moving.some(vj => p[vi].distanceTo(p[vj]) < 0.0002)) &&
           !other.moving.some(vi => raw.moving.includes(vi) && !onAxis(vi))) {
           raw.moving = [...new Set([...raw.moving, ...other.moving])];
           ops.splice(j--, 1);

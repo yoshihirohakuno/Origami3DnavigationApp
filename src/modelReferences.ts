@@ -27,8 +27,8 @@ export const referenceOf = (id: string): string | undefined => diagrams[id] ? ba
 /** Known differences found by direct diagram comparison, not a blanket accuracy claim. */
 export const MODEL_NOTES: Record<string, LocalizedText> = {
   crane: {
-    ja: '形状を再検証中：首・羽の形と袋を開く動きには、修正が必要な箇所があります。',
-    en: 'Under review: the neck, wings and squash-fold motion still need correction.',
+    ja: '形状を再検証中：花弁折りと首・羽の形には、修正が必要な箇所があります。',
+    en: 'Under review: the petal folds, neck and wings still need correction.',
   },
   box: {
     ja: 'この作品は、浅い簡易トレイに仕上がります。',

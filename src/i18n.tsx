@@ -69,7 +69,7 @@ const DICT = {
   library: { ja: 'ライブラリ', en: 'Library' },
   isComplete: { ja: `「${'{name}'}」— 完成です。`, en: `Your ${'{name}'} is complete.` },
   collapse: { ja: 'たたむ', en: 'Collapse' },
-  collapseHint: { ja: '複数の折りを同時に', en: 'several folds at once' },
+  collapseHint: { ja: 'つながった紙を動かす', en: 'move connected layers' },
   difficulty: { ja: '難易度', en: 'Difficulty' },
   langLabel: { ja: '言語', en: 'Language' },
   filterLabel: { ja: '種類でしぼる', en: 'Filter by kind' },

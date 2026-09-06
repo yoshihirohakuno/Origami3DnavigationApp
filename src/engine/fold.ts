@@ -78,14 +78,16 @@ function buildArrowPath(
   positions: THREE.Vector3[],
   p1: THREE.Vector3,
   axisDir: THREE.Vector3,
+  range: [number, number] = [0, 1],
 ): THREE.Vector3[] {
+  if (op.pocket) return buildArrowPath({ ...op, pocket: undefined, moving: [op.pocket.rim] }, sign, positions, p1, axisDir, range);
   if (op.targets?.length) {
     const target = op.targets.reduce((best, p) => {
       const distance = (v: typeof p) => positions[v[0]].distanceToSquared(new THREE.Vector3(v[1], v[2], v[3]));
       return distance(p) > distance(best) ? p : best;
     });
     const end = new THREE.Vector3(target[1], target[2], target[3]);
-    return Array.from({ length: 9 }, (_, i) => positions[target[0]].clone().lerp(end, i / 8));
+    return Array.from({ length: 9 }, (_, i) => positions[target[0]].clone().lerp(end, range[0] + (range[1] - range[0]) * i / 8));
   }
   const translate = op.translate;
   // 平行移動が主体の組み立てでは、移動量が最大に見える頂点(=軸から遠い頂点)より
@@ -103,7 +105,7 @@ function buildArrowPath(
   const path: THREE.Vector3[] = [];
   const total = sign * THREE.MathUtils.degToRad(op.angle);
   for (let s = 0; s <= 8; s++) {
-    const f = s / 8;
+    const f = range[0] + (range[1] - range[0]) * s / 8;
     _q.setFromAxisAngle(axisDir, total * f);
     const p = positions[far].clone();
     rotateAbout(p, p1, _q);
@@ -139,22 +141,31 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
     const step = model.steps[i];
     const a = Math.max(0, Math.min(clamped - i, 1));
     if (a <= 0 && i !== stepIndex) break;
+    // Completed slices are represented by the current continuation, not applied
+    // a second time. At the boundary the next slice starts at the same pose.
+    if (a === 1 && model.steps[i + 1]?.motionRange?.[0]) continue;
+    const [from, to] = step.motionRange ?? [0, 1];
+    const motion = from + (to - from) * a;
 
     for (const op of step.folds) {
       const [start, end] = op.timing ?? [0, 1];
-      const progress = Math.max(0, Math.min((a - start) / (end - start), 1));
+      const progress = Math.max(0, Math.min((motion - start) / (end - start), 1));
       const sign = foldSign(op, positions);
       const p1 = positions[op.axis[0]].clone();
       const p2 = positions[op.axis[1]].clone();
       const axisDir = new THREE.Vector3().subVectors(p2, p1).normalize();
 
-      if (i === stepIndex && a < 1 && a >= start && a < end && isGuideFold(op)) {
+      if (i === stepIndex && a < 1 && motion >= start && motion < end && isGuideFold(op)) {
         guides.push({
           type: op.type,
           axisLine: [p1.clone(), p2.clone()],
-          arrowPath: buildArrowPath(op, sign, positions, p1, axisDir),
+          arrowPath: buildArrowPath(op, sign, positions, p1, axisDir,
+            [from, to].map(v => easeInOut(Math.max(0, Math.min((v - start) / (end - start), 1)))) as [number, number]),
         });
         const movingSet = new Set(op.moving);
+        for (const [vi, a, b, c, u, v, w] of op.surfacePoints ?? []) {
+          if ([[a,u],[b,v],[c,w]].some(([anchor, weight]) => weight > 1e-8 && movingSet.has(anchor))) movingSet.add(vi);
+        }
         model.faces.forEach((face, fi) => {
           if (face.some((vi) => movingSet.has(vi))) movingFaces.add(fi);
         });
@@ -166,7 +177,7 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
         _q.setFromAxisAngle(axisDir, angle);
         if (op.spinZ) _qSpin.setFromAxisAngle(Z_AXIS, THREE.MathUtils.degToRad(op.spinZ) * e);
         const tr = op.translate;
-        for (const vi of op.moving) {
+        for (const vi of op.pocket ? [op.pocket.rim] : op.moving) {
           rotateAbout(positions[vi], p1, _q);
           if (op.spinZ) rotateAbout(positions[vi], p1, _qSpin);
           if (tr) {
@@ -175,7 +186,23 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
             positions[vi].z += tr[2] * e;
           }
         }
+        if (op.pocket) {
+          // The hinge endpoint is one intersection of the tip's three spheres.
+          // Reflect it through the plane of the two rim vectors to get the other
+          // intersection. Unlike two chained rotations, this preserves all four
+          // triangular panels while the pocket is open.
+          const pivot = positions[op.pocket.pivot].clone().sub(p1);
+          const rim = positions[op.pocket.rim].clone().sub(p1);
+          const normal = pivot.cross(rim).normalize();
+          const hinge = p2.clone().sub(p1);
+          if (normal.lengthSq() > 1e-12) positions[op.pocket.tip].copy(hinge)
+            .addScaledVector(normal, -2 * hinge.dot(normal)).add(p1);
+        }
         for (const [vi, x, y, z] of op.targets ?? []) positions[vi].lerp(_tmp.set(x, y, z), e);
+        for (const [vi, a, b, c, u, v, w] of op.surfacePoints ?? []) {
+          positions[vi].copy(positions[a]).multiplyScalar(u)
+            .addScaledVector(positions[b], v).addScaledVector(positions[c], w);
+        }
       }
     }
     if (i === stepIndex) fraction = a;

@@ -59,14 +59,23 @@ export interface FoldOp {
   guide?: boolean;
   /** Flexible paper motion: interpolate these vertices to a sampled surface pose. */
   targets?: [vertex: number, x: number, y: number, z: number][];
+  /** Carry subdivision points with a coarse triangular panel (barycentric weights). */
+  surfacePoints?: [vertex: number, a: number, b: number, c: number, u: number, v: number, w: number][];
+  /** Four triangular panels of a square/waterbomb pocket. The rim rotates
+   * about axis; the tip follows the sphere constraints against the fixed pivot. */
+  pocket?: { rim: number; tip: number; pivot: number };
 }
 
 /**
- * 1工程。複数の折りを同時に実行できる
- * (左右対称の折り、将来的には中割り折りなどの連動した折りに使う)。
+ * 1工程。公開ルートでは独立した操作を1つずつ案内する。
+ * 連動する袋開き・紙厚の補正は、同じ工程内に複数の演算を持てる。
  */
 export interface FoldStep {
   folds: FoldOp[];
+  /** Consecutive slices of ONE coupled motion, covering [0,1]. Each slice repeats
+   * the same folds; the engine evaluates only the current slice from their common
+   * starting pose. This provides a stop while opening a pocket without unfolding it. */
+  motionRange?: [number, number];
   /** 工程の説明文(短く) */
   description: LocalizedText;
   /** 注意ポイント(任意) */

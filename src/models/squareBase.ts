@@ -1,33 +1,11 @@
 import type { FoldStep, OrigamiModel } from '../engine/types';
 
-/**
- * 正方基本形 / Square Base(全5工程)— 鶴への第一歩。
- * 原典 https://www.origami-club.com/traditional/crane/zu.html の❶〜❻と同じ手順。
- *
- *   ❶ はんぶんに おる(対角線で三角に)
- *   ❷ はんぶんに おる(さらに半分の三角に)
- *   ❸ ふくろを ひらいて つぶす
- *   ❹ うらがえす
- *   ❺ おなじように ふくろを つぶす
- *
- * **2026-08-15 に作り直した(2回目)。** それまでは「対角線と十字の折りすじを
- * つけて戻す」を4本ぶん(8工程)並べてから1工程で畳んでいたが、
- * **原典には折りすじをつけて戻す工程が無い**。三角に2回折ってから袋を開いてつぶす
- * のが本来の手順で、戻す工程は要らない(ユーザー指摘 2026-08-15)。
- *
- * 幾何(紙は [-1,1] の正方形。O=中心、E/N/W/S=辺の中点、NE/NW/SW/SE=角):
- * - ❶ 対角線 NE-SW で、北西の半分を南東へ折る。N→E / NW→SE / W→S に重なる
- * - ❷ 対角線 O-SE で、南西の半分を北東へ折る。**4つの辺の中点が1点(E)に重なり、
- *   角は NE と SE の2点に2枚ずつ重なる**四分の一の三角形になる
- * - ❸ **袋を開いてつぶす**。エンジンでは2回の連鎖回転で表す:
- *   ①手前の層を❷の折り線(O-SE)で開き(SW角とS中点が回る)、
- *   ②できた折り目 O-S で角を折り返す。SW角が SE角に重なり、S中点が紙の S の位置へ戻る
- * - ❺ うらがえしたあと、まったく同じ2回の回転で反対側の袋をつぶす(NE角とN中点)
- * - 完成形は一辺 √2 のひし形。閉じた角が O、開いた4つの角(紙の4隅)が反対の頂点。
- *   シート全体を -45° 回転してあるので、画面では閉じた角が上・開いた角が下になる
- *
- * 鶴(`src/models/crane.ts`)は折りすじ先行の collapse で正方基本形を作っており、
- * ルートが違う(2026-08-13 にユーザー判断で現行維持と決定済み)。
+/** 正方基本形。三角に2回折り、手前の袋を開いてつぶす。裏返して反対も同様。
+ * 2026-09-06: pocket は4枚の三角パネルの辺長を保つ連動運動。
+ * 従来の2本の連鎖回転は中間で面が潰れたため廃止した。
+ * 平畳みの2工程は180°で閉じ、後のヒンジから角をずらさない。
+ * 袋つぶしは紙の層が見えるよう176°で止める。表示ルートでは開口とつぶしを分ける。
+ * 鶴もこの基本形ルートを共有し、細かい折り点を各三角面に追従させる。
  */
 
 /**
@@ -63,7 +41,9 @@ function r(x: number, y: number): [number, number] {
 const steps: FoldStep[] = [
   {
     // ❶ 対角線 NE-SW で三角に折る(北西の半分が南東へ回る)
-    folds: [{ axis: [2, 6], moving: [3, 4, 5], type: 'valley', angle: ANGLE }],
+    // Fully close this triangle so its stacked corner lies on the next hinge.
+    // A 176° stop leaves that corner off-axis and stretches the next fold.
+    folds: [{ axis: [2, 6], moving: [3, 4, 5], type: 'valley', angle: 180 }],
     description: {
       ja: '角と角を合わせて、対角線で三角に折ります。',
       en: 'Bring opposite corners together and fold into a triangle.',
@@ -75,7 +55,7 @@ const steps: FoldStep[] = [
   },
   {
     // ❷ もう半分。4つの辺の中点が1点に重なる
-    folds: [{ axis: [0, 8], moving: [5, 6, 7], type: 'valley', angle: ANGLE }],
+    folds: [{ axis: [0, 8], moving: [5, 6, 7], type: 'valley', angle: 180 }],
     description: {
       ja: 'もう一度はんぶんに折って、小さな三角にします。',
       en: 'Fold in half again into a smaller triangle.',
@@ -86,10 +66,10 @@ const steps: FoldStep[] = [
     },
   },
   {
-    // ❸ 袋を開いてつぶす(①❷の折り線で開く → ②できた折り目で角を折り返す)
+    // ❸ 口の点をヒンジ周りに動かし、先端を面の辺長拘束で追従させる。
     folds: [
-      { axis: [0, 8], moving: [6, 7], type: 'valley', angle: ANGLE },
-      { axis: [0, 7], moving: [6], type: 'valley', angle: ANGLE },
+      { axis: [0, 8], moving: [6, 7], type: 'valley', angle: ANGLE,
+        pocket: { rim: 7, tip: 6, pivot: 5 } },
     ],
     description: {
       ja: '手前のふくろを開いて、四角くつぶします。',
@@ -106,13 +86,10 @@ const steps: FoldStep[] = [
     description: { ja: 'うらがえします。', en: 'Turn it over.' },
   },
   {
-    // ❺ 反対側のふくろも同じようにつぶす
-    // 2本目の軸は **N(3) ではなく、平らなまま残っている中点 S(7)**(水風船基本形と同じ話。
-    // N は1本目の折りで持ち上がるので軸が傾き、フラップが束の上に乗って完成形の
-    // 表裏が❸と食い違う)。❹のうらがえしで束が -z 側へ移るので direction も明示する。
+    // ❺ 裏返した反対側も、同じ4面の拘束を保ってつぶす。
     folds: [
-      { axis: [0, 8], moving: [2, 3], type: 'valley', angle: ANGLE },
-      { axis: [0, 7], moving: [2], type: 'valley', angle: ANGLE, direction: -1 },
+      { axis: [0, 8], moving: [2, 3], type: 'valley', angle: ANGLE,
+        pocket: { rim: 3, tip: 2, pivot: 1 } },
     ],
     description: {
       ja: 'こちらのふくろも同じように開いて、つぶします。正方基本形のできあがり。',

@@ -22,39 +22,112 @@ for (const file of readdirSync(new URL('../src/models/', import.meta.url)).filte
 const modelOf = id => models.find(m => m.id === id);
 const distance = (a, b) => Math.max(...a.map((p, i) => p.distanceTo(b[i])));
 
-for (const short of MODELS) test(`${short.id}: shortened route omits crease preparation and preserves every retained motion`, () => {
+for (const short of MODELS) test(`${short.id}: individual stages retain all shape-making folds and completed poses`, () => {
   const source = modelOf(short.id);
   assert.ok(short.steps.length > 0);
   assert.equal(short.faces,source.faces);
   assert.equal(short.sheetColors,source.sheetColors);
   assert.ok(short.steps.every(s=>s.folds.every(op=>op.type!=='unfold')));
   let lastIndex=-1;
+  const seen = new Set();
   short.steps.forEach((s,i)=>{
-    const originalIndex=source.steps.findIndex(old=>old.folds===s.folds);
-    assert.ok(originalIndex>lastIndex);
+    const originalIndex=source.steps.findIndex(old=>old.folds.includes(s.folds[0]));
+    assert.ok(originalIndex>=lastIndex && originalIndex>=0);
+    const original = source.steps[originalIndex];
+    assert.ok(s.folds.every(op=>original.folds.includes(op)));
     lastIndex=originalIndex;
-    for (const fraction of [0,.25,.5,.75,1]) {
-      assert.ok(distance(computeFoldState(short,i+fraction).positions,
-        computeFoldState(source,originalIndex+fraction).positions)<1e-8, `${short.id} at ${i+fraction}`);
+    for(const op of s.folds) if (!s.motionRange?.[0]) {
+      assert.ok(!seen.has(op),'an action is not repeated'); seen.add(op);
     }
+    const next=short.steps[i+1];
+    if (!next || !original.folds.includes(next.folds[0])) {
+      assert.ok(original.folds.every(op=>seen.has(op)),'no layer adjustment is lost');
+      assert.ok(distance(computeFoldState(short,i+1).positions,
+        computeFoldState(source,originalIndex+1).positions)<1e-8, `${short.id}: completed source stage ${originalIndex}`);
+    }
+    if(s.motionRange || s.folds===original.folds) for (const fraction of [0,.25,.5,.75,1]) {
+      const [from,to]=s.motionRange??[0,1];
+      assert.ok(distance(computeFoldState(short,i+fraction).positions,
+        computeFoldState(source,originalIndex+from+(to-from)*fraction).positions)<1e-8, `${short.id} at ${i+fraction}`);
+    }
+    for(const fraction of [0,.25,.5,.75,1]) assert.ok(computeFoldState(short,i+fraction).positions
+      .every(p=>[p.x,p.y,p.z].every(Number.isFinite)));
   });
+  assert.equal(seen.size,withoutCreasePreparation(source).steps.flatMap(s=>s.folds).length);
   assert.ok(distance(computeFoldState(short,short.steps.length).positions,
     computeFoldState(source,source.steps.length).positions)<1e-8);
   assert.equal(buildStepDiagrams(short).length,short.steps.length);
   assert.equal(withoutCreasePreparation(short),short,'applying the policy twice is a no-op');
 });
 
-test('shortened library has expected counts and keeps shape-making operations', () => {
+test('all works use individual stages while crease-only round trips stay omitted', () => {
   assert.equal(MODELS.length,models.length);
   const byId=id=>MODELS.find(m=>m.id===id);
-  for(const [id,n] of [['crane',7],['elephant',3],['dog',4],['acorn',4],['car',6],['piano',4]]) {
+  for(const [id,n] of [['crane',18],['elephant',4],['dog',5],['acorn',6],['car',7],['piano',5],['shuriken',21],['heart',8],['bus',13]]) {
     assert.equal(byId(id).steps.length,n,id);
   }
-  for(const id of ['cup','shuriken','square-base','waterbomb-base','tadpole','box','pizza']) {
+  for(const id of ['cup']) {
     assert.equal(byId(id),modelOf(id),'do not shorten necessary openings or reverse folds');
   }
   assert.match(byId('acorn').steps[0].caution.ja,/色の面を上/);
   assert.match(byId('elephant').steps[0].caution.ja,/白い面を上/);
+});
+
+test('crane starts with two separate rigid triangle folds, carrying every fine crease point', () => {
+  const m=MODELS.find(m=>m.id==='crane'), base=modelOf('square-base');
+  const initial=computeFoldState(m,0).positions;
+  assert.match(m.steps[0].description.ja,/対角線で三角/);
+  assert.match(m.steps[1].description.ja,/小さな三角/);
+  for(let t=0;t<=2;t+=.125){
+    const p=computeFoldState(m,t).positions, q=computeFoldState(base,t).positions;
+    assert.ok(distance(p.slice(0,9),q)<1e-8,'one base operation per Next');
+    for(const face of m.faces)for(let i=0;i<face.length;i++){
+      const a=face[i],b=face[(i+1)%face.length];
+      assert.ok(Math.abs(p[a].distanceTo(p[b])-initial[a].distanceTo(initial[b]))<1e-8,'fine points stay on rigid panels');
+    }
+  }
+});
+
+test('pocket checkpoints are continuous, scrub backwards, and survive JSON export', () => {
+  for(const m of MODELS.filter(m=>m.steps.some(s=>s.motionRange))){
+    const json=JSON.parse(JSON.stringify(m));
+    m.steps.forEach((s,i)=>{
+      if(!s.motionRange?.[0])return;
+      assert.deepEqual(m.steps[i-1].motionRange,[0,s.motionRange[0]]);
+      const boundary=computeFoldState(m,i).positions;
+      for(const t of [i+.00001,i-.00001,i,i+.5,i-.5]){
+        assert.ok(distance(computeFoldState(m,t).positions,computeFoldState(json,t).positions)<1e-8);
+        if(Math.abs(t-i)<.001)assert.ok(distance(boundary,computeFoldState(m,t).positions)<.0001);
+      }
+    });
+  }
+});
+
+test('square and waterbomb pockets retain panel lengths throughout their opening checkpoints', () => {
+  for(const id of ['square-base','waterbomb-base','crane','tadpole']){
+    const m=MODELS.find(m=>m.id===id),q=computeFoldState(m,0).positions;
+    for(let t=0;t<=(id==='tadpole'?4:7);t+=.025){
+      const p=computeFoldState(m,t).positions;
+      for(const f of m.faces)for(const a of f)for(const b of f)
+        assert.ok(Math.abs(p[a].distanceTo(p[b])-q[a].distanceTo(q[b]))<1e-8,`${id} panel distance at ${t}`);
+    }
+    const half=computeFoldState(m,3).positions, flat=computeFoldState(m,4).positions;
+    assert.ok(distance(half,flat)>.25,'opening is a real intermediate shape');
+    const startGuide=computeFoldState(m,2).guides[0], nextGuide=computeFoldState(m,3).guides[0];
+    assert.ok(startGuide.arrowPath.at(-1).distanceTo(nextGuide.arrowPath[0])<1e-8,'arrows stop at the checkpoint');
+  }
+});
+
+test('separate collinear corners do not move together, but overlapping layers still do', () => {
+  for(const [id,sourceStep,expected]of [['heart',4,2],['bus',2,4]]){
+    const m=withoutCreasePreparation(modelOf(id)),ops=m.steps[sourceStep].folds.filter(isGuideFold);
+    assert.equal(ops.length,expected,id);
+  }
+  const dog=MODELS.find(m=>m.id==='dog'), before=computeFoldState(dog,1).positions;
+  const oneEar=computeFoldState(dog,2).positions, both=computeFoldState(dog,3).positions;
+  const other=dog.steps[2].folds.find(isGuideFold).moving;
+  assert.ok(other.every(vi=>before[vi].distanceTo(oneEar[vi])<1e-8),'second ear stays put');
+  assert.ok(other.some(vi=>both[vi].distanceTo(oneEar[vi])>.1),'second ear moves on the next action');
 });
 
 test('an unfold which leaves the paper partly folded is retained', () => {

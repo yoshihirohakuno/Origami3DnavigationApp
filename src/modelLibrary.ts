@@ -33,9 +33,11 @@ import { pizzaModel } from './models/pizza';
 import { acornModel } from './models/acorn';
 import type { OrigamiModel, LocalizedText } from './engine/types';
 import { withoutCreasePreparation } from './engine/withoutCreasePreparation';
+import { separateFoldSteps } from './engine/separateFoldSteps';
 
 // Source routes retain the original step numbers used by the layer compilers.
-// All user-facing consumers share the shortened routes exported as MODELS.
+// All user-facing consumers share MODELS: omit crease preparation, then expose
+// individual actions/checkpoints after the layer compilers have finished.
 const SOURCES: OrigamiModel[] = [
   tulipModel,
   dogModel,
@@ -133,4 +135,4 @@ export const MODELS: OrigamiModel[] = SOURCES.map(source => {
     };
   }
   return { ...short, steps };
-});
+}).map(separateFoldSteps);
