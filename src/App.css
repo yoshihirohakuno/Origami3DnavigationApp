@@ -1914,9 +1914,7 @@
 }
 
 .model-note { color: var(--faint); font-size: 11px; line-height: 1.5; margin-top: 6px; }
-.model-reference { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin-top: 8px; font-size: 12px; line-height: 1.5; }
-.model-reference span { flex: 1 1 260px; color: var(--faint); }
-.model-reference a { color: var(--accent); margin-left: auto; }
+.model-notice { margin: 8px 0 0; color: var(--faint); font-size: 12px; line-height: 1.5; }
 
 @media (max-width: 560px) {
   .filter-key {

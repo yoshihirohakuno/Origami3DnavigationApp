@@ -218,8 +218,8 @@ const steps: FoldStep[] = [
       en: 'Fold the tips of both humps behind as well. The heart is done.',
     },
     caution: {
-      ja: '山の先が落ちて、原典どおりのまるいハートになります。',
-      en: 'With the tips folded away the heart matches the diagram’s rounded shape.',
+      ja: '山の先が落ちて、まるいハートになります。',
+      en: 'Folding the tips away gives the heart a rounded shape.',
     },
   },
 ];

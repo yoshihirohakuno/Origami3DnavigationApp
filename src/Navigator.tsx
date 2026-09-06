@@ -4,7 +4,7 @@ import { computeFoldState, isGuideFold } from './engine/fold';
 import { buildStepDiagrams } from './CreasePattern';
 import { PaperScene } from './three/PaperScene';
 import { LangToggle, useLang } from './i18n';
-import { MODEL_NOTES, referenceOf } from './modelReferences';
+import { MODEL_NOTES } from './modelReferences';
 
 /** 折り種類の名前と、動く向きの補足(バッジの2行) */
 const FOLD_LABEL: Record<FoldType, { ja: string; en: string }> = {
@@ -385,12 +385,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
           {finished ? t('isComplete', { name: L(model.name) }) : L(step.description)}
         </p>
         {step.caution && <p className="step-caution">※ {L(step.caution)}</p>}
-        <div className="model-reference">
-          {MODEL_NOTES[model.id] && <span>{L(MODEL_NOTES[model.id])}</span>}
-          {referenceOf(model.id) && <a href={referenceOf(model.id)} target="_blank" rel="noopener noreferrer">
-            {lang === 'ja' ? '原典の折り図を見る ↗' : 'View original diagram ↗'}
-          </a>}
-        </div>
+        {MODEL_NOTES[model.id] && <p className="model-notice">{L(MODEL_NOTES[model.id])}</p>}
       </div>
 
       <div className="controls">

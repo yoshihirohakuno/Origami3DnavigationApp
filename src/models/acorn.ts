@@ -17,5 +17,5 @@ export const acornModel = flatSequence({
     description: { ja: '左右を後ろへ折り、どんぐりを細くします。', en: 'Fold both sides behind to narrow the acorn.' } },
   { moves: [move([-.4,-.1],[-.25,-.25],-1,'mountain'),move([.25,-.25],[.4,-.1],-1,'mountain')],
     description: { ja: '下の両角を少し後ろへ折って完成です。', en: 'Fold the two bottom corners a little behind to finish.' },
-    caution: { ja: '白い部分はどんぐりの帽子です。原典と同じく下に向け、点を描いて仕上げます。', en: 'The white cup points down as in the reference. Finish by drawing small dots on it.' } },
+    caution: { ja: '白い部分はどんぐりの帽子です。下に向け、点を描いて仕上げます。', en: 'The white cup points down. Finish by drawing small dots on it.' } },
 ]);

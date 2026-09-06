@@ -312,8 +312,8 @@ const steps: FoldStep[] = [
       en: 'Fold the top corner between the ears behind, flattening the head.',
     },
     caution: {
-      ja: '胴の2枚と、内側に倒れた耳の三角の先も一緒に始末します(原典は層のあいだに差し込む折り)。',
-      en: 'Both body layers and the tips of the inward-folded ear triangles go behind (the diagram tucks them inside).',
+      ja: '胴の2枚と、内側に倒れた耳の三角の先も一緒に後ろへ折ります。',
+      en: 'Fold both body layers and the tips of the inward-folded ear triangles behind together.',
     },
   },
   {

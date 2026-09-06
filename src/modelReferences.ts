@@ -21,16 +21,17 @@ const diagrams: Record<string, string> = {
   whale: 'rn-image/zu/whale.gif', yacht: 'easy/vehicle/yacht/yacht2/yacht.gif',
 };
 
+/** Development reference links for the audit tools; not displayed in the app. */
 export const referenceOf = (id: string): string | undefined => diagrams[id] ? base + diagrams[id] : undefined;
 
 /** Known differences found by direct diagram comparison, not a blanket accuracy claim. */
 export const MODEL_NOTES: Record<string, LocalizedText> = {
   crane: {
-    ja: '形状を再検証中：首・羽の形と袋を開く動きが原典と一致していません。折る際は原典もご確認ください。',
-    en: 'Under review: the neck, wings and squash-fold motion differ from the reference. Please consult the original diagram when folding.',
+    ja: '形状を再検証中：首・羽の形と袋を開く動きには、修正が必要な箇所があります。',
+    en: 'Under review: the neck, wings and squash-fold motion still need correction.',
   },
   box: {
-    ja: 'この作品は簡易トレイです。原典「はこ1」とは折り方が異なります。',
-    en: 'This model is a simple tray. Its folding sequence differs from the referenced Box 1.',
+    ja: 'この作品は、浅い簡易トレイに仕上がります。',
+    en: 'This model folds into a simple, shallow tray.',
   },
 };
