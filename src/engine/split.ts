@@ -45,13 +45,18 @@ export function splitFacesByLine(
   };
 
   const faces: number[][] = [];
-  for (const face of model.faces) {
+  const faceSheet: number[] = [];
+  for (const [fi, face] of model.faces.entries()) {
+    const addFace = (part: number[]) => {
+      faces.push(part);
+      if (model.faceSheet) faceSheet.push(model.faceSheet[fi]);
+    };
     const sides = face.map((vi) => {
       const s = side(vertices[vi]);
       return Math.abs(s) < EPS ? 0 : Math.sign(s);
     });
     if (!sides.includes(1) || !sides.includes(-1)) {
-      faces.push(face);
+      addFace(face);
       continue;
     }
     const left: number[] = [];
@@ -67,9 +72,9 @@ export function splitFacesByLine(
         right.push(nv);
       }
     }
-    if (left.length >= 3) faces.push(left);
-    if (right.length >= 3) faces.push(right);
+    if (left.length >= 3) addFace(left);
+    if (right.length >= 3) addFace(right);
   }
 
-  return { ...model, vertices, faces };
+  return { ...model, vertices, faces, ...(model.faceSheet ? { faceSheet } : {}) };
 }

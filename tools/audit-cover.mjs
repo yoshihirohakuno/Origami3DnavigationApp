@@ -70,10 +70,14 @@ function planeZ(P, f, x, y) {
 
 /** 工程 t の「裏面が見えている割合(%)」。detail:true なら面ごとの内訳も返す */
 export async function coverage(model, t, { grid = 120, detail = false } = {}) {
-  const { computeFoldState } = await import('/src/engine/fold.ts');
+  const { computeFoldState } = await import('../src/engine/fold.ts');
+  const { paperTriangles } = await import('../src/engine/mesh.ts');
   const P = computeFoldState(model, t).positions;
-  const xs = P.map((p) => p.x);
-  const ys = P.map((p) => p.y);
+  const used = [...new Set(model.faces.flat())];
+  const xs = used.map(vi => P[vi].x);
+  const ys = used.map(vi => P[vi].y);
+  // Use the actual WebGL triangles, including non-planar quadrilaterals.
+  const triangles = paperTriangles(model).map(([face, ...vertices]) => ({face, vertices}));
   const x0 = Math.min(...xs), x1 = Math.max(...xs);
   const y0 = Math.min(...ys), y1 = Math.max(...ys);
   let hit = 0, back = 0;
@@ -83,15 +87,16 @@ export async function coverage(model, t, { grid = 120, detail = false } = {}) {
       const x = x0 + ((x1 - x0) * (i + 0.5)) / grid;
       const y = y0 + ((y1 - y0) * (j + 0.5)) / grid;
       let best = -1;
+      let bestTriangle;
       let bz = -Infinity;
-      model.faces.forEach((f, fi) => {
+      triangles.forEach(({vertices: f, face: fi}) => {
         if (!inPolygon(P, f, x, y)) return;
         const z = planeZ(P, f, x, y);
-        if (z > bz) { bz = z; best = fi; }
+        if (z > bz) { bz = z; best = fi; bestTriangle = f; }
       });
       if (best < 0) continue;
       hit++;
-      const isBack = normalZ(P, model.faces[best]) < 0;
+      const isBack = normalZ(P, bestTriangle) < 0;
       if (isBack) back++;
       if (detail) {
         const k = `${best}[${model.faces[best].join(',')}]:${isBack ? '裏' : '表'}`;
@@ -116,7 +121,7 @@ export async function auditModel(model, opts) {
 export async function auditAll(opts) {
   const lines = [];
   for (const id of IDS) {
-    const mod = await import(`/src/models/${id}.ts?audit=${Date.now()}`);
+    const mod = await import(`../src/models/${id}.ts`);
     const model = Object.values(mod).find((v) => v && v.steps && v.vertices);
     const a = await auditModel(model, opts);
     lines.push(model.id.padEnd(12) + a.join(' '));

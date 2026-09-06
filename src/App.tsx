@@ -93,7 +93,14 @@ interface Records {
 function loadRecords(): Records {
   try {
     const raw = localStorage.getItem('origami-records');
-    if (raw) return JSON.parse(raw) as Records;
+    if (raw) {
+      const value = JSON.parse(raw);
+      if (value && Number.isSafeInteger(value.total) && value.total >= 0 &&
+          value.byModel && typeof value.byModel === 'object' && !Array.isArray(value.byModel) &&
+          Object.values(value.byModel).every(n => Number.isSafeInteger(n) && Number(n) >= 0)) {
+        return value as Records;
+      }
+    }
   } catch {
     /* 破損時は初期値へ */
   }
@@ -148,7 +155,9 @@ export default function App() {
         total: prev.total + 1,
         byModel: { ...prev.byModel, [model.id]: (prev.byModel[model.id] ?? 0) + 1 },
       };
-      localStorage.setItem('origami-records', JSON.stringify(next));
+      try { localStorage.setItem('origami-records', JSON.stringify(next)); } catch {
+        // Storage can be disabled; still keep the completion for this session.
+      }
       return next;
     });
   };

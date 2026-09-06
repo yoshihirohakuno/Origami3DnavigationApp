@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { OrigamiModel, FoldType } from './engine/types';
-import { computeFoldState } from './engine/fold';
+import { computeFoldState, isGuideFold } from './engine/fold';
 import { buildStepDiagrams } from './CreasePattern';
 import { PaperScene } from './three/PaperScene';
 import { LangToggle, useLang } from './i18n';
@@ -116,6 +116,8 @@ export function Navigator({ model, onExit, onComplete }: Props) {
 
     let raf = 0;
     let last = performance.now();
+    let lastTime = -1;
+    let state = computeFoldState(model, 0);
     const loop = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.1);
       last = now;
@@ -128,9 +130,12 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         playingRef.current = false;
         setPlaying(false);
       }
-      const state = computeFoldState(model, tRef.current);
+      if (tRef.current !== lastTime) {
+        state = computeFoldState(model, tRef.current);
+        lastTime = tRef.current;
+        setUi({ t: lastTime, stepIndex: state.stepIndex, fraction: state.fraction });
+      }
       scene.update(state);
-      setUi({ t: tRef.current, stepIndex: state.stepIndex, fraction: state.fraction });
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -176,6 +181,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
       canvas.removeEventListener('pointerdown', onTap);
       scene.dispose();
       sceneRef.current = null;
+      delete (window as unknown as Record<string, unknown>).__origami;
     };
   }, [model, total]);
 
@@ -260,8 +266,9 @@ export function Navigator({ model, onExit, onComplete }: Props) {
 
   const step = model.steps[ui.stepIndex];
   // バッジは工程の代表折り。山谷が混在する工程は「たたむ」と表示する
-  const foldType = step.folds[0].type;
-  const mixed = step.folds.some((f) => f.type !== foldType);
+  const visibleFolds = step.folds.filter(isGuideFold);
+  const foldType = visibleFolds[0]?.type ?? 'assemble';
+  const mixed = visibleFolds.some((f) => f.type !== foldType);
   const finished = ui.t >= total;
   const left = total - ui.stepIndex - (ui.fraction >= 1 ? 1 : 0);
   const pct = (ui.t / total) * 100;

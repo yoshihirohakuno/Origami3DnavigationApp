@@ -1,6 +1,8 @@
 import type { ReactElement } from 'react';
-import { computeFoldState } from './engine/fold';
+import { computeFoldState, isGuideFold } from './engine/fold';
 import type { OrigamiModel, FoldType } from './engine/types';
+import { paperTriangles } from './engine/mesh';
+import { orderPaper } from './engine/painter';
 
 /** 折り種類ごとの表示色(UI全体で共通) */
 export const FOLD_COLORS: Record<FoldType, string> = {
@@ -120,44 +122,6 @@ function projectedArea(points: { x: number; y: number }[]): number {
   return area / 2;
 }
 
-/** 手裏剣だけは組み上げ星形を専用シルエットで描く(朱×藍の風車状4つ尖り) */
-export function ShurikenFinalPreview({
-  size = 96,
-  className,
-}: {
-  size?: number;
-  className?: string;
-}) {
-  // 上向きの風車ブレードを90°ずつ回して4枚。対で朱/藍に塗り分ける。
-  const blade = '50,50 67,45 50,7 46,43';
-  const colors = ['#e0492f', '#2f4b7c', '#e0492f', '#2f4b7c'];
-  return (
-    <svg className={className} viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      {colors.map((c, i) => (
-        <polygon
-          key={i}
-          points={blade}
-          fill={c}
-          stroke="#25262c"
-          strokeWidth="1.2"
-          strokeLinejoin="round"
-          transform={`rotate(${i * 90} 50 50)`}
-        />
-      ))}
-      <rect
-        x="44"
-        y="44"
-        width="12"
-        height="12"
-        transform="rotate(45 50 50)"
-        fill="#1c1d22"
-        stroke="#25262c"
-        strokeWidth="1"
-      />
-    </svg>
-  );
-}
-
 /** 紙の色の既定値(PaperScene の COLOR_FRONT / COLOR_BACK と合わせる) */
 const PAPER_FRONT = '#eda6a2';
 const PAPER_BACK = '#fbfaf7';
@@ -224,14 +188,6 @@ function flatten(p: Point3, view: View): { x: number; y: number } {
     : { x: p.x, y: p.y };
 }
 
-/** 奥から手前へ並べるための深さ(視点座標の z。平畳みならモデルの z) */
-function depthOf(ps: Point3[], view: View): number {
-  const d = view
-    ? ps.map((p) => p.x * view.zAxis[0] + p.y * view.zAxis[1] + p.z * view.zAxis[2])
-    : ps.map((p) => p.z);
-  return d.reduce((s, v) => s + v, 0) / d.length;
-}
-
 /** 与えた状態(複数可)がすべて収まる枠を作る。fill は 100 のうち紙が占める幅 */
 function frameFor(states: Point3[][], view: View, fill: number): Frame {
   const points = states.flat().map((p) => flatten(p, view));
@@ -251,15 +207,6 @@ function frameFor(states: Point3[][], view: View, fill: number): Frame {
 const toSvgX = (x: number, frame: Frame) => 50 + (x - frame.cx) * frame.scale;
 const toSvgY = (y: number, frame: Frame) => 50 - (y - frame.cy) * frame.scale;
 
-/**
- * `displaySideSwapFromStep` の工程に達しているか(達していれば表示上の表裏を入れ替える)。
- * PaperScene.update と同じ判定にしないと、3D画面と一覧カード・工程サムネイルで
- * 色が食い違う。
- */
-function swapsSides(model: OrigamiModel, stepIndex: number): boolean {
-  return model.displaySideSwapFromStep !== undefined && stepIndex >= model.displaySideSwapFromStep;
-}
-
 /** 紙をSVGのポリゴン列にする(奥から手前の順。表裏で色を変える) */
 function polygonsOf(
   model: OrigamiModel,
@@ -267,7 +214,6 @@ function polygonsOf(
   view: View,
   frame: Frame,
   edge: { color: string; width: number } = { color: '#25262c', width: 0.85 },
-  swapSides = false,
 ): ReactElement[] {
   // 作品ごとの紙色(sheetColors)を使う。ハート・箱・くじら・兜などは
   // 既定の「薄い赤/白」ではないので、既定色のままだと完成形が無色に見える
@@ -276,37 +222,39 @@ function polygonsOf(
     return model.sheetColors?.[sheet] ?? { front: PAPER_FRONT, back: PAPER_BACK };
   };
 
-  return model.faces
-    .map((face, index) => {
-      const ps = face.map((vi) => positions[vi]);
-      const fp = ps.map((p) => flatten(p, view)); // 視点座標
-      const projected = fp.map((p) => ({ x: toSvgX(p.x, frame), y: toSvgY(p.y, frame) }));
-      const area = Math.abs(projectedArea(projected));
-      // 視点から見た表裏(視点座標での回り方)
-      const nz =
-        (fp[1].x - fp[0].x) * (fp[2].y - fp[0].y) - (fp[1].y - fp[0].y) * (fp[2].x - fp[0].x);
-      const colors = sheetColorOf(index);
-      const showFront = swapSides ? nz < 0 : nz >= 0;
-      return {
-        index,
-        area,
-        fill: showFront ? colors.front : colors.back,
-        depth: depthOf(ps, view),
-        points: projected.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' '),
-      };
-    })
-    .filter((face) => face.area > 0.1)
-    .sort((a, b) => a.depth - b.depth)
-    .map((face) => (
-      <polygon
-        key={face.index}
-        points={face.points}
-        fill={face.fill}
-        stroke={edge.color}
-        strokeWidth={edge.width}
-        strokeLinejoin="round"
-      />
-    ));
+  const projected = positions.map(p => ({ ...flatten(p, view),
+    z: view ? p.x * view.zAxis[0] + p.y * view.zAxis[1] + p.z * view.zAxis[2] : p.z,
+  }));
+  const triangles = paperTriangles(model).map(([face, ...ids]) => ({ face, points: ids.map(vi => projected[vi]) }))
+    .filter(p => Math.abs(projectedArea(p.points)) > 1e-10);
+  const svgPoint = (p: { x: number; y: number }) =>
+    `${toSvgX(p.x, frame).toFixed(4)},${toSvgY(p.y, frame).toFixed(4)}`;
+  return orderPaper(triangles).filter(p => Math.abs(projectedArea(p.points)) > 1e-10).map((polygon, index) => {
+    const colors = sheetColorOf(polygon.face);
+    const fill = projectedArea(polygon.points) >= 0 ? colors.front : colors.back;
+    // Draw only real face edges, never triangulation or BSP subdivision seams.
+    const face = model.faces[polygon.face];
+    const outline = polygon.points.flatMap((a, i) => {
+      const b = polygon.points[(i + 1) % polygon.points.length];
+      if (Math.hypot(a.x - b.x, a.y - b.y) < 1e-8) return [];
+      const onEdge = face.some((vi, j) => {
+        const p = projected[vi], q = projected[face[(j + 1) % face.length]];
+        const dx = q.x - p.x, dy = q.y - p.y, length = Math.hypot(dx, dy);
+        const on = (r: Point3) => length > 1e-9 &&
+          Math.abs(dx * (r.y - p.y) - dy * (r.x - p.x)) < 1e-7 * length &&
+          (r.x - p.x) * dx + (r.y - p.y) * dy >= -1e-8 &&
+          (r.x - q.x) * dx + (r.y - q.y) * dy <= 1e-8;
+        return on(a) && on(b);
+      });
+      return onEdge ? [`M${svgPoint(a)}L${svgPoint(b)}`] : [];
+    }).join(' ');
+    return <g key={index}>
+      <polygon points={polygon.points.map(svgPoint).join(' ')} fill={fill} stroke={fill} strokeWidth={0.03} />
+      <path d={outline} fill="none" stroke={edge.color} strokeWidth={edge.width} strokeLinejoin="round"
+        style={{ clipPath: `polygon(${polygon.points.map(p =>
+          `${toSvgX(p.x, frame)}px ${toSvgY(p.y, frame)}px`).join(',')})` }} />
+    </g>;
+  });
 }
 
 /** 作品カード用:工程を最後まで適用した完成形をSVGで描く */
@@ -314,7 +262,6 @@ export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; s
   // 鶴は手描きSVGをやめて工程データから描く(2026-08-10)。15工程の完成形が
   // 実装済みで、立体なのでナビ画面と同じ視点から投影すれば実物と同じ形になる。
   // 手描きSVGは羽・首の形が実際の折りと違っていた
-  if (model.id === 'shuriken') return <ShurikenFinalPreview size={size} />;
 
   const view = viewFor(model);
   const state = computeFoldState(model, model.steps.length);
@@ -323,7 +270,7 @@ export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; s
 
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      {polygonsOf(model, positions, view, frame, undefined, swapsSides(model, model.steps.length - 1))}
+      {polygonsOf(model, positions, view, frame)}
     </svg>
   );
 }
@@ -379,9 +326,8 @@ export function buildStepDiagrams(model: OrigamiModel, size = 44): ReactElement[
           view,
           frame,
           { color: 'rgba(37,38,44,0.4)', width: 0.5 },
-          swapsSides(model, i),
         )}
-        {step.folds.map((op, k) => {
+        {step.folds.filter(op => isGuideFold(op) && (op.timing?.[0] ?? 0) === 0).map((op, k) => {
           const a = line(positions[op.axis[0]]);
           const b = line(positions[op.axis[1]]);
           return (

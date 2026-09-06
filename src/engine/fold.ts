@@ -34,6 +34,12 @@ const _qSpin = new THREE.Quaternion();
 const _tmp = new THREE.Vector3();
 const Z_AXIS = new THREE.Vector3(0, 0, 1);
 
+/** 紙の厚みだけを補う移動には、折り線や矢印を出さない。 */
+export function isGuideFold(op: FoldOp): boolean {
+  return op.guide ?? !(op.type === 'assemble' && op.angle === 0 && !op.spinZ &&
+    op.translate?.[0] === 0 && op.translate?.[1] === 0);
+}
+
 /**
  * 谷折り=+z(手前)へ動く回転符号を返す。
  * 折り開始時点の配置で、動く頂点が回転し始める向きのz成分から判定する。
@@ -113,7 +119,7 @@ function buildArrowPath(
  */
 export function computeFoldState(model: OrigamiModel, t: number): FoldState {
   const positions = model.vertices.map(([x, y]) => new THREE.Vector3(x, y, 0));
-  const clamped = Math.max(0, Math.min(t, model.steps.length));
+  const clamped = Math.max(0, Math.min(Number.isNaN(t) ? 0 : t, model.steps.length));
   // 静止中(tが整数)は「次の工程」を現在工程として予告表示する(完成時のみ最終工程)
   const stepIndex = Math.min(Math.floor(clamped), model.steps.length - 1);
 
@@ -127,12 +133,14 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
     if (a <= 0 && i !== stepIndex) break;
 
     for (const op of step.folds) {
+      const [start, end] = op.timing ?? [0, 1];
+      const progress = Math.max(0, Math.min((a - start) / (end - start), 1));
       const sign = foldSign(op, positions);
       const p1 = positions[op.axis[0]].clone();
       const p2 = positions[op.axis[1]].clone();
       const axisDir = new THREE.Vector3().subVectors(p2, p1).normalize();
 
-      if (i === stepIndex) {
+      if (i === stepIndex && a < 1 && a >= start && a < end && isGuideFold(op)) {
         guides.push({
           type: op.type,
           axisLine: [p1.clone(), p2.clone()],
@@ -144,8 +152,8 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
         });
       }
 
-      if (a > 0) {
-        const e = easeInOut(a);
+      if (progress > 0) {
+        const e = easeInOut(progress);
         const angle = sign * THREE.MathUtils.degToRad(op.angle) * e;
         _q.setFromAxisAngle(axisDir, angle);
         if (op.spinZ) _qSpin.setFromAxisAngle(Z_AXIS, THREE.MathUtils.degToRad(op.spinZ) * e);

@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "test": "node --import ./tools/register-typescript.mjs --test tests/*.test.mjs",
+    "audit:models": "node --import ./tools/register-typescript.mjs tools/inspect-models.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

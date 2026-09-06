@@ -1,4 +1,5 @@
 import type { FoldOp, FoldStep, OrigamiModel } from '../engine/types';
+import { withFlatLayers } from '../engine/flatLayers';
 
 /**
  * 手裏剣 / Shuriken(2枚組み・全9工程)
@@ -19,7 +20,7 @@ import type { FoldOp, FoldStep, OrigamiModel } from '../engine/types';
  * ❹の折り線は❸の斜め辺と「平行」(展開図は0.5刻みの5×5格子+対角線)。
  * ユニットは先端が斜めにずれた稲妻形になり、組んだ星の尖りは風車状に傾く。
  * 「さしこむ」は新しい折り線を作らず、❹の折り線で翼をわずかに開いて相手の
- * 帯の上へかぶせ直す(相手のツメの下に入る)。エンジンでは小さな開き回転で
+ * 帯の上へかぶせ直す(相手のツメの下に入る)。エンジンでは面ごとの厚みと層順を保持し、小さな開閉で
  * 表現する(README「既知の制約」)。
  *
  * 紙の表は色、裏は白で扱う。`sheetColors` の front/back は反転しない。
@@ -27,8 +28,7 @@ import type { FoldOp, FoldStep, OrigamiModel } from '../engine/types';
 
 const AX = -1.2; // 朱の展開図での中心x
 const BX = 1.2; // 藍の展開図での中心x
-const Z_TOP = 0.14; // ❻で藍を朱の上に乗せる高さ
-const LIFT4 = 0.06; // ❹の折り線頂点(翼側)の持ち上げ
+const Z_TOP = 0.0028; // ❻で藍を朱の上に乗せる高さ(紙の厚み)
 
 /**
  * ローカル展開図: 0.5刻みの5×5格子(番号 = 5*ix + iy、x,y ∈ {-1,-0.5,0,0.5,1})
@@ -103,7 +103,6 @@ const CUPBOARD_L = COL(-1);
 const CUPBOARD_R = COL(1);
 // ❷で動く側(紙のはし=x=-1列は❶で回転軸上に来ているため含めない)
 const HALF = COL(-0.5);
-const DUPS = [dup(-1), dup(-0.5), dup(0), dup(0.5), dup(1)];
 const SLANT_TOP = [id(-0.5, 1), id(0.5, 1)]; // ❸上(dup(1)は折り線の端点上)
 const SLANT_BOT = [id(0, -1), dup(-1), id(-1, -1), id(1, -1)]; // ❸下
 // ❹の翼(dup(0.5)/dup(0) は折り線上なので動かない)
@@ -155,25 +154,14 @@ const steps: FoldStep[] = [
       en: 'On both sheets, fold the left and right edges in to the center line.',
     },
     caution: {
-      ja: '手裏剣は2枚の紙で作ります。紙の表は色面、裏は白です。',
-      en: 'The shuriken uses two sheets. The colored side is the front and the reverse is white.',
+      ja: '2枚とも白い裏面を上にして始めます。色の面が外側になるように折ります。',
+      en: 'Start with the white reverse side up on both sheets. The colored front will face outward.',
     },
   },
   {
     // ❷ 半分に折る
     folds: both((s) => [
       { axis: [s + id(0, 1), s + id(0, -1)], moving: off(s, HALF), type: 'valley', angle: 176.5 },
-      // 上層側の折り目の縁(複製頂点)をわずかに持ち上げて層を分離する。
-      // 大きく持ち上げると❹の回転軸(z=0)から浮いた蝶番になり翼がねじれるため、
-      // ここでは最小限にとどめ、本命の持ち上げは❹の後に行う
-      {
-        axis: [s + id(0, 1), s + id(0, -1)],
-        moving: off(s, DUPS),
-        type: 'assemble',
-        angle: 0,
-        direction: 1,
-        translate: [0, 0, 0.012],
-      },
     ]),
     description: {
       ja: '中心線でさらに半分に折り、細い帯にします。',
@@ -200,24 +188,6 @@ const steps: FoldStep[] = [
     folds: both((s) => [
       { axis: [s + AXIS4T[0], s + AXIS4T[1]], moving: off(s, WING_TOP), type: 'valley', angle: 174 },
       { axis: [s + AXIS4B[0], s + AXIS4B[1]], moving: off(s, WING_BOT), type: 'valley', angle: 174 },
-      // 折り返した最上層の折り目は層の束の上まで巻き上がるため持ち上げる
-      {
-        axis: [s + AXIS4T[0], s + AXIS4T[1]],
-        moving: off(s, [AXIS4T[0], AXIS4T[1], AXIS4B[0], AXIS4B[1]]),
-        type: 'assemble',
-        angle: 0,
-        direction: 1,
-        translate: [0, 0, LIFT4],
-      },
-      // 中央の折り目の縁(上層側の複製)も、回転が終わったここで本来の高さへ
-      {
-        axis: [s + AXIS4T[0], s + AXIS4T[1]],
-        moving: off(s, [dup(0.5), dup(0)]),
-        type: 'assemble',
-        angle: 0,
-        direction: 1,
-        translate: [0, 0, 0.023],
-      },
     ]),
     description: {
       ja: '斜めのはしの帯を、❸と平行な折り線で中央へ折り返します。翼が斜めについた稲妻形になります。',
@@ -236,7 +206,7 @@ const steps: FoldStep[] = [
         direction: 1,
         spinZ: 90,
         // 裏返し+回転後のユニット中心 (AX+0.5, 0.75) を原点へ
-        translate: [-AX - 0.5, -0.75, 0.02],
+        translate: [-AX - 0.5, -0.75, 0.0004],
       },
     ],
     description: {
@@ -273,9 +243,9 @@ const steps: FoldStep[] = [
   {
     // ❼ さしこむ(朱の翼を藍の上にかぶせ直し、藍のツメの下へ)
     folds: [
-      // 翼を❹の折り線で開き、藍の帯を巻き込んで反対側(上)へ閉じ直す(ほぼ1回転)
-      { axis: [A + AXIS4T[0], A + AXIS4T[1]], moving: off(A, WING_TOP), type: 'mountain', angle: 344, direction: 1 },
-      { axis: [A + AXIS4B[0], A + AXIS4B[1]], moving: off(A, WING_BOT), type: 'mountain', angle: 344, direction: -1 },
+      // 翼を少し開き、ポケットへ入れて閉じる(前半で開き、後半で閉じる)
+      { axis: [A + AXIS4T[0], A + AXIS4T[1]], moving: off(A, WING_TOP), type: 'mountain', angle: 25, direction: 1 },
+      { axis: [A + AXIS4B[0], A + AXIS4B[1]], moving: off(A, WING_BOT), type: 'mountain', angle: 25, direction: -1 },
     ],
     description: {
       ja: '朱の2つの翼をわずかに開き、藍の帯にかぶせて、藍のツメの下へさしこみます。',
@@ -306,8 +276,8 @@ const steps: FoldStep[] = [
     // ❾ さしこんで できあがり
     folds: [
       // 藍の翼も開いて朱の帯を巻き込み、反対側へ閉じ直す
-      { axis: [B + AXIS4T[0], B + AXIS4T[1]], moving: off(B, WING_TOP), type: 'mountain', angle: 344, direction: -1 },
-      { axis: [B + AXIS4B[0], B + AXIS4B[1]], moving: off(B, WING_BOT), type: 'mountain', angle: 344, direction: 1 },
+      { axis: [B + AXIS4T[0], B + AXIS4T[1]], moving: off(B, WING_TOP), type: 'mountain', angle: 25, direction: -1 },
+      { axis: [B + AXIS4B[0], B + AXIS4B[1]], moving: off(B, WING_BOT), type: 'mountain', angle: 25, direction: 1 },
     ],
     description: {
       ja: '藍の2つの翼も同じように朱へさしこんだら、手裏剣のできあがり。',
@@ -320,7 +290,7 @@ const steps: FoldStep[] = [
   },
 ];
 
-export const shurikenModel: OrigamiModel = {
+const sourceModel: OrigamiModel = {
   id: 'shuriken',
   name: { ja: '手裏剣', en: 'Shuriken' },
   difficulty: 3,
@@ -328,9 +298,11 @@ export const shurikenModel: OrigamiModel = {
   // 平らな作品なのでほぼ正面から(わずかに見下ろす)見せる
   cameraPos: [0, -0.9, 4.6],
   vertices,
-  faces,
+  // 原典❶は白面スタート。最後までこの表裏を保ち、途中で色を交換しない。
+  faces: faces.map(face => [...face].reverse()),
   faceSheet,
   sheetColors,
-  displaySideSwapFromStep: 8,
   steps,
 };
+
+export const shurikenModel = withFlatLayers(sourceModel, [6, 8]);

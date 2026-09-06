@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { OrigamiModel } from '../engine/types';
-import type { FoldState } from '../engine/fold';
+import { computeFoldState, type FoldState } from '../engine/fold';
+import { paperTriangles } from '../engine/mesh';
 
 const COLOR_FRONT = new THREE.Color('#eda6a2'); // 紙の表(薄い赤)
 const COLOR_FRONT_HL = new THREE.Color('#f5c2bd'); // 表・折る面ハイライト
@@ -35,6 +36,10 @@ export class PaperScene {
   private guideGroup = new THREE.Group();
 
   private model: OrigamiModel | null = null;
+  private lastState: FoldState | null = null;
+  private framePoints: THREE.Vector3[] = [];
+  private autoFrame = true;
+  private viewAngle = 0;
   /** 面ごとの三角形分割 [faceIndex, v0, v1, v2] */
   private tris: [number, number, number, number][] = [];
   /** 面の輪郭線の頂点ペア */
@@ -59,6 +64,7 @@ export class PaperScene {
     this.controls.enablePan = false;
     this.controls.minDistance = 1.5;
     this.controls.maxDistance = 10;
+    this.controls.addEventListener('start', () => { this.autoFrame = false; });
 
     this.scene.add(new THREE.HemisphereLight(0xffffff, 0x3a3f4a, 1.2));
     const dir = new THREE.DirectionalLight(0xffffff, 1.4);
@@ -93,6 +99,12 @@ export class PaperScene {
 
   setModel(model: OrigamiModel): void {
     this.model = model;
+    this.lastState = null;
+    const used = [...new Set(model.faces.flat())];
+    this.framePoints = Array.from({ length: model.steps.length + 1 }, (_, t) => {
+      const positions = computeFoldState(model, t).positions;
+      return used.map(vi => positions[vi]);
+    }).flat();
     this.resetCamera();
     // 2枚組みの色分けを準備(ハイライトは白へ寄せた明色)
     this.faceSheet = model.faceSheet ?? null;
@@ -102,12 +114,9 @@ export class PaperScene {
       const white = new THREE.Color('#ffffff');
       return [f, f.clone().lerp(white, 0.3), b, b.clone().lerp(white, 0.3)];
     });
-    this.tris = [];
+    this.tris = paperTriangles(model);
     this.edgePairs = [];
-    model.faces.forEach((face, fi) => {
-      for (let i = 1; i < face.length - 1; i++) {
-        this.tris.push([fi, face[0], face[i], face[i + 1]]);
-      }
+    model.faces.forEach((face) => {
       for (let i = 0; i < face.length; i++) {
         this.edgePairs.push([face[i], face[(i + 1) % face.length]]);
       }
@@ -128,16 +137,23 @@ export class PaperScene {
   /** 現在の折り状態を反映して1フレーム描画する */
   update(state: FoldState): void {
     if (!this.model) return;
+    if (state !== this.lastState) {
+      this.updateGeometry(state);
+      this.lastState = state;
+    }
+    this.controls.update();
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  private updateGeometry(state: FoldState): void {
     const pos = state.positions;
 
     const a = new THREE.Vector3();
     const b = new THREE.Vector3();
     const n = new THREE.Vector3();
-    const swapDisplaySides =
-      this.model.displaySideSwapFromStep !== undefined && state.stepIndex >= this.model.displaySideSwapFromStep;
     for (const mesh of [this.frontMesh, this.backMesh]) {
       const isFront = mesh === this.frontMesh;
-      const useFrontColor = swapDisplaySides ? !isFront : isFront;
+      const useFrontColor = isFront;
       const pAttr = mesh.geometry.getAttribute('position') as THREE.BufferAttribute;
       const nAttr = mesh.geometry.getAttribute('normal') as THREE.BufferAttribute;
       const cAttr = mesh.geometry.getAttribute('color') as THREE.BufferAttribute;
@@ -150,7 +166,7 @@ export class PaperScene {
         n.crossVectors(a, b).normalize();
         const hl = state.movingFaces.has(fi) && state.fraction < 1;
         let col: THREE.Color;
-        const pal = this.faceSheet ? this.sheetPalette[this.faceSheet[fi]] : undefined;
+        const pal = this.sheetPalette[this.faceSheet?.[fi] ?? 0];
         if (pal) {
           col = useFrontColor ? (hl ? pal[1] : pal[0]) : hl ? pal[3] : pal[2];
         } else {
@@ -179,8 +195,6 @@ export class PaperScene {
 
     this.updateFoldGuides(state);
 
-    this.controls.update();
-    this.renderer.render(this.scene, this.camera);
   }
 
   /** 現在工程の各折りごとに、折り線(点線)と折る方向の矢印を描く */
@@ -240,6 +254,8 @@ export class PaperScene {
 
   /** 水平回転角(度)を指定してカメラを配置する(検証・デバッグ用にも使う) */
   setViewAngle(angleDeg: number): void {
+    this.viewAngle = angleDeg;
+    this.autoFrame = true;
     const angle = THREE.MathUtils.degToRad(angleDeg);
     const base = this.model?.cameraPos ?? [CAMERA_POS.x, CAMERA_POS.y, CAMERA_POS.z];
     this.camera.position.set(
@@ -247,6 +263,18 @@ export class PaperScene {
       base[1],
       -base[0] * Math.sin(angle) + base[2] * Math.cos(angle),
     );
+    // Fit both sheets on narrow displays; the default distance used to crop them.
+    const direction = this.camera.position.clone().normalize();
+    const right = new THREE.Vector3(0, 1, 0).cross(direction).normalize();
+    const up = direction.clone().cross(right);
+    const tangent = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
+    let distance = this.camera.position.length();
+    for (const p of this.framePoints) {
+      const span = Math.max(Math.abs(p.dot(right)) / this.camera.aspect, Math.abs(p.dot(up)));
+      distance = Math.max(distance, p.dot(direction) + 1.12 * span / tangent);
+    }
+    this.camera.position.copy(direction.multiplyScalar(distance));
+    this.controls.maxDistance = Math.max(10, distance * 2);
     this.controls.target.set(0, 0, 0);
     this.controls.update();
   }
@@ -257,6 +285,7 @@ export class PaperScene {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+    if (this.model && this.autoFrame) this.setViewAngle(this.viewAngle);
   }
 
   dispose(): void {
