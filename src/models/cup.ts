@@ -120,8 +120,9 @@ export const cupModel: OrigamiModel = {
     {
       // ❻ 口を開く。底の折り線(動かない 7-4)を軸に、前の層を手前・奥の層を奥へ
       folds: [
-        { axis: [7, 4], moving: [0, 5, 8], type: 'valley', angle: OPEN },
-        { axis: [7, 4], moving: [2, 6, 9, 10, 11], type: 'mountain', angle: OPEN },
+        // 左右の角は❷❸で前側へ重ね済み。口を開くときも前壁と一緒に動かす。
+        { axis: [7, 4], moving: [0, 5, 8, 1, 3, 10, 11], type: 'valley', angle: OPEN },
+        { axis: [7, 4], moving: [2, 6, 9], type: 'mountain', angle: OPEN },
       ],
       description: {
         ja: '口を開いて、コップの形にします。できあがり。',
