@@ -390,6 +390,7 @@ export const craneModel: OrigamiModel = {
   name: { ja: '鶴', en: 'Crane' },
   difficulty: 5,
   cameraAngle: 22,
+  cameraPos: [0, -2.4, 4],
   vertices: [
     r(0, 0), //  0: 中心O
     r(1, 0), //  1: 辺中点E

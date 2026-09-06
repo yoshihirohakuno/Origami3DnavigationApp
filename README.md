@@ -16,14 +16,23 @@ Node.js 24で回帰検証できます。
 npm test
 npm run build
 npm run audit:models
+npm run audit:references
 ```
 
 2026-09-06の点検結果・修正内容・残存課題は
-[31作品の品質点検](docs/quality-audit-2026-09-06.md)にまとめています。
+[33作品の完成形再照合](docs/final-shape-audit-2026-09-06.md)にまとめています。
+
+ピザ・どんぐりを追加しました。鶴は首・羽の形状を再検証中、箱は原典と異なる簡易トレイです。
+
+子プロセスの起動が制限される環境では、テストを次の方法で実行できます。
+
+```bash
+node --import ./tools/register-typescript.mjs --test --test-isolation=none tests/origami.test.mjs
+```
 
 ## 現在できること
 
-- 作品ライブラリ(鶴・手裏剣・動物の顔・のりもの・基本形など31作品)。
+- 作品ライブラリ(鶴・手裏剣・動物の顔・のりもの・基本形など33作品)。
   サムネイルは工程データを最後まで適用した完成形をSVGで自動描画
   ([src/CreasePattern.tsx](src/CreasePattern.tsx))
 - 工程データ駆動の3D折りシミュレーション
@@ -52,7 +61,7 @@ npm run audit:models
 タイムライン位置 t(0=展開状態、k=工程kまで完了)から毎フレーム計算する。
 工程を順に適用し、折り線の現在位置を軸に対象頂点をクォータニオン回転させる。
 谷折り/山折りの回転方向は「谷=手前(+z)へ動く」から自動決定。
-180°ちょうどではなく170°前後で折ることで、紙の層の重なり(Zファイティング)を回避している。
+通常の平畳みは180°の剛体回転と独立した層の厚みで重なりを管理する。袋つぶしなどには近似が残る。
 
 描画は [src/three/PaperScene.ts](src/three/PaperScene.ts)(three.js、React非依存)。
 表と裏を別メッシュ(FrontSide/BackSide)で色分けし、面ごとの頂点色でハイライトする。

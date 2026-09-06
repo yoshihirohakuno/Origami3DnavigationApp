@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "test": "node --import ./tools/register-typescript.mjs --test tests/*.test.mjs",
     "audit:models": "node --import ./tools/register-typescript.mjs tools/inspect-models.mjs",
+    "audit:references": "node --import ./tools/register-typescript.mjs tools/compare-references.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

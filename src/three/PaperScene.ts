@@ -17,7 +17,7 @@ const GUIDE_COLORS: Record<string, THREE.Color> = {
   assemble: new THREE.Color('#c084fc'),
 };
 
-const CAMERA_POS = new THREE.Vector3(0, -2.4, 4.0);
+const CAMERA_POS = new THREE.Vector3(0, 0, 5);
 
 /**
  * 折り紙の3D表示を担当する(React非依存)。
@@ -288,14 +288,18 @@ export class PaperScene {
     const points = finished && this.model
       ? [...new Set(this.model.faces.flat())].map(vi => this.lastState!.positions[vi])
       : this.framePoints;
+    const center = finished && points.length
+      ? new THREE.Box3().setFromPoints(points).getCenter(new THREE.Vector3())
+      : new THREE.Vector3();
     let distance = finished ? this.controls.minDistance : this.camera.position.length();
     for (const p of points) {
-      const span = Math.max(Math.abs(p.dot(right)) / this.camera.aspect, Math.abs(p.dot(up)));
-      distance = Math.max(distance, p.dot(direction) + 1.12 * span / tangent);
+      const relative = p.clone().sub(center);
+      const span = Math.max(Math.abs(relative.dot(right)) / this.camera.aspect, Math.abs(relative.dot(up)));
+      distance = Math.max(distance, relative.dot(direction) + 1.2 * span / tangent);
     }
-    this.camera.position.copy(direction.multiplyScalar(distance));
+    this.camera.position.copy(center).addScaledVector(direction, distance);
     this.controls.maxDistance = Math.max(10, distance * 2);
-    this.controls.target.set(0, 0, 0);
+    this.controls.target.copy(center);
     this.controls.update();
   }
 

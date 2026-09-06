@@ -174,6 +174,7 @@ export const boxModel: OrigamiModel = {
   difficulty: 2,
   // 立体なので、少し見下ろす角度で中が見えるように
   cameraAngle: 35,
+  cameraPos: [0, -2.4, 4],
   vertices: V,
   faces: F.map(orient),
   faceSheet: F.map(() => 0),

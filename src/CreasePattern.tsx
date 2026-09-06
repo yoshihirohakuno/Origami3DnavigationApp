@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { useId, type ReactElement } from 'react';
 import { computeFoldState, isGuideFold } from './engine/fold';
 import type { OrigamiModel, FoldType } from './engine/types';
 import { paperTriangles } from './engine/mesh';
@@ -149,13 +149,11 @@ function usedVertices(model: OrigamiModel): number[] {
  * 立体の作品(箱・コップ)は真正面から見ると平らな四角にしか見えないので、
  * ナビ画面の既定カメラ(cameraPos を cameraAngle で水平回転)と同じ向きから
  * 平行投影する。平畳みの作品は真正面(xy そのまま)。
- * 完成形の z の広がりで判定し、工程の途中でも同じ視点を使う。
+ * 紙厚や折り残しの大きさで視点を切り替えない。耳の長さが変わって見えるため。
  */
 function viewFor(model: OrigamiModel): View {
-  const state = computeFoldState(model, model.steps.length);
-  const zs = usedVertices(model).map((vi) => state.positions[vi].z);
-  if (Math.max(...zs) - Math.min(...zs) <= 0.2) return null;
-  const base = model.cameraPos ?? [0, -2.4, 4.0];
+  const base = model.cameraPos ?? [0, 0, 5];
+  if (base[0] === 0 && base[1] === 0 && !model.cameraAngle) return null;
   const a = ((model.cameraAngle ?? 0) * Math.PI) / 180;
   // PaperScene.setViewAngle と同じ回転(垂直軸まわり)
   const eye = [
@@ -208,13 +206,11 @@ const toSvgX = (x: number, frame: Frame) => 50 + (x - frame.cx) * frame.scale;
 const toSvgY = (y: number, frame: Frame) => 50 - (y - frame.cy) * frame.scale;
 
 /** 紙をSVGのポリゴン列にする(奥から手前の順。表裏で色を変える) */
-function polygonsOf(
-  model: OrigamiModel,
-  positions: Point3[],
-  view: View,
-  frame: Frame,
-  edge: { color: string; width: number } = { color: '#25262c', width: 0.85 },
-): ReactElement[] {
+function PaperPolygons({ model, positions, view, frame,
+  edge = { color: '#25262c', width: 0.85 },
+}: { model: OrigamiModel; positions: Point3[]; view: View; frame: Frame;
+  edge?: { color: string; width: number } }): ReactElement[] {
+  const clipId = useId();
   // 作品ごとの紙色(sheetColors)を使う。ハート・箱・くじら・兜などは
   // 既定の「薄い赤/白」ではないので、既定色のままだと完成形が無色に見える
   const sheetColorOf = (faceIndex: number): { front: string; back: string } => {
@@ -249,19 +245,19 @@ function polygonsOf(
       return onEdge ? [`M${svgPoint(a)}L${svgPoint(b)}`] : [];
     }).join(' ');
     return <g key={index}>
+      <defs><clipPath id={`${clipId}-${index}`} clipPathUnits="userSpaceOnUse">
+        <polygon points={polygon.points.map(svgPoint).join(' ')} />
+      </clipPath></defs>
       <polygon points={polygon.points.map(svgPoint).join(' ')} fill={fill} stroke={fill} strokeWidth={0.03} />
       <path d={outline} fill="none" stroke={edge.color} strokeWidth={edge.width} strokeLinejoin="round"
-        style={{ clipPath: `polygon(${polygon.points.map(p =>
-          `${toSvgX(p.x, frame)}px ${toSvgY(p.y, frame)}px`).join(',')})` }} />
+        clipPath={`url(#${clipId}-${index})`} />
     </g>;
   });
 }
 
 /** 作品カード用:工程を最後まで適用した完成形をSVGで描く */
 export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; size?: number }) {
-  // 鶴は手描きSVGをやめて工程データから描く(2026-08-10)。15工程の完成形が
-  // 実装済みで、立体なのでナビ画面と同じ視点から投影すれば実物と同じ形になる。
-  // 手描きSVGは羽・首の形が実際の折りと違っていた
+  // Always render the actual final geometry, including known model limitations.
 
   const view = viewFor(model);
   const state = computeFoldState(model, model.steps.length);
@@ -270,7 +266,7 @@ export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; s
 
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      {polygonsOf(model, positions, view, frame)}
+      <PaperPolygons model={model} positions={positions} view={view} frame={frame} />
     </svg>
   );
 }
@@ -320,13 +316,8 @@ export function buildStepDiagrams(model: OrigamiModel, size = 44): ReactElement[
       <svg key={i} viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
         {/* 面の境目(=すでについている折りすじ)は細く薄く。小さいサムネイルでは
             事前分割の線まで濃く出ると網目に見えて形が読めなくなる */}
-        {polygonsOf(
-          model,
-          positions,
-          view,
-          frame,
-          { color: 'rgba(37,38,44,0.4)', width: 0.5 },
-        )}
+        <PaperPolygons model={model} positions={positions} view={view} frame={frame}
+          edge={{ color: 'rgba(37,38,44,0.4)', width: 0.5 }} />
         {step.folds.filter(op => isGuideFold(op) && (op.timing?.[0] ?? 0) === 0).map((op, k) => {
           const a = line(positions[op.axis[0]]);
           const b = line(positions[op.axis[1]]);

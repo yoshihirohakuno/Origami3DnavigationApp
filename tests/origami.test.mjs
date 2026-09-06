@@ -9,6 +9,7 @@ import { orderPaper } from '../src/engine/painter.ts';
 import { splitFacesByLine } from '../src/engine/split.ts';
 import { FinalShapePreview, buildStepDiagrams } from '../src/CreasePattern.tsx';
 import { coverage } from '../tools/audit-cover.mjs';
+import { referenceOf } from '../src/modelReferences.ts';
 
 const models = [];
 for (const file of readdirSync(new URL('../src/models/', import.meta.url)).filter(f => f.endsWith('.ts'))) {
@@ -36,7 +37,8 @@ for (const model of models) {
       for (const p of state.positions) assert.ok([p.x,p.y,p.z].every(Number.isFinite), `t=${t}`);
     }
     model.steps.forEach((step,i) => {
-      if (i && step.folds.every(op => op.type === 'unfold')) {
+      const guides = step.folds.filter(isGuideFold);
+      if (i && guides.length && guides.every(op => op.type === 'unfold')) {
         assert.ok(distance(computeFoldState(model,i-1).positions, computeFoldState(model,i+1).positions) < 1e-8);
       }
     });
@@ -104,7 +106,9 @@ test('shuriken matches the reference tips and interleaves the two colors at the 
 
 test('cup opens with its folded corners attached to the front wall', async () => {
   const m=modelOf('cup'),start=computeFoldState(m,0).positions;
-  assert.ok(await coverage(m,6)<15);
+  // Original cup diagram: the white front flap covers the colored corner folds.
+  const white = await coverage(m,6);
+  assert.ok(white > 45 && white < 55);
   for(let t=5;t<=6;t+=.1){
     const p=computeFoldState(m,t).positions;
     for(const f of m.faces)for(let i=0;i<f.length;i++){
@@ -112,6 +116,78 @@ test('cup opens with its folded corners attached to the front wall', async () =>
       assert.ok(Math.abs(p[a].distanceTo(p[b])-start[a].distanceTo(start[b]))<1e-8);
     }
   }
+});
+
+const rigidIds = ['acorn','pizza','bear','boots','bus','car','cat','chick','dog','envelope','fox','heart',
+  'helmet','panda','penguin','piano','rabbit','riceball','rocket','ship','sinkansen','tulip','yacht'];
+for (const id of rigidIds) test(`${id}: every panel keeps all pairwise distances throughout the animation`, () => {
+  const m = modelOf(id), initial = computeFoldState(m,0).positions;
+  for (let t = 0; t <= m.steps.length; t += .25) {
+    const p = computeFoldState(m,t).positions;
+    for (const f of m.faces) for (let i=0;i<f.length;i++) for (let j=i+1;j<f.length;j++) {
+      assert.ok(Math.abs(p[f[i]].distanceTo(p[f[j]]) - initial[f[i]].distanceTo(initial[f[j]])) < 1e-8, `${id} at ${t}`);
+    }
+  }
+});
+
+function visibleAt(m, x, y, t=m.steps.length) {
+  const p = computeFoldState(m,t).positions;
+  let hit;
+  for (const [fi,ai,bi,ci] of paperTriangles(m)) {
+    const a=p[ai],b=p[bi],c=p[ci];
+    const den=(b.y-c.y)*(a.x-c.x)+(c.x-b.x)*(a.y-c.y);
+    if(Math.abs(den)<1e-10)continue;
+    const u=((b.y-c.y)*(x-c.x)+(c.x-b.x)*(y-c.y))/den;
+    const v=((c.y-a.y)*(x-c.x)+(a.x-c.x)*(y-c.y))/den,w=1-u-v;
+    const z=u*a.z+v*b.z+w*c.z;
+    if(Math.min(u,v,w)>=-1e-9 && (!hit || z>hit.z)) hit={face:fi,z,front:den>0};
+  }
+  return hit;
+}
+
+test('elephant ear covers its body, with the white wedge under its trunk', () => {
+  const m=modelOf('elephant');
+  const ear=visibleAt(m,.35,-.85),body=visibleAt(m,.8,-.85),wedge=visibleAt(m,.1,-.85);
+  assert.ok(ear.front && body.front);
+  assert.notEqual(ear.face,body.face);
+  assert.ok(ear.z>body.z);
+  assert.equal(wedge.front,false);
+});
+
+test('helmet brim folds up without a dangling lower tip; bear keeps its white chin', () => {
+  const helmet=modelOf('helmet'),p=computeFoldState(helmet,helmet.steps.length).positions;
+  assert.ok(Math.min(...helmet.faces.flat().map(vi=>p[vi].y))>-.50001);
+  assert.equal(visibleAt(helmet,.01,-.44).front,false);
+  assert.equal(visibleAt(helmet,.01,-.12).front,true);
+  const bear=modelOf('bear');
+  assert.equal(visibleAt(bear,.02,-.75).front,false);
+});
+
+test('new models preserve the full square and reference silhouettes and colors', async () => {
+  for(const id of ['pizza','acorn']){
+    const m=modelOf(id),start=computeFoldState(m,0).positions;
+    const area=paperTriangles(m).reduce((sum,[,a,b,c])=>sum+start[b].clone().sub(start[a]).cross(start[c].clone().sub(start[a])).length()/2,0);
+    assert.ok(Math.abs(area-2)<1e-8);
+  }
+  const pizza=modelOf('pizza'),p=computeFoldState(pizza,pizza.steps.length).positions;
+  for(const [x,y] of [[-.35,-.15],[-.35,.15],[-.15,.35],[.15,.35],[.35,.15],[.35,-.15],[.15,-.35],[-.15,-.35]]) {
+    assert.ok(Math.min(...pizza.faces.flat().map(vi=>Math.hypot(p[vi].x-x,p[vi].y-y)))<1e-8);
+  }
+  assert.equal(await coverage(pizza,0),100);
+  assert.equal(await coverage(pizza,pizza.steps.length),0);
+  const acorn=modelOf('acorn');
+  assert.equal(visibleAt(acorn,.05,.4).front,true);
+  assert.equal(visibleAt(acorn,.05,-.15).front,false);
+  assert.equal(visibleAt(acorn,.39,-.24),undefined);
+});
+
+test('every model has an explicit source and each rendered SVG owns its clips', () => {
+  for(const m of models) assert.match(referenceOf(m.id),/^https:\/\/www\.origami-club\.com\//);
+  const html=renderToStaticMarkup(createElement('div',{},models.slice(0,4).map(m=>createElement(FinalShapePreview,{model:m,key:m.id}))));
+  const ids=[...html.matchAll(/<clipPath id="([^"]+)"/g)].map(m=>m[1]);
+  assert.ok(ids.length>4);assert.equal(new Set(ids).size,ids.length);
+  assert.match(html,/clipPathUnits="userSpaceOnUse"/);
+  assert.doesNotMatch(html,/clip-path:polygon/);
 });
 
 test('previews derive from geometry and sheet colors, including collinear first vertices', () => {

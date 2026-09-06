@@ -4,6 +4,7 @@ import { computeFoldState, isGuideFold } from './engine/fold';
 import { buildStepDiagrams } from './CreasePattern';
 import { PaperScene } from './three/PaperScene';
 import { LangToggle, useLang } from './i18n';
+import { MODEL_NOTES, referenceOf } from './modelReferences';
 
 /** 折り種類の名前と、動く向きの補足(バッジの2行) */
 const FOLD_LABEL: Record<FoldType, { ja: string; en: string }> = {
@@ -303,13 +304,13 @@ export function Navigator({ model, onExit, onComplete }: Props) {
 
       <div className="canvas-wrap">
         <canvas ref={canvasRef} />
-        <div className={`fold-badge ${mixed ? 'mixed' : foldType}`}>
+        {!finished && <div className={`fold-badge ${mixed ? 'mixed' : foldType}`}>
           <i />
           <div>
             <strong>{mixed ? t('collapse') : L(FOLD_LABEL[foldType])}</strong>
             <span>{mixed ? t('collapseHint') : L(FOLD_HINT[foldType])}</span>
           </div>
-        </div>
+        </div>}
         <button className="view-reset" onClick={() => sceneRef.current?.resetCamera()}>
           {t('front')}
         </button>
@@ -329,19 +330,6 @@ export function Navigator({ model, onExit, onComplete }: Props) {
             </ul>
             <button className="btn-main primary" onClick={closeHint}>
               {t('hintClose')}
-            </button>
-          </div>
-        )}
-        {finished && !done && (
-          <div className="finish-float">
-            <button
-              className="btn-done"
-              onClick={() => {
-                onComplete();
-                setDone(true);
-              }}
-            >
-              {t('markFolded')}
             </button>
           </div>
         )}
@@ -396,10 +384,19 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         <p className="step-desc">
           {finished ? t('isComplete', { name: L(model.name) }) : L(step.description)}
         </p>
-        {!finished && step.caution && <p className="step-caution">※ {L(step.caution)}</p>}
+        {step.caution && <p className="step-caution">※ {L(step.caution)}</p>}
+        <div className="model-reference">
+          {MODEL_NOTES[model.id] && <span>{L(MODEL_NOTES[model.id])}</span>}
+          {referenceOf(model.id) && <a href={referenceOf(model.id)} target="_blank" rel="noopener noreferrer">
+            {lang === 'ja' ? '原典の折り図を見る ↗' : 'View original diagram ↗'}
+          </a>}
+        </div>
       </div>
 
       <div className="controls">
+        {finished && !done && <button className="btn-done finish-record" onClick={() => {
+          onComplete(); setDone(true);
+        }}>{t('markFolded')}</button>}
         <input
           className="timeline"
           type="range"

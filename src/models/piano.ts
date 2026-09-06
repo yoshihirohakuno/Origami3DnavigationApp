@@ -1,3 +1,4 @@
+import { withRigidFolds } from '../engine/rigidFolds';
 import type { FoldStep, OrigamiModel } from '../engine/types';
 
 /**
@@ -189,7 +190,7 @@ const steps: FoldStep[] = [
   },
 ];
 
-export const pianoModel: OrigamiModel = {
+const source: OrigamiModel = {
   id: 'piano',
   name: { ja: 'ぴあの', en: 'Piano' },
   difficulty: 1,
@@ -201,3 +202,6 @@ export const pianoModel: OrigamiModel = {
   sheetColors: [{ front: '#898989', back: '#f6f2e8' }],
   steps,
 };
+
+// Close each flat fold fully and preserve the paper stack, including fold-line vertices.
+export const pianoModel = withRigidFolds(source);

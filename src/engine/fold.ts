@@ -44,7 +44,7 @@ export function isGuideFold(op: FoldOp): boolean {
  * 谷折り=+z(手前)へ動く回転符号を返す。
  * 折り開始時点の配置で、動く頂点が回転し始める向きのz成分から判定する。
  */
-function foldSign(op: FoldOp, positions: THREE.Vector3[]): number {
+export function foldSign(op: FoldOp, positions: THREE.Vector3[]): number {
   if (op.direction) return op.direction;
   const p1 = positions[op.axis[0]];
   const p2 = positions[op.axis[1]];

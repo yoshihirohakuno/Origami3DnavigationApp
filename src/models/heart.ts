@@ -1,3 +1,4 @@
+import { withRigidFolds } from '../engine/rigidFolds';
 import type { FoldStep, OrigamiModel } from '../engine/types';
 
 /**
@@ -107,7 +108,8 @@ const F: number[][] = [
   [28, 10, 9, 32, 31, 30], // 右翼の残り
   // ❸のフラップ(下の角。❹の折り線の鏡映と x=0 で分割)
   [15, 16, 17], // 左の角(専用複製。❹で翼と一緒に回る)
-  [10, 13, 2, 14], // 中央(くぼみの底まで届く)
+  [10, 13, 2], // 中央・左(最初の縦の折り目で分割)
+  [10, 2, 14], // 中央・右
   [18, 20, 19], // 右の角(専用複製)
 ];
 
@@ -150,7 +152,7 @@ const steps: FoldStep[] = [
   },
   {
     // ❷ 上の角をまんなかへ
-    folds: [{ axis: [4, 5], moving: [0], type: 'valley', angle: 176 }],
+    folds: [{ axis: [4, 5], moving: [0, 23, 29], type: 'valley', angle: 176 }],
     description: {
       ja: '上の角を、まんなかへ折り下げます。',
       en: 'Fold the top corner down to the center.',
@@ -222,7 +224,7 @@ const steps: FoldStep[] = [
   },
 ];
 
-export const heartModel: OrigamiModel = {
+const source: OrigamiModel = {
   id: 'heart',
   name: { ja: 'ハート', en: 'Heart' },
   difficulty: 1,
@@ -234,3 +236,6 @@ export const heartModel: OrigamiModel = {
   sheetColors: [{ front: '#e0492f', back: '#f2ede3' }],
   steps,
 };
+
+// Close each flat fold fully and preserve the paper stack, including fold-line vertices.
+export const heartModel = withRigidFolds(source);

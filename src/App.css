@@ -556,14 +556,7 @@
   border-color: var(--accent);
 }
 
-.finish-float {
-  position: absolute;
-  bottom: 18px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-}
+.finish-record { width: 100%; margin-top: 12px; }
 
 .btn-done {
   font: inherit;
@@ -1919,6 +1912,11 @@
   color: var(--text);
   border-color: var(--accent);
 }
+
+.model-note { color: var(--faint); font-size: 11px; line-height: 1.5; margin-top: 6px; }
+.model-reference { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; margin-top: 8px; font-size: 12px; line-height: 1.5; }
+.model-reference span { flex: 1 1 260px; color: var(--faint); }
+.model-reference a { color: var(--accent); margin-left: auto; }
 
 @media (max-width: 560px) {
   .filter-key {

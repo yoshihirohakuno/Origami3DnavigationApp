@@ -32,7 +32,7 @@ export interface FoldOp {
   moving: number[];
   /** 谷折り=手前(+z)へ / 山折り=奥(-z)へ / 開く=折りを戻す。回転の符号はエンジンが自動決定する */
   type: FoldType;
-  /** 折る角度(度)。180に近いほど平らに畳まれる。層の重なりを避けるため175前後を推奨 */
+  /** 折る角度(度)。平畳みは180°。層順は rigidFolds などで別に管理する。 */
   angle: number;
   /** 中割り/かぶせ折りの回す向き(省略時 front=手前側を通す) */
   sweep?: 'front' | 'back';
@@ -78,7 +78,7 @@ export interface OrigamiModel {
   cameraAngle?: number;
   /**
    * 既定カメラ位置の上書き [x,y,z]。平らな作品(手裏剣など)を正面寄りから
-   * 見せたい時に指定(未指定時は全体既定の斜め見下ろし)。cameraAngle の
+   * 見せたい時に指定(未指定時は正面 [0,0,5])。cameraAngle の
    * 水平回転はこの位置に対して適用される。
    */
   cameraPos?: [number, number, number];

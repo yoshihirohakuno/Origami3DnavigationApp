@@ -1,3 +1,4 @@
+import { withRigidFolds } from '../engine/rigidFolds';
 import type { FoldStep, OrigamiModel } from '../engine/types';
 
 /**
@@ -31,14 +32,8 @@ import type { FoldStep, OrigamiModel } from '../engine/types';
  * `sheetColors` は front=色面 / back=白い裏面 のままにし、白面スタートは
  * `backSideUp` で面の初期向きを反転して表す(2026-08-13 の表示方針)。
  *
- * 層(ここが一番はまった。完成形に白がのぞくかどうかは全部これで決まる):
- * - ❸は帯の角だけでなく**その下の紙も一緒に**折る(折り図❺で輪郭が細くなる)。
- *   下の紙側の折り線を入れないと、共有頂点が引きずられて胴の面がねじれる
- * - ❹で持ち上がった層のうち、❻の折り線 y=T の上に乗る面は、**折り線上にあるが
- *   z が持ち上がっている頂点**(17/18)を錨にしてしまい、さしこんだ屋根が前に出て
- *   白がのぞく。その面だけ複製頂点(25/26)を持たせて❻でも一緒に回す
- * - 残差角は ❷=174 / ❸=176 / ❹=172 / ❺=170 / ❻=179 と段差をつける。
- *   ❹だけは自動符号だとフラップが奥へ回るので direction を明示(右=+1 / 左=-1)
+ * 2026-09-06: 層順は withRigidFolds で管理する。最後の先端は前帯の下へ、
+ * 屋根は側面フラップの上へ配置する。差し込みの小さな傾きは曲面の近似。
  */
 
 /** ❷の折り線(下半分を3等分したいちばん下) */
@@ -232,7 +227,7 @@ const steps: FoldStep[] = [
   },
 ];
 
-export const envelopeModel: OrigamiModel = {
+const source: OrigamiModel = {
   id: 'envelope',
   name: { ja: 'てがみ', en: 'Letter' },
   difficulty: 2,
@@ -244,3 +239,6 @@ export const envelopeModel: OrigamiModel = {
   sheetColors: [{ front: '#ffff4d', back: '#f6f2e8' }],
   steps,
 };
+
+// Close each flat fold fully and preserve the paper stack, including fold-line vertices.
+export const envelopeModel = withRigidFolds(source, { 7: { face: 5, at: [0, -1 / 3], angle: 182 } });

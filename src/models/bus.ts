@@ -1,8 +1,9 @@
+import { withRigidFolds } from '../engine/rigidFolds';
 import type { FoldStep, OrigamiModel } from '../engine/types';
 
 /**
  * ばす / Bus(全8工程)— 6つめの「のりもの」。
- * 原典 https://www.origami-club.com/easy/vehicle/bus/zu.html の❶〜❼
+ * 原典 https://www.origami-club.com/rn-image/zu/bus.gif の❶〜❼
  *
  *   ❶ はんぶんに おって おりめを つけて もどす(よこ)
  *   ❷ 上下のふちを てんせんで 内へ おる
@@ -219,7 +220,7 @@ const steps: FoldStep[] = [
   },
 ];
 
-export const busModel: OrigamiModel = {
+const source: OrigamiModel = {
   id: 'bus',
   name: { ja: 'ばす', en: 'Bus' },
   difficulty: 2,
@@ -230,3 +231,6 @@ export const busModel: OrigamiModel = {
   sheetColors: [{ front: '#f5a11f', back: '#f6f2e8' }],
   steps,
 };
+
+// Close each flat fold fully and preserve the paper stack, including fold-line vertices.
+export const busModel = withRigidFolds(source);

@@ -1,3 +1,4 @@
+import { withRigidFolds } from '../engine/rigidFolds';
 import type { FoldStep, OrigamiModel } from '../engine/types';
 
 /**
@@ -171,7 +172,7 @@ const steps: FoldStep[] = [
   },
 ];
 
-export const sinkansenModel: OrigamiModel = {
+const source: OrigamiModel = {
   id: 'sinkansen',
   name: { ja: 'しんかんせん', en: 'Bullet Train' },
   difficulty: 2,
@@ -183,3 +184,6 @@ export const sinkansenModel: OrigamiModel = {
   sheetColors: [{ front: '#80cfe3', back: '#f6f2e8' }],
   steps,
 };
+
+// Close each flat fold fully and preserve the paper stack, including fold-line vertices.
+export const sinkansenModel = withRigidFolds(source);

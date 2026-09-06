@@ -1,3 +1,4 @@
+import { withRigidFolds } from '../engine/rigidFolds';
 import type { FoldStep, OrigamiModel } from '../engine/types';
 
 /**
@@ -266,7 +267,7 @@ const steps: FoldStep[] = [
   },
 ];
 
-export const pandaModel: OrigamiModel = {
+const source: OrigamiModel = {
   id: 'panda',
   name: { ja: 'ぱんだのかお', en: 'Panda Face' },
   difficulty: 2,
@@ -281,3 +282,6 @@ export const pandaModel: OrigamiModel = {
   sheetColors: [{ front: '#f2ede3', back: '#2a2a2f' }],
   steps,
 };
+
+// Close each flat fold fully and preserve the paper stack, including fold-line vertices.
+export const pandaModel = withRigidFolds(source);

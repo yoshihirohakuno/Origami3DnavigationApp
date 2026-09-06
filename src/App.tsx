@@ -32,11 +32,14 @@ import { tadpoleModel } from './models/tadpole';
 import { carModel } from './models/car';
 import { busModel } from './models/bus';
 import { elephantModel } from './models/elephant';
+import { pizzaModel } from './models/pizza';
+import { acornModel } from './models/acorn';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import { LangToggle, useLang } from './i18n';
 import { CATEGORIES, categoryOf, levelLabel, usedLevels } from './catalog';
 import type { CategoryId } from './catalog';
+import { MODEL_NOTES } from './modelReferences';
 import './App.css';
 
 const MODELS: OrigamiModel[] = [
@@ -71,6 +74,8 @@ const MODELS: OrigamiModel[] = [
   carModel,
   busModel,
   elephantModel,
+  pizzaModel,
+  acornModel,
 ];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ)。全作品実装済みで現在は空 */
@@ -306,6 +311,7 @@ export default function App() {
               <Difficulty n={m.difficulty} />
             </div>
             {lang === 'ja' && <div className="work-en">{m.name.en}</div>}
+            {MODEL_NOTES[m.id] && <div className="model-note">{L(MODEL_NOTES[m.id])}</div>}
             <div className="work-meta">
               {t('stepsMeta', { n: m.steps.length })}
               {lang === 'ja' ? ' ・ ' : ' · '}
