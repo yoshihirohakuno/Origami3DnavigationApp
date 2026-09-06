@@ -16,6 +16,7 @@ export function splitFacesByLine(
   p: [number, number],
   q: [number, number],
 ): OrigamiModel {
+  if (model.triangles) throw new Error('曲面を含む作品への折り線の追加には、まだ対応していません。');
   const EPS = 1e-4;
   const vertices = model.vertices.map((v) => [v[0], v[1]] as [number, number]);
   const side = (pt: [number, number]) =>

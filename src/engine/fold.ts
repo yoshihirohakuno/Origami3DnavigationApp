@@ -79,6 +79,14 @@ function buildArrowPath(
   p1: THREE.Vector3,
   axisDir: THREE.Vector3,
 ): THREE.Vector3[] {
+  if (op.targets?.length) {
+    const target = op.targets.reduce((best, p) => {
+      const distance = (v: typeof p) => positions[v[0]].distanceToSquared(new THREE.Vector3(v[1], v[2], v[3]));
+      return distance(p) > distance(best) ? p : best;
+    });
+    const end = new THREE.Vector3(target[1], target[2], target[3]);
+    return Array.from({ length: 9 }, (_, i) => positions[target[0]].clone().lerp(end, i / 8));
+  }
   const translate = op.translate;
   // 平行移動が主体の組み立てでは、移動量が最大に見える頂点(=軸から遠い頂点)より
   // 単純に代表頂点でよいが、既存同様「軸から最も遠い頂点」を採用する
@@ -167,10 +175,18 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
             positions[vi].z += tr[2] * e;
           }
         }
+        for (const [vi, x, y, z] of op.targets ?? []) positions[vi].lerp(_tmp.set(x, y, z), e);
       }
     }
     if (i === stepIndex) fraction = a;
   }
 
+  for (const weld of model.vertexWelds ?? []) {
+    // A crease wraps over the frontmost participating layer. Averaging depths
+    // buries the crease under intervening flaps and makes their reverse poke through.
+    const front = weld.reduce((a, b) => positions[b].z > positions[a].z ? b : a);
+    _tmp.copy(positions[front]);
+    for (const vi of weld) positions[vi].copy(_tmp);
+  }
   return { positions, stepIndex, fraction, guides, movingFaces };
 }

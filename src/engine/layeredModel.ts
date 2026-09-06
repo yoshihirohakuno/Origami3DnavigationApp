@@ -7,7 +7,7 @@ import type { FoldOp, OrigamiModel } from './types';
  * Groups run from the back to the front. Undefined steps are spatial folds.
  * This fixes layer order, not the kinematics of a squash-fold linkage.
  */
-export function withPanelLayers(source: OrigamiModel, stacks: (number[][] | undefined)[]): OrigamiModel {
+export function withPanelLayers(source: OrigamiModel, stacks: (number[][] | undefined)[], thickness = 0.001): OrigamiModel {
   if (stacks.length !== source.steps.length) throw new Error(`${source.id}: one stack entry is required per step`);
   for (const stack of stacks) if (stack) {
     const ids = stack.flat();
@@ -44,7 +44,7 @@ export function withPanelLayers(source: OrigamiModel, stacks: (number[][] | unde
     const p = computeFoldState(model, model.steps.length).positions;
     stack.forEach((group, layer) => group.forEach(fi => {
       for (const vi of model.faces[fi]) {
-        const dz = layer * 0.001 - p[vi].z;
+        const dz = layer * thickness - p[vi].z;
         if (Math.abs(dz) < 1e-10) continue;
         compiled.folds.push({ axis: [0, 1], moving: [vi], type: 'assemble', angle: 0,
           direction: 1, translate: [0, 0, dz], guide: false });

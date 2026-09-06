@@ -150,17 +150,66 @@ test('shuriken matches the reference tips and interleaves the two colors at the 
   assert.ok(Math.abs(area-8)<1e-8,'both complete squares survive panel merging');
 });
 
-test('cup opens with its folded corners attached to the front wall', async () => {
+test('cup bows its walls while retaining the white front flap and limiting strain', async () => {
   const m=modelOf('cup'),start=computeFoldState(m,0).positions;
   // Original cup diagram: the white front flap covers the colored corner folds.
   const white = await coverage(m,6);
   assert.ok(white > 45 && white < 55);
-  for(let t=5;t<=6;t+=.1){
+  for(let t=0;t<=6;t+=.05){
     const p=computeFoldState(m,t).positions;
-    for(const f of m.faces)for(let i=0;i<f.length;i++){
-      const a=f[i],b=f[(i+1)%f.length];
-      assert.ok(Math.abs(p[a].distanceTo(p[b])-start[a].distanceTo(start[b]))<1e-8);
+    for(const [,a,b,c] of paperTriangles(m))for(const [u,v] of [[a,b],[b,c],[c,a]]){
+      // A sampled flexible surface, not two rigid walls. Bound the approximation.
+      assert.ok(Math.abs(p[u].distanceTo(p[v])/start[u].distanceTo(start[v])-1)<.03,`strain at ${t}`);
     }
+  }
+});
+
+test('cup is one uncut sheet and every shared material edge remains joined', () => {
+  const m=modelOf('cup'), edges=new Map(), start=computeFoldState(m,0).positions;
+  const key=i=>m.vertices[i].map(x=>Math.round(x*1e8)).join(',');
+  let area=0;
+  for(const [,a,b,c] of paperTriangles(m)){
+    area+=start[b].clone().sub(start[a]).cross(start[c].clone().sub(start[a])).length()/2;
+    for(const [u,v] of [[a,b],[b,c],[c,a]]){
+      const k=[key(u),key(v)].sort().join('/');
+      edges.set(k,[...(edges.get(k)??[]),[u,v]]);
+    }
+  }
+  assert.ok(Math.abs(area-2)<1e-8,'preserve the full original square');
+  for(const e of edges.values()){
+    assert.ok(e.length===1||e.length===2,'manifold sheet');
+    if(e.length===1)for(const vi of e[0])assert.ok(Math.abs(Math.abs(m.vertices[vi][0])+Math.abs(m.vertices[vi][1])-1)<1e-7,'no internal cuts');
+  }
+  for(let t=0;t<=6;t+=.05){
+    const p=computeFoldState(m,t).positions;
+    for(const e of edges.values())if(e.length===2)for(const vi of e[0]){
+      const other=e[1].find(v=>key(v)===key(vi));
+      assert.ok(p[vi].distanceTo(p[other])<1e-9,`seam gap at ${t}`);
+    }
+  }
+  const rim = fi => [...new Set(paperTriangles(m).filter(tr=>tr[0]===fi).flatMap(tr=>tr.slice(1)))].find(vi=>{
+    const p=computeFoldState(m,5).positions[vi];return Math.abs(p.x)<1e-7&&Math.abs(p.y-(2-Math.SQRT2))<1e-7;
+  });
+  const front=rim(7),back=rim(3),p=computeFoldState(m,6).positions;
+  assert.ok(p[front].z-p[back].z>.19,'the free mouth edges really open');
+  const restored=JSON.parse(JSON.stringify(m));
+  assert.ok(distance(p,computeFoldState(restored,6).positions)<1e-9,'editor JSON retains the surface');
+  assert.throws(()=>splitFacesByLine(m,[-1,0],[1,0]),/曲面/,'do not discard the flexible mesh during editing');
+});
+
+test('dense BSP tiling keeps crossing surfaces in the correct visible order', () => {
+  const polygons=[];
+  for(let x=0;x<9;x++)for(let y=0;y<9;y++){
+    polygons.push({face:0,points:[{x:x-.4,y:y-.4,z:-.4},{x:x+.4,y:y-.4,z:.4},{x:x+.4,y:y+.4,z:.4},{x:x-.4,y:y+.4,z:-.4}]},
+      {face:1,points:[{x:x-.4,y:y-.4,z:0},{x:x+.4,y:y-.4,z:0},{x:x+.4,y:y+.4,z:0},{x:x-.4,y:y+.4,z:0}]});
+  }
+  const sorted=orderPaper(polygons);
+  for(let x=0;x<9;x++)for(let y=0;y<9;y++)for(const offset of [-.2,.2]){
+    const px=x+offset,py=y+.1;
+    const visible=sorted.filter(poly=>poly.points.every((a,i)=>{
+      const b=poly.points[(i+1)%poly.points.length];return (b.x-a.x)*(py-a.y)-(b.y-a.y)*(px-a.x)>=-1e-9;
+    })).at(-1);
+    assert.equal(visible?.face,offset<0?1:0);
   }
 });
 

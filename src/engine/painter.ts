@@ -19,6 +19,43 @@ function planeOf(points: PaperPoint[]): Plane | null {
 }
 
 export function orderPaper(polygons: PaperPolygon[]): PaperPolygon[] {
+  // Localize BSP splitting for finely tessellated curved paper. Disjoint screen
+  // tiles cannot occlude each other; interpolated cut points keep exact depths.
+  if (polygons.length <= 128) return orderNode(polygons);
+  const points = polygons.flatMap(p => p.points);
+  const minX = Math.min(...points.map(p => p.x)), minY = Math.min(...points.map(p => p.y));
+  const dx = (Math.max(...points.map(p => p.x)) - minX) / 8;
+  const dy = (Math.max(...points.map(p => p.y)) - minY) / 8;
+  if (dx < EPS || dy < EPS) return orderNode(polygons);
+  const tiles: PaperPolygon[][] = Array.from({ length: 64 }, () => []);
+  for (const polygon of polygons) {
+    const xs = polygon.points.map(p => p.x), ys = polygon.points.map(p => p.y);
+    const ix = Math.max(0, Math.floor((Math.min(...xs) - minX) / dx));
+    const iy = Math.max(0, Math.floor((Math.min(...ys) - minY) / dy));
+    const jx = Math.min(7, Math.floor((Math.max(...xs) - minX) / dx));
+    const jy = Math.min(7, Math.floor((Math.max(...ys) - minY) / dy));
+    for (let i = ix; i <= jx; i++) for (let j = iy; j <= jy; j++) {
+      let clipped = polygon.points;
+      for (const [axis, value, sign] of [['x', minX + i * dx, 1], ['x', minX + (i + 1) * dx, -1],
+        ['y', minY + j * dy, 1], ['y', minY + (j + 1) * dy, -1]] as const) {
+        clipped = clipped.flatMap((a, k, ps) => {
+          const b = ps[(k + 1) % ps.length], da = (a[axis] - value) * sign, db = (b[axis] - value) * sign;
+          const insideA = da >= 0, insideB = db >= 0;
+          const out = insideA ? [a] : [];
+          if (insideA !== insideB) {
+            const t = da / (da - db);
+            out.push({ x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y), z: a.z + t * (b.z - a.z) });
+          }
+          return out;
+        });
+      }
+      if (clipped.length >= 3) tiles[j * 8 + i].push({ face: polygon.face, points: clipped });
+    }
+  }
+  return tiles.flatMap(orderNode);
+}
+
+function orderNode(polygons: PaperPolygon[]): PaperPolygon[] {
   if (polygons.length < 2) return polygons;
   const pivot = polygons.find(p => planeOf(p.points));
   if (!pivot) return [];
@@ -46,6 +83,6 @@ export function orderPaper(polygons: PaperPolygon[]): PaperPolygon[] {
     if (bp.length >= 3) back.push({ face: polygon.face, points: bp });
   }
   return plane.z >= 0
-    ? [...orderPaper(back), ...coplanar, ...orderPaper(front)]
-    : [...orderPaper(front), ...coplanar, ...orderPaper(back)];
+    ? [...orderNode(back), ...coplanar, ...orderNode(front)]
+    : [...orderNode(front), ...coplanar, ...orderNode(back)];
 }

@@ -1,5 +1,8 @@
 import type { OrigamiModel } from '../engine/types';
 import { withPanelLayers } from '../engine/layeredModel';
+import { refinePaper } from '../engine/refinePaper';
+import { computeFoldState } from '../engine/fold';
+import { paperTriangles } from '../engine/mesh';
 
 /**
  * コップ / Cup — 全6工程。
@@ -8,14 +11,14 @@ import { withPanelLayers } from '../engine/layeredModel';
  * 2026-09-06: 原典❹は後ろ、❺は手前。白い前フタが左右の色付きの角を覆う。
  * 完成の白い割合は約50%であり、裏面を一律15%未満にする旧判定は誤り。
  * 左右の折り線は s=2-√2, √2-1, 3-2√2 の厳密値。
- * withPanelLayers で前後の重なりを定義し、最後に前後の壁を12°ずつ開く。
- * 左右の折り込んだ角も前壁に付随させるため、開く途中で辺長は変わらない。
- * 口の曲面は平面パネルによる近似。正面より少し上のカメラで開口を見せる。
+ * 最初の5工程は層順を保持。最後は共通メッシュ上で前後の壁を湾曲させる。
+ * 元の紙で同じ位置だった接続点を溶接し、底と側面を切り離さずに口を開く。
+ * 曲面は区分線形の近似(途中の辺長誤差は3%以内)。厳密な剛体折りではない。
  */
 const S = 2 - Math.SQRT2; // ≈ 0.5858(フタ折り線の高さ)
 const X_TOP = Math.SQRT2 - 1; // ≈ 0.4142(折り線上端のx)
 const X_BASE = 3 - 2 * Math.SQRT2; // ≈ 0.1716(折り線下端のx)
-const OPEN = 12; // ❻ 原典の浅い口の開きに合わせる(前後の層それぞれ)
+const OPEN_CURVE = 0.5; // 開口部の片側の曲がり角(rad)。浅く開いて紙の伸縮を抑える。
 const source: OrigamiModel = {
   id: 'cup',
   name: { ja: 'コップ', en: 'Cup' },
@@ -106,29 +109,53 @@ const source: OrigamiModel = {
       },
     },
     {
-      // ❻ 口を開く。底の折り線(動かない 7-4)を軸に、前の層を手前・奥の層を奥へ
-      folds: [
-        // 左右の角は❷❸で前側へ重ね済み。口を開くときも前壁と一緒に動かす。
-        { axis: [7, 4], moving: [0, 5, 8, 1, 3, 10, 11], type: 'valley', angle: OPEN },
-        { axis: [7, 4], moving: [2, 6, 9], type: 'mountain', angle: OPEN },
-      ],
+      // ❻ 曲面の開口は、下のメッシュ生成後に設定する。
+      folds: [],
       description: {
         ja: '口を開いて、コップの形にします。できあがり。',
         en: 'Open the mouth into a cup. Done.',
       },
       caution: {
-        ja: '前後の紙をそっと離して、口を少し開きます。',
-        en: 'Gently separate the front and back to open the mouth a little.',
+        ja: '左右を軽く寄せながら、前後の紙をふくらませて口を開きます。',
+        en: 'Gently bring the sides inward and bow the front and back outward to open the mouth.',
       },
     },
   ],
 };
 
-export const cupModel = withPanelLayers(source, [
+const layered = withPanelLayers(source, [
   [[0, 1, 2, 3], [4, 5, 6, 7]],
   [[0, 2, 3], [4, 6, 7], [5], [1]],
   [[0, 3], [4, 7], [5], [1], [6], [2]],
   [[0], [3], [4, 7], [5], [1], [6], [2]],
   [[0], [3], [7], [5], [1], [6], [2], [4]],
   undefined,
-]);
+], 0.0001);
+
+// Bow the connected sheet rather than swinging the two walls apart at the base.
+// Material welds retain the side creases; the free top edges form the opening.
+const refined = refinePaper(layered, 5, 8);
+export const cupModel = refined.model;
+const closed = computeFoldState(cupModel, 5).positions;
+const groups = [new Set<number>(), new Set<number>()];
+for (const [fi, a, b, c] of paperTriangles(cupModel)) {
+  const back = fi === 0 || fi === 3;
+  for (const vi of [a, b, c]) groups[back ? 1 : 0].add(vi);
+}
+cupModel.steps[5].folds = groups.map((vertices, side) => ({
+  axis: [7, 4], moving: [...vertices], type: side === 0 ? 'valley' : 'mountain', angle: 0,
+  targets: [...vertices].map(vi => {
+    const p = closed[vi];
+    const [x, y, bow] = refined.sample([p.x, p.y], ([px, py]) => {
+      const width = X_BASE + (X_TOP - X_BASE) * py / S;
+      const angle = OPEN_CURVE * Math.max(0, Math.min(py / S, 1));
+      if (angle < 1e-8) return [px, py, 0];
+      const radius = width / angle;
+      const x = radius * Math.sin(px / radius);
+      const bow = radius * (Math.cos(px / radius) - Math.cos(angle));
+      const y = Math.sqrt(Math.max(0, py * py + px * px - x * x - bow * bow));
+      return [x, y, bow];
+    });
+    return [vi, x, y, p.z + (side === 0 ? bow : -bow)];
+  }),
+}));

@@ -245,12 +245,12 @@ function PaperPolygons({ model, positions, view, frame,
       return onEdge ? [`M${svgPoint(a)}L${svgPoint(b)}`] : [];
     }).join(' ');
     return <g key={index}>
-      <defs><clipPath id={`${clipId}-${index}`} clipPathUnits="userSpaceOnUse">
+      {outline && <defs><clipPath id={`${clipId}-${index}`} clipPathUnits="userSpaceOnUse">
         <polygon points={polygon.points.map(svgPoint).join(' ')} />
-      </clipPath></defs>
+      </clipPath></defs>}
       <polygon points={polygon.points.map(svgPoint).join(' ')} fill={fill} stroke={fill} strokeWidth={0.03} />
-      <path d={outline} fill="none" stroke={edge.color} strokeWidth={edge.width} strokeLinejoin="round"
-        clipPath={`url(#${clipId}-${index})`} />
+      {outline && <path d={outline} fill="none" stroke={edge.color} strokeWidth={edge.width} strokeLinejoin="round"
+        clipPath={`url(#${clipId}-${index})`} />}
     </g>;
   });
 }

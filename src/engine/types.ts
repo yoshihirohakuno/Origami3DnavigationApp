@@ -57,6 +57,8 @@ export interface FoldOp {
   timing?: [number, number];
   /** 層の厚み調整など、操作ガイドを出さない内部処理は false。 */
   guide?: boolean;
+  /** Flexible paper motion: interpolate these vertices to a sampled surface pose. */
+  targets?: [vertex: number, x: number, y: number, z: number][];
 }
 
 /**
@@ -96,4 +98,8 @@ export interface OrigamiModel {
   faceSheet?: number[];
   /** シートごとの表裏色(faceSheet と対応)。未指定時はグローバル色。 */
   sheetColors?: { front: string; back: string }[];
+  /** Optional refined surface mesh. Face IDs still refer to the original paper panels. */
+  triangles?: [face: number, a: number, b: number, c: number][];
+  /** Rendered copies of the same material point must stay connected, including at creases. */
+  vertexWelds?: number[][];
 }

@@ -148,8 +148,12 @@ export function Editor({ onExit }: { onExit: () => void }) {
   // ---- 折り線ツール ----
   const splitByLine = () => {
     if (linePts.length !== 2) return;
-    applyModel(splitFacesByLine(modelRef.current, linePts[0], linePts[1]));
-    setLinePts([]);
+    try {
+      applyModel(splitFacesByLine(modelRef.current, linePts[0], linePts[1]));
+      setLinePts([]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
   };
 
   // ---- 工程ビルダー ----

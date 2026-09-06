@@ -6,6 +6,7 @@ const cache = new WeakMap<OrigamiModel, PaperTriangle[]>();
 
 /** Share the same triangulation between WebGL, SVG and geometry audits. */
 export function paperTriangles(model: OrigamiModel): PaperTriangle[] {
+  if (model.triangles) return model.triangles;
   const cached = cache.get(model);
   if (cached) return cached;
   const triangles: PaperTriangle[] = [];
