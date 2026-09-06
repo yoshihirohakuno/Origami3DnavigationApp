@@ -24,6 +24,10 @@ npm run audit:references
 
 ピザ・どんぐりを追加しました。鶴は首・羽の形状を再検証中、箱は原典と異なる簡易トレイです。
 
+全33作品で、折り目をつけるためだけの「折る→戻す」を省略しています。
+鶴は15→7工程、象は7→3工程。形を作る袋開き・中割り折りは残しています。
+工程数と検証結果は [折り目づけ工程の省略](docs/crease-preparation-omission.md)を参照してください。
+
 子プロセスの起動が制限される環境では、テストを次の方法で実行できます。
 
 ```bash
@@ -74,7 +78,7 @@ node --import ./tools/register-typescript.mjs --test --test-isolation=none tests
 2. 折り線で区切られた面を `faces` に列挙する(表から見て反時計回り)
 3. 工程を順に `steps` に書く。各折りは折り線上の2頂点を `axis`、動く側の頂点を
    `moving` に指定。左右対称に同時に折るなら `folds` に2本入れる
-4. `src/App.tsx` の `MODELS` に追加
+4. `src/modelLibrary.ts` の `SOURCES` に追加。画面には折り目づけを省略した `MODELS` を使う
 
 注意点:
 - 後の工程で使う折り線も最初から `vertices`/`faces` に埋め込む(面の動的分割はしない)。

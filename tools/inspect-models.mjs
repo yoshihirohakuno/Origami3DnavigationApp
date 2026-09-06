@@ -1,17 +1,15 @@
 // Run with npm run audit:models (Node 24).
-import { readdirSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { FinalShapePreview } from '../src/CreasePattern.tsx';
 import { computeFoldState, isGuideFold } from '../src/engine/fold.ts';
 import { auditModel } from './audit-cover.mjs';
+import { MODELS } from '../src/modelLibrary.ts';
 
 mkdirSync('tools/.zu', { recursive: true });
 const reports = [], cards = [];
-for (const file of readdirSync('src/models').filter(f => f.endsWith('.ts'))) {
-  const mod = await import(`../src/models/${file}`);
-  const m = Object.values(mod).find(v => v?.steps && v?.vertices);
-  if (!m) continue;
+for (const m of MODELS) {
   const edges = m.faces.flatMap(f => f.map((a, i) => [a, f[(i + 1) % f.length]]));
   const orig = computeFoldState(m, 0).positions;
   let worst = { error: 0 }, roundTrips = [];

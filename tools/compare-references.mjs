@@ -1,17 +1,12 @@
 // Offline contact sheet; original artwork is opened on its publisher's site.
-import { readdirSync, writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { FinalShapePreview } from '../src/CreasePattern.tsx';
 import { MODEL_NOTES, referenceOf } from '../src/modelReferences.ts';
+import { MODELS as models } from '../src/modelLibrary.ts';
 
 mkdirSync('tools/.zu', { recursive: true });
-const models = [];
-for (const file of readdirSync('src/models').filter(f => f.endsWith('.ts'))) {
-  const mod = await import(`../src/models/${file}`);
-  const model = Object.values(mod).find(v => v?.steps && v?.vertices);
-  if (model) models.push(model);
-}
 let previewId = 0;
 const svg = model => renderToStaticMarkup(createElement(FinalShapePreview, { model, size: 300 }), { identifierPrefix: `review-${previewId++}-` });
 const nav = models.map(m => `<a href="#${m.id}">${m.name.ja}</a>`).join(' ');

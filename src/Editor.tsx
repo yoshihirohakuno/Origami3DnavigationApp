@@ -4,13 +4,9 @@ import { computeFoldState } from './engine/fold';
 import { splitFacesByLine } from './engine/split';
 import { PaperScene } from './three/PaperScene';
 import { buildSegments, FOLD_COLORS } from './CreasePattern';
-import { tulipModel } from './models/tulip';
-import { dogModel } from './models/dog';
-import { cupModel } from './models/cup';
-import { chickModel } from './models/chick';
-import { squareBaseModel } from './models/squareBase';
+import { MODELS } from './modelLibrary';
 
-const PRESETS: OrigamiModel[] = [tulipModel, dogModel, cupModel, chickModel, squareBaseModel];
+const PRESETS = MODELS.filter(m => ['tulip', 'dog', 'cup', 'chick', 'square-base'].includes(m.id));
 
 const TYPE_LABEL: Record<FoldType, string> = {
   valley: '谷折り',
@@ -43,8 +39,8 @@ type Point = [number, number];
  * 左:工程ビルダー/JSONタブ、中:展開図(頂点選択・折り線分割)、右:3Dプレビュー。
  */
 export function Editor({ onExit }: { onExit: () => void }) {
-  const [model, setModel] = useState<OrigamiModel>(tulipModel);
-  const [text, setText] = useState(() => JSON.stringify(tulipModel, null, 2));
+  const [model, setModel] = useState<OrigamiModel>(PRESETS[0]);
+  const [text, setText] = useState(() => JSON.stringify(PRESETS[0], null, 2));
   const [error, setError] = useState('');
   const [tab, setTab] = useState<'steps' | 'json'>('steps');
   const [mode, setMode] = useState<'pick' | 'line'>('pick');
@@ -282,7 +278,7 @@ export function Editor({ onExit }: { onExit: () => void }) {
         </button>
         <select
           className="preset-select"
-          defaultValue={tulipModel.id}
+          defaultValue={PRESETS[0].id}
           onChange={(e) => loadPreset(e.target.value)}
           aria-label="プリセット読込 / Load preset"
         >

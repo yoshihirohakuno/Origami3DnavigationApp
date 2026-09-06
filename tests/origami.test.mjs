@@ -10,6 +10,8 @@ import { splitFacesByLine } from '../src/engine/split.ts';
 import { FinalShapePreview, buildStepDiagrams } from '../src/CreasePattern.tsx';
 import { coverage } from '../tools/audit-cover.mjs';
 import { referenceOf } from '../src/modelReferences.ts';
+import { MODELS } from '../src/modelLibrary.ts';
+import { withoutCreasePreparation } from '../src/engine/withoutCreasePreparation.ts';
 
 const models = [];
 for (const file of readdirSync(new URL('../src/models/', import.meta.url)).filter(f => f.endsWith('.ts'))) {
@@ -19,6 +21,50 @@ for (const file of readdirSync(new URL('../src/models/', import.meta.url)).filte
 }
 const modelOf = id => models.find(m => m.id === id);
 const distance = (a, b) => Math.max(...a.map((p, i) => p.distanceTo(b[i])));
+
+for (const short of MODELS) test(`${short.id}: shortened route omits crease preparation and preserves every retained motion`, () => {
+  const source = modelOf(short.id);
+  assert.ok(short.steps.length > 0);
+  assert.equal(short.faces,source.faces);
+  assert.equal(short.sheetColors,source.sheetColors);
+  assert.ok(short.steps.every(s=>s.folds.every(op=>op.type!=='unfold')));
+  let lastIndex=-1;
+  short.steps.forEach((s,i)=>{
+    const originalIndex=source.steps.findIndex(old=>old.folds===s.folds);
+    assert.ok(originalIndex>lastIndex);
+    lastIndex=originalIndex;
+    for (const fraction of [0,.25,.5,.75,1]) {
+      assert.ok(distance(computeFoldState(short,i+fraction).positions,
+        computeFoldState(source,originalIndex+fraction).positions)<1e-8, `${short.id} at ${i+fraction}`);
+    }
+  });
+  assert.ok(distance(computeFoldState(short,short.steps.length).positions,
+    computeFoldState(source,source.steps.length).positions)<1e-8);
+  assert.equal(buildStepDiagrams(short).length,short.steps.length);
+  assert.equal(withoutCreasePreparation(short),short,'applying the policy twice is a no-op');
+});
+
+test('shortened library has expected counts and keeps shape-making operations', () => {
+  assert.equal(MODELS.length,models.length);
+  const byId=id=>MODELS.find(m=>m.id===id);
+  for(const [id,n] of [['crane',7],['elephant',3],['dog',4],['acorn',4],['car',6],['piano',4]]) {
+    assert.equal(byId(id).steps.length,n,id);
+  }
+  for(const id of ['cup','shuriken','square-base','waterbomb-base','tadpole','box','pizza']) {
+    assert.equal(byId(id),modelOf(id),'do not shorten necessary openings or reverse folds');
+  }
+  assert.match(byId('acorn').steps[0].caution.ja,/色の面を上/);
+  assert.match(byId('elephant').steps[0].caution.ja,/白い面を上/);
+});
+
+test('an unfold which leaves the paper partly folded is retained', () => {
+  const source={id:'partial-opening',name:{ja:'test',en:'test'},difficulty:1,
+    vertices:[[0,0],[0,1],[1,0]],faces:[[0,2,1]],steps:[
+      {folds:[{axis:[0,1],moving:[2],type:'valley',angle:180,direction:-1}],description:{ja:'fold',en:'fold'}},
+      {folds:[{axis:[0,1],moving:[2],type:'unfold',angle:90,direction:1}],description:{ja:'open halfway',en:'open halfway'}},
+    ]};
+  assert.equal(withoutCreasePreparation(source),source);
+});
 
 for (const model of models) {
   test(`${model.id}: finite geometry at every quarter-step and exact crease/unfold return`, () => {

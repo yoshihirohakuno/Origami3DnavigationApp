@@ -1,82 +1,14 @@
 import { useState } from 'react';
 import { Navigator } from './Navigator';
 import { Editor } from './Editor';
-import { dogModel } from './models/dog';
-import { cupModel } from './models/cup';
-import { tulipModel } from './models/tulip';
-import { chickModel } from './models/chick';
-import { squareBaseModel } from './models/squareBase';
-import { craneModel } from './models/crane';
-import { shurikenModel } from './models/shuriken';
-import { catModel } from './models/cat';
-import { foxModel } from './models/fox';
-import { rabbitModel } from './models/rabbit';
-import { pandaModel } from './models/panda';
-import { whaleModel } from './models/whale';
-import { bearModel } from './models/bear';
-import { helmetModel } from './models/helmet';
-import { heartModel } from './models/heart';
-import { boxModel } from './models/box';
-import { yachtModel } from './models/yacht';
-import { penguinModel } from './models/penguin';
-import { shipModel } from './models/ship';
-import { rocketModel } from './models/rocket';
-import { envelopeModel } from './models/envelope';
-import { pianoModel } from './models/piano';
-import { turtleModel } from './models/turtle';
-import { sinkansenModel } from './models/sinkansen';
-import { bootsModel } from './models/boots';
-import { waterbombBaseModel } from './models/waterbombBase';
-import { riceballModel } from './models/riceball';
-import { tadpoleModel } from './models/tadpole';
-import { carModel } from './models/car';
-import { busModel } from './models/bus';
-import { elephantModel } from './models/elephant';
-import { pizzaModel } from './models/pizza';
-import { acornModel } from './models/acorn';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
 import { LangToggle, useLang } from './i18n';
 import { CATEGORIES, categoryOf, levelLabel, usedLevels } from './catalog';
 import type { CategoryId } from './catalog';
 import { MODEL_NOTES } from './modelReferences';
+import { MODELS } from './modelLibrary';
 import './App.css';
-
-const MODELS: OrigamiModel[] = [
-  tulipModel,
-  dogModel,
-  cupModel,
-  chickModel,
-  squareBaseModel,
-  craneModel,
-  shurikenModel,
-  catModel,
-  foxModel,
-  rabbitModel,
-  pandaModel,
-  bearModel,
-  whaleModel,
-  helmetModel,
-  heartModel,
-  boxModel,
-  yachtModel,
-  penguinModel,
-  shipModel,
-  rocketModel,
-  envelopeModel,
-  pianoModel,
-  turtleModel,
-  sinkansenModel,
-  bootsModel,
-  waterbombBaseModel,
-  riceballModel,
-  tadpoleModel,
-  carModel,
-  busModel,
-  elephantModel,
-  pizzaModel,
-  acornModel,
-];
 
 /** 準備中の作品(ライブラリの見せ方確認用プレースホルダ)。全作品実装済みで現在は空 */
 const COMING_SOON: { ja: string; en: string; difficulty: number }[] = [];

@@ -43,8 +43,8 @@ const DICT = {
   minutesMeta: { ja: `${'{n}'}分`, en: `${'{n}'} min` },
   comingSoon: { ja: '準備中', en: 'COMING SOON' },
   libraryNote: {
-    ja: `収録${'{n}'}作品。おりがみくらぶ(新宮文明)の折り図と伝承作品にもとづいています。`,
-    en: `${'{n}'} models, folded from the diagrams of origami-club (Fumiaki Shingu) and traditional designs.`,
+    ja: `収録${'{n}'}作品。折り目をつけるためだけの「折る・戻す」は省略しています。おりがみくらぶ(新宮文明)の折り図と伝承作品にもとづいています。`,
+    en: `${'{n}'} models. Fold-and-unfold steps used only to make reference creases are omitted. Based on origami-club (Fumiaki Shingu) and traditional designs.`,
   },
   editorLink: { ja: 'モデルエディタ — 工程データ作成(β)', en: 'Model editor — build fold data (beta)' },
   backToLibrary: { ja: 'ライブラリへ戻る', en: 'Back to library' },
