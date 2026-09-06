@@ -1,308 +1,156 @@
 import type { FoldOp, FoldStep, OrigamiModel } from '../engine/types';
-import { withFlatLayers } from '../engine/flatLayers';
+import { computeFoldState } from '../engine/fold';
+import { mergeRigidPanels, withFlatLayers } from '../engine/flatLayers';
 
 /**
- * 手裏剣 / Shuriken(2枚組み・全9工程)
- *
- * おりがみくらぶ(https://www.origami-club.com/fun/cross/index.html)の折り図に
- * 忠実な工程。幾何は tools/solve-shuriken.mjs で厳密値を検証済み。
- *
- *   ❶ 観音折り(左右のはしを中心線へ) ─ 2枚同時
- *   ❷ 中心でさらに半分 → 幅1/4の帯
- *   ❸ 帯の両はしを斜め45°に折る(2枚は鏡写し)
- *   ❹ 端の帯を❸と平行な線で折り返す → 翼が斜めにずれた六角Z形
- *   ❺ 朱をうらがえして向きを90°かえ、中央へ
- *   ❻ 藍を朱の上に十字にかさねる(藍が上)
- *   ❼ 朱の翼を藍の上にかぶせ直し、藍のツメの下へさしこむ
- *   ❽ 全体をうらがえす
- *   ❾ 藍の翼も同じようにさしこんで できあがり
- *
- * ❹の折り線は❸の斜め辺と「平行」(展開図は0.5刻みの5×5格子+対角線)。
- * ユニットは先端が斜めにずれた稲妻形になり、組んだ星の尖りは風車状に傾く。
- * 「さしこむ」は新しい折り線を作らず、❹の折り線で翼をわずかに開いて相手の
- * 帯の上へかぶせ直す(相手のツメの下に入る)。エンジンでは面ごとの厚みと層順を保持し、小さな開閉で
- * 表現する(README「既知の制約」)。
- *
- * 紙の表は色、裏は白で扱う。`sheetColors` の front/back は反転しない。
+ * 手裏剣: https://www.origami-club.com/fun/cross/zu.html
+ * 白面から観音折り→半分→両端→端と直角の線で折り返す→裏返して配置→差し込む。
+ * 2026-09-06: 旧版の❹は❸と平行で、❼❾は同じ翼を一回転させていた。
+ * 実際は❹を直交する折り線で折り、❼❾ではできた三角の先端半分を折り込む。
+ * 最終形の4頂点は (±h,∓3h)/(±3h,±h)、h=1/(4√2)。
  */
-
-const AX = -1.2; // 朱の展開図での中心x
-const BX = 1.2; // 藍の展開図での中心x
-const Z_TOP = 0.0028; // ❻で藍を朱の上に乗せる高さ(紙の厚み)
-
-/**
- * ローカル展開図: 0.5刻みの5×5格子(番号 = 5*ix + iy、x,y ∈ {-1,-0.5,0,0.5,1})
- * + 中心線(❷の折り線)上の頂点の複製 25〜29(上層側の面が使う。
- * 折った後に上層の縁は層の厚みぶん浮くため、1頂点では両層を表せない)。
- *
- * 折り線(すべて対角線、傾き±1):
- *   ❸上: (-1,1)-(-0.5,0.5)-(0,1)-(0.5,0.5)-(1,1) のジグザグ
- *   ❹上: (-1,0.5)-(-0.5,0)-(0,0.5)-(0.5,0)-(1,0.5)
- *   ❹下: (-1,0)-(-0.5,-0.5)-(0,0)-(0.5,-0.5)-(1,0)
- *   ❸下: (-1,-0.5)-(-0.5,-1)-(0,-0.5)-(0.5,-1)-(1,-0.5)
- */
-const LOCAL: [number, number][] = [];
-for (let ix = 0; ix < 5; ix++) {
-  for (let iy = 0; iy < 5; iy++) LOCAL.push([-1 + ix * 0.5, -1 + iy * 0.5]);
+const V: [number, number][] = [];
+const F: number[][] = [];
+function id(x: number, y: number): number {
+  const found = V.findIndex(p => Math.abs(p[0] - x) < 1e-8 && Math.abs(p[1] - y) < 1e-8);
+  if (found >= 0) return found;
+  V.push([x, y]);
+  return V.length - 1;
 }
-// 25〜29: x=0 列の複製(下から (0,-1),(0,-0.5),(0,0),(0,0.5),(0,1))
-for (let iy = 0; iy < 5; iy++) LOCAL.push([0, -1 + iy * 0.5]);
-// 30〜33: ❹の折り線頂点の複製(中央帯側)。この折り線は「翼(束の上へ巻く)」と
-// 「中央帯(底層)」で共有されるため、1頂点では両方の高さを表せない。
-// 中央帯の面(L3/L4の中央)はこちらを使い、元の頂点は翼側として持ち上げる
-LOCAL.push([0, 0.5]); // 30 = id(0,0.5) の中央帯側
-LOCAL.push([0.5, 0]); // 31 = id(0.5,0) の中央帯側
-LOCAL.push([0, 0]); // 32 = id(0,0) の中央帯側
-LOCAL.push([0.5, -0.5]); // 33 = id(0.5,-0.5) の中央帯側
-
-const id = (x: number, y: number) => Math.round((x + 1) / 0.5) * 5 + Math.round((y + 1) / 0.5);
-const dup = (y: number) => 25 + Math.round((y + 1) / 0.5);
-
-/** 面(20枚)。列1(x∈[-0.5,0]=上層側)は複製頂点を使う */
-const LOCAL_FACES: number[][] = [
-  // 列0 x∈[-1,-0.5](斜線は左が高い)
-  [id(-1, 1), id(-0.5, 1), id(-0.5, 0.5)],
-  [id(-1, 1), id(-0.5, 0.5), id(-0.5, 0), id(-1, 0.5)],
-  [id(-1, 0.5), id(-0.5, 0), id(-0.5, -0.5), id(-1, 0)],
-  [id(-1, 0), id(-0.5, -0.5), id(-0.5, -1), id(-1, -0.5)],
-  [id(-1, -0.5), id(-0.5, -1), id(-1, -1)],
-  // 列1 x∈[-0.5,0](右が高い。x=0 は複製 25〜29)
-  [id(-0.5, 0.5), id(-0.5, 1), dup(1)],
-  [id(-0.5, 0.5), dup(1), dup(0.5), id(-0.5, 0)],
-  [id(-0.5, 0), dup(0.5), dup(0), id(-0.5, -0.5)],
-  [id(-0.5, -0.5), dup(0), dup(-0.5), id(-0.5, -1)],
-  [id(-0.5, -1), dup(-0.5), dup(-1)],
-  // 列2 x∈[0,0.5](左が高い)
-  [id(0, 1), id(0.5, 1), id(0.5, 0.5)],
-  [id(0, 1), id(0.5, 0.5), id(0.5, 0), id(0, 0.5)],
-  [30, 31, 33, 32], // L3の中央帯(中央帯側の複製を使う)
-  [id(0, 0), id(0.5, -0.5), id(0.5, -1), id(0, -0.5)],
-  [id(0, -0.5), id(0.5, -1), id(0, -1)],
-  // 列3 x∈[0.5,1](右が高い)
-  [id(0.5, 0.5), id(0.5, 1), id(1, 1)],
-  [id(0.5, 0.5), id(1, 1), id(1, 0.5), id(0.5, 0)],
-  [31, id(1, 0.5), id(1, 0), 33], // L4の中央帯(中央帯側の複製を使う)
-  [id(0.5, -0.5), id(1, 0), id(1, -0.5), id(0.5, -1)],
-  [id(0.5, -1), id(1, -0.5), id(1, -1)],
-];
-
-/** 反時計回り(表=+z)に揃える */
-function orient(f: number[]): number[] {
-  let area = 0;
-  for (let i = 0; i < f.length; i++) {
-    const [x1, y1] = LOCAL[f[i]];
-    const [x2, y2] = LOCAL[f[(i + 1) % f.length]];
-    area += x1 * y2 - x2 * y1;
-  }
-  return area >= 0 ? f : [...f].reverse();
+// 両向きの対角線を用意。不要な分割は折り操作の確定後にmergeRigidPanelsで除く。
+for (let x = -1; x < 1; x += 0.5) for (let y = -1; y < 1; y += 0.5) {
+  const corners = [id(x, y), id(x + .5, y), id(x + .5, y + .5), id(x, y + .5)];
+  const center = id(x + .25, y + .25);
+  for (let i = 0; i < 4; i++) F.push([corners[i], corners[(i + 1) % 4], center]);
 }
 
-// 動く頂点の集合(ローカル)
-const COL = (x: number) => [0, 1, 2, 3, 4].map((i) => id(x, -1 + i * 0.5));
-const CUPBOARD_L = COL(-1);
-const CUPBOARD_R = COL(1);
-// ❷で動く側(紙のはし=x=-1列は❶で回転軸上に来ているため含めない)
-const HALF = COL(-0.5);
-const SLANT_TOP = [id(-0.5, 1), id(0.5, 1)]; // ❸上(dup(1)は折り線の端点上)
-const SLANT_BOT = [id(0, -1), dup(-1), id(-1, -1), id(1, -1)]; // ❸下
-// ❹の翼(dup(0.5)/dup(0) は折り線上なので動かない)
-const WING_TOP = [id(0, 1), dup(1), id(-1, 1), id(1, 1), id(0.5, 0.5), id(-0.5, 0.5)];
-const WING_BOT = [id(0, -0.5), dup(-0.5), id(-1, -0.5), id(1, -0.5), id(0.5, -1), id(-0.5, -1)];
-const ALL = LOCAL.map((_, i) => i);
-
-const A = 0; // 朱(鏡映)のインデックスオフセット
-const B = 34; // 藍のインデックスオフセット
-
-const vertices: [number, number][] = [
-  ...LOCAL.map(([x, y]): [number, number] => [-x + AX, y]), // 朱(鏡映)
-  ...LOCAL.map(([x, y]): [number, number] => [x + BX, y]), // 藍
+const captions: Pick<FoldStep, 'description' | 'caution'>[] = [
+  { description: {
+    ja: '2枚とも、左右のはしを中心線に合わせて折ります(かんのん折り)。',
+    en: 'On both sheets, fold the left and right edges in to the center line.',
+  }, caution: {
+    ja: '2枚とも白い裏面を上にして始めます。色の面が外側になるように折ります。',
+    en: 'Start with the white reverse side up on both sheets. The colored front will face outward.',
+  } },
+  { description: {
+    ja: '中心線でさらに半分に折り、細い帯にします。',
+    en: 'Fold in half again along the center line into a slim strip.',
+  } },
+  { description: {
+    ja: '帯の上下のはしを斜め45°に折ります。2枚は左右対称(鏡写し)です。',
+    en: 'Fold both ends of each strip at 45°. The two sheets mirror each other.',
+  } },
+  { description: {
+    ja: '端の斜めのふちと直角になる折り線で、上下を反対向きに折り返します。',
+    en: 'Fold the ends in opposite directions along creases perpendicular to the slanted edges.',
+  }, caution: {
+    ja: '2枚は鏡写しのまま。上下に三角がついた形になります。',
+    en: 'Keep the units mirrored, with a triangle on each side.',
+  } },
+  { description: {
+    ja: '朱をうらがえし、帯が縦になる向きで中央に置きます。',
+    en: 'Flip the vermilion unit over and place it at the center with its band vertical.',
+  } },
+  { description: {
+    ja: '藍の帯が横になるように向きを整え、朱の上に十字にかさねます。',
+    en: 'Turn the indigo band horizontally and lay it across the vermilion one.',
+  }, caution: {
+    ja: '藍の折った三角が上を向いたまま。この下がポケットになります。',
+    en: 'Keep the indigo folded triangles on top. The pockets are underneath them.',
+  } },
+  { description: {
+    ja: '朱の三角の先を中央へ折り、藍のポケットへさしこみます。',
+    en: 'Fold the vermilion triangular tips inward and tuck them into the indigo pockets.',
+  }, caution: {
+    ja: '三角の先端半分を折ります。',
+    en: 'Fold the outer half of each triangle into its pocket.',
+  } },
+  { description: { ja: '全体をうらがえします。', en: 'Turn the whole piece over.' } },
+  { description: {
+    ja: '藍の三角の先も同じように朱へさしこんだら、手裏剣のできあがり。',
+    en: 'Tuck the indigo triangular tips into the vermilion pockets to finish the shuriken.',
+  }, caution: {
+    ja: '向かい合う尖りが同じ色になり、中央で交互に重なります。',
+    en: 'Opposite points share a color and the units interleave at the center.',
+  } },
 ];
 
-const faces: number[][] = [
-  ...LOCAL_FACES.map((f) => orient(f).reverse().map((i) => i + A)), // 鏡映は向きも反転
-  ...LOCAL_FACES.map((f) => orient(f).map((i) => i + B)),
-];
-
-const faceSheet = [...LOCAL_FACES.map(() => 0), ...LOCAL_FACES.map(() => 1)];
-
-// 紙の表=色、裏=白。
-const sheetColors = [
-  { front: '#e0492f', back: '#f2ede3' }, // 朱
-  { front: '#2f4b7c', back: '#f2ede3' }, // 藍
-];
-
-/** 両シートへ同じ折りを作るヘルパ */
-function both(op: (base: number) => FoldOp[]): FoldOp[] {
-  return [...op(A), ...op(B)];
+const unit: OrigamiModel = {
+  id: 'unit', name: { ja: '', en: '' }, difficulty: 1, vertices: V, faces: F, steps: [],
+};
+function fold(a: [number, number], b: [number, number], predicate: (p: { x: number; y: number }) => boolean) {
+  // 同時に折る上下・左右は、どちらも工程開始時の配置で選ぶ。
+  const positions = computeFoldState(unit, unit.steps.length - 1).positions;
+  unit.steps.at(-1)!.folds.push({
+    axis: [id(...a), id(...b)], moving: positions.flatMap((p, i) => predicate(p) ? [i] : []),
+    type: 'valley', angle: 180,
+  });
 }
+unit.steps.push({ ...captions[0], folds: [] });
+fold([-.5, 1], [-.5, -1], p => p.x < -.5 - 1e-8);
+fold([.5, 1], [.5, -1], p => p.x > .5 + 1e-8);
+unit.steps.push({ ...captions[1], folds: [] });
+fold([0, 1], [0, -1], p => p.x < -1e-8);
+unit.steps.push({ ...captions[2], folds: [] });
+fold([0, 1], [.5, .5], p => p.x + p.y > 1 + 1e-8);
+fold([0, -.5], [.5, -1], p => p.x + p.y < -.5 - 1e-8);
+unit.steps.push({ ...captions[3], folds: [] });
+fold([0, 0], [.5, .5], p => p.y - p.x > 1e-8);
+fold([0, -.5], [.5, 0], p => p.y - p.x < -.5 - 1e-8);
 
-const off = (base: number, ids: number[]) => ids.map((i) => i + base);
-
-// ❹の折り線(軸): 上 (0,0.5)-(0.5,0) / 下 (0,0)-(0.5,-0.5)
-const AXIS4T: [number, number] = [id(0, 0.5), id(0.5, 0)];
-const AXIS4B: [number, number] = [id(0, 0), id(0.5, -0.5)];
-
-const steps: FoldStep[] = [
-  {
-    // ❶ 観音折り
-    folds: both((s) => [
-      { axis: [s + id(-0.5, 1), s + id(-0.5, -1)], moving: off(s, CUPBOARD_L), type: 'valley', angle: 177.5 },
-      { axis: [s + id(0.5, 1), s + id(0.5, -1)], moving: off(s, CUPBOARD_R), type: 'valley', angle: 177.5 },
-    ]),
-    description: {
-      ja: '2枚とも、左右のはしを中心線に合わせて折ります(かんのん折り)。',
-      en: 'On both sheets, fold the left and right edges in to the center line.',
-    },
-    caution: {
-      ja: '2枚とも白い裏面を上にして始めます。色の面が外側になるように折ります。',
-      en: 'Start with the white reverse side up on both sheets. The colored front will face outward.',
-    },
-  },
-  {
-    // ❷ 半分に折る
-    folds: both((s) => [
-      { axis: [s + id(0, 1), s + id(0, -1)], moving: off(s, HALF), type: 'valley', angle: 176.5 },
-    ]),
-    description: {
-      ja: '中心線でさらに半分に折り、細い帯にします。',
-      en: 'Fold in half again along the center line into a slim strip.',
-    },
-  },
-  {
-    // ❸ 端を斜めに折る
-    folds: both((s) => [
-      { axis: [s + id(0, 1), s + id(0.5, 0.5)], moving: off(s, SLANT_TOP), type: 'valley', angle: 175.5 },
-      { axis: [s + id(0, -0.5), s + id(0.5, -1)], moving: off(s, SLANT_BOT), type: 'valley', angle: 175.5 },
-    ]),
-    description: {
-      ja: '帯の上下のはしを斜め45°に折ります。2枚は左右対称(鏡写し)です。',
-      en: 'Fold both ends of each strip at 45°. The two sheets mirror each other.',
-    },
-    caution: {
-      ja: '上のはしと下のはしは反対向きに折ります。',
-      en: 'The top and bottom ends fold in opposite directions.',
-    },
-  },
-  {
-    // ❹ 端の帯を折り返して翼にする(❸の斜め辺と平行な折り線)
-    folds: both((s) => [
-      { axis: [s + AXIS4T[0], s + AXIS4T[1]], moving: off(s, WING_TOP), type: 'valley', angle: 174 },
-      { axis: [s + AXIS4B[0], s + AXIS4B[1]], moving: off(s, WING_BOT), type: 'valley', angle: 174 },
-    ]),
-    description: {
-      ja: '斜めのはしの帯を、❸と平行な折り線で中央へ折り返します。翼が斜めについた稲妻形になります。',
-      en: 'Fold each slanted end back along a crease parallel to it — a lightning shape with offset wings.',
-    },
-  },
-  {
-    // ❺ 朱をうらがえして向きをかえ、中央へ
-    folds: [
-      {
-        // 縦の折り目線まわりに180°裏返し → 面内90°回転 → 中央へ
-        axis: [A + id(0, 0.5), A + id(0, 0)],
-        moving: off(A, ALL),
-        type: 'assemble',
-        angle: 180,
-        direction: 1,
-        spinZ: 90,
-        // 裏返し+回転後のユニット中心 (AX+0.5, 0.75) を原点へ
-        translate: [-AX - 0.5, -0.75, 0.0004],
-      },
-    ],
-    description: {
-      ja: '朱をうらがえして向きを90°かえ、中央に置きます。',
-      en: 'Flip the vermilion unit over, turn it 90°, and set it at the center.',
-    },
-    caution: {
-      ja: 'うらがえすと朱の翼が下を向きます(あとで差し込むツメになります)。',
-      en: 'Flipped, the vermilion wings face down — they become the tuck tabs.',
-    },
-  },
-  {
-    // ❻ 藍を朱の上にかさねる
-    folds: [
-      {
-        axis: [B + id(0, 0.5), B + id(0, 0)],
-        moving: off(B, ALL),
-        type: 'assemble',
-        angle: 0,
-        direction: 1,
-        // 藍の中心 (BX+0.25, 0) を原点の真上へ
-        translate: [-(BX + 0.25), 0, Z_TOP],
-      },
-    ],
-    description: {
-      ja: '藍を、朱の上に十字になるようにかさねます。',
-      en: 'Lay the indigo unit on top of the vermilion one in a cross.',
-    },
-    caution: {
-      ja: '藍の翼は上を向いたまま。この下がポケットになります。',
-      en: 'The indigo wings stay face-up — the pockets form beneath them.',
-    },
-  },
-  {
-    // ❼ さしこむ(朱の翼を藍の上にかぶせ直し、藍のツメの下へ)
-    folds: [
-      // 翼を少し開き、ポケットへ入れて閉じる(前半で開き、後半で閉じる)
-      { axis: [A + AXIS4T[0], A + AXIS4T[1]], moving: off(A, WING_TOP), type: 'mountain', angle: 25, direction: 1 },
-      { axis: [A + AXIS4B[0], A + AXIS4B[1]], moving: off(A, WING_BOT), type: 'mountain', angle: 25, direction: -1 },
-    ],
-    description: {
-      ja: '朱の2つの翼をわずかに開き、藍の帯にかぶせて、藍のツメの下へさしこみます。',
-      en: 'Open the two vermilion wings slightly, lay them over the indigo strip, and tuck them under the indigo tabs.',
-    },
-    caution: {
-      ja: '翼の折り線は❹と同じ。あたらしい折り線は作りません。',
-      en: 'The wings refold on the same creases as step 4 — no new creases.',
-    },
-  },
-  {
-    // ❽ うらがえす
-    folds: [
-      {
-        axis: [B + id(0, 0), B + id(0.5, 0)],
-        moving: [...off(A, ALL), ...off(B, ALL)],
-        type: 'assemble',
-        angle: 180,
-        direction: 1,
-      },
-    ],
-    description: {
-      ja: '全体をうらがえします。',
-      en: 'Turn the whole piece over.',
-    },
-  },
-  {
-    // ❾ さしこんで できあがり
-    folds: [
-      // 藍の翼も開いて朱の帯を巻き込み、反対側へ閉じ直す
-      { axis: [B + AXIS4T[0], B + AXIS4T[1]], moving: off(B, WING_TOP), type: 'mountain', angle: 25, direction: -1 },
-      { axis: [B + AXIS4B[0], B + AXIS4B[1]], moving: off(B, WING_BOT), type: 'mountain', angle: 25, direction: 1 },
-    ],
-    description: {
-      ja: '藍の2つの翼も同じように朱へさしこんだら、手裏剣のできあがり。',
-      en: 'Tuck the two indigo wings into the vermilion unit the same way — the shuriken is complete.',
-    },
-    caution: {
-      ja: '向かい合う尖りが同じ色になります。',
-      en: 'Opposite points share a color.',
-    },
-  },
-];
-
-const sourceModel: OrigamiModel = {
-  id: 'shuriken',
-  name: { ja: '手裏剣', en: 'Shuriken' },
-  difficulty: 3,
-  cameraAngle: 0,
-  // 平らな作品なのでほぼ正面から(わずかに見下ろす)見せる
-  cameraPos: [0, -0.9, 4.6],
-  vertices,
-  // 原典❶は白面スタート。最後までこの表裏を保ち、途中で色を交換しない。
-  faces: faces.map(face => [...face].reverse()),
-  faceSheet,
-  sheetColors,
-  steps,
+const N = V.length;
+const all = V.map((_, i) => i);
+const source: OrigamiModel = {
+  id: 'shuriken', name: { ja: '手裏剣', en: 'Shuriken' }, difficulty: 3,
+  cameraAngle: 0, cameraPos: [0, -0.9, 4.6],
+  vertices: [-1.2, 1.2].flatMap((offset, sheet) =>
+    V.map(([x, y]): [number, number] => [offset + (sheet ? -x : x), y])),
+  // 両方とも白面スタート。鏡映側だけ頂点の順番を戻す。
+  faces: [...F.map(f => [...f].reverse()), ...F.map(f => f.map(i => i + N))],
+  faceSheet: [...F.map(() => 0), ...F.map(() => 1)],
+  sheetColors: [{ front: '#e0492f', back: '#f2ede3' }, { front: '#2f4b7c', back: '#f2ede3' }],
+  steps: unit.steps.map(step => ({ ...step, folds: [
+    ...step.folds,
+    ...step.folds.map(op => ({ ...op, axis: op.axis.map(i => i + N) as [number, number],
+      moving: op.moving.map(i => i + N) })),
+  ] })),
 };
 
-export const shurikenModel = withFlatLayers(sourceModel, [6, 8]);
+function place(sheet: number, angle: number, spinZ: number, z: number) {
+  const op: FoldOp = {
+    axis: [id(0, 0) + sheet * N, id(0, -.5) + sheet * N], moving: all.map(i => i + sheet * N),
+    type: 'assemble', angle, direction: 1, spinZ,
+  };
+  source.steps.push({ ...captions[source.steps.length], folds: [op] });
+  const p = computeFoldState(source, source.steps.length).positions.slice(sheet * N, (sheet + 1) * N);
+  op.translate = [
+    -(Math.min(...p.map(v => v.x)) + Math.max(...p.map(v => v.x))) / 2,
+    -(Math.min(...p.map(v => v.y)) + Math.max(...p.map(v => v.y))) / 2, z,
+  ];
+}
+place(0, 180, -45, .0004);
+place(1, 0, 45, .0028);
+
+function tuck(sheet: number) {
+  const p = computeFoldState(source, source.steps.length).positions;
+  const folds: FoldOp[] = [[id(.5, .5), id(.5, 0)], [id(0, -.5), id(0, 0)]].map(ids => {
+    const axis = ids.map(i => i + sheet * N) as [number, number];
+    const a = p[axis[0]], b = p[axis[1]];
+    const side = (v: { x: number; y: number }) => (b.x - a.x) * (v.y - a.y) - (b.y - a.y) * (v.x - a.x);
+    const centerSide = side({ x: 0, y: 0 });
+    return { axis, moving: all.map(i => i + sheet * N).filter(i => side(p[i]) * centerSide < -1e-8),
+      type: 'valley', angle: 180 };
+  });
+  source.steps.push({ ...captions[source.steps.length], folds });
+}
+// うらがえす軸は紙面とは独立した縦軸。描画する面には使わない。
+const flipAxis: [number, number] = [source.vertices.length, source.vertices.length + 1];
+source.vertices.push([0, -.25], [0, .25]);
+tuck(0);
+source.steps.push({ ...captions[7], folds: [{
+  axis: flipAxis, moving: all.concat(all.map(i => i + N)), type: 'assemble', angle: 180, direction: 1,
+}] });
+tuck(1);
+
+// 0.02°の紙厚表現で中央の循環する層順を表す。ポケットの曲面変形は近似。
+export const shurikenModel = withFlatLayers(mergeRigidPanels(source), [6, 8], 3);

@@ -21,7 +21,7 @@ const CAMERA_POS = new THREE.Vector3(0, -2.4, 4.0);
 
 /**
  * 折り紙の3D表示を担当する(React非依存)。
- * 毎フレーム FoldState を受け取ってジオメトリを組み直す。
+ * 折り状態が変わったときだけジオメトリを更新し、カメラ操作は毎フレーム反映する。
  */
 export class PaperScene {
   private renderer: THREE.WebGLRenderer;
@@ -32,7 +32,7 @@ export class PaperScene {
   private frontMesh!: THREE.Mesh;
   private backMesh!: THREE.Mesh;
   private edgeLines!: THREE.LineSegments;
-  /** 現在工程のガイド(折り線・矢印)。毎フレーム作り直す */
+  /** 現在工程のガイド(折り線・矢印)。折り状態に合わせて更新する */
   private guideGroup = new THREE.Group();
 
   private model: OrigamiModel | null = null;
@@ -138,10 +138,26 @@ export class PaperScene {
   update(state: FoldState): void {
     if (!this.model) return;
     if (state !== this.lastState) {
+      const finished = state.fraction >= 1 && state.stepIndex === this.model.steps.length - 1;
+      const wasFinished = this.lastState?.fraction === 1 && this.lastState.stepIndex === this.model.steps.length - 1;
       this.updateGeometry(state);
       this.lastState = state;
+      if (finished !== wasFinished && this.autoFrame) this.setViewAngle(this.viewAngle);
     }
     this.controls.update();
+    // Paper layers are much closer together than ordinary 3D objects. A fixed
+    // 0.1–100 clip range loses their depth precision when the camera pulls back.
+    const bounds = this.frontMesh.geometry.boundingSphere;
+    if (bounds) {
+      const distance = this.camera.position.distanceTo(bounds.center);
+      const padding = Math.max(2.5, bounds.radius * 1.5);
+      const near = Math.max(0.05, distance - padding), far = distance + padding;
+      if (near !== this.camera.near || far !== this.camera.far) {
+        this.camera.near = near;
+        this.camera.far = far;
+        this.camera.updateProjectionMatrix();
+      }
+    }
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -268,8 +284,12 @@ export class PaperScene {
     const right = new THREE.Vector3(0, 1, 0).cross(direction).normalize();
     const up = direction.clone().cross(right);
     const tangent = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
-    let distance = this.camera.position.length();
-    for (const p of this.framePoints) {
+    const finished = this.lastState?.fraction === 1 && this.lastState.stepIndex === (this.model?.steps.length ?? 0) - 1;
+    const points = finished && this.model
+      ? [...new Set(this.model.faces.flat())].map(vi => this.lastState!.positions[vi])
+      : this.framePoints;
+    let distance = finished ? this.controls.minDistance : this.camera.position.length();
+    for (const p of points) {
       const span = Math.max(Math.abs(p.dot(right)) / this.camera.aspect, Math.abs(p.dot(up)));
       distance = Math.max(distance, p.dot(direction) + 1.12 * span / tangent);
     }

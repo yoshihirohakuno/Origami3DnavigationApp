@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readdirSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { computeFoldState } from '../src/engine/fold.ts';
+import { computeFoldState, isGuideFold } from '../src/engine/fold.ts';
 import { paperTriangles } from '../src/engine/mesh.ts';
 import { orderPaper } from '../src/engine/painter.ts';
 import { splitFacesByLine } from '../src/engine/split.ts';
@@ -59,14 +59,47 @@ test('shuriken starts white and shows the colored front after every completed fo
   }
 });
 
-test('tuck opens then closes without a full revolution or permanent shape drift', () => {
+test('tuck folds the outer triangles inward instead of opening and returning to the same shape', () => {
   const m=modelOf('shuriken');
   for(const t of [6,8]){
     const before=computeFoldState(m,t).positions;
     assert.ok(distance(before,computeFoldState(m,t+.45).positions)>.05);
-    assert.ok(distance(before,computeFoldState(m,t+1).positions)<1e-8);
-    assert.ok(m.steps[t].folds.every(op=>op.angle<=25));
+    assert.ok(distance(before,computeFoldState(m,t+1).positions)>.5);
+    const guides=m.steps[t].folds.filter(isGuideFold);
+    assert.equal(guides.length,2);
+    assert.ok(guides.every(op=>op.angle>179&&op.angle<181));
   }
+});
+
+test('shuriken matches the reference tips and interleaves the two colors at the center', () => {
+  const m=modelOf('shuriken'),p=computeFoldState(m,9).positions;
+  const h=1/(4*Math.SQRT2),used=[...new Set(m.faces.flat())];
+  for(const [x,y] of [[-h,3*h],[3*h,h],[h,-3*h],[-3*h,-h]]){
+    assert.ok(Math.min(...used.map(i=>Math.hypot(p[i].x-x,p[i].y-y)))<1e-5);
+  }
+  const sheetAt=(x,y)=>{
+    let sheet=-1,z=-Infinity;
+    for(const [fi,ai,bi,ci]of paperTriangles(m)){
+      const a=p[ai],b=p[bi],c=p[ci];
+      const den=(b.y-c.y)*(a.x-c.x)+(c.x-b.x)*(a.y-c.y);
+      if(Math.abs(den)<1e-10)continue;
+      const u=((b.y-c.y)*(x-c.x)+(c.x-b.x)*(y-c.y))/den;
+      const v=((c.y-a.y)*(x-c.x)+(a.x-c.x)*(y-c.y))/den,w=1-u-v;
+      const depth=u*a.z+v*b.z+w*c.z;
+      if(Math.min(u,v,w)>=-1e-9&&depth>z){sheet=m.faceSheet[fi];z=depth;}
+    }
+    return sheet;
+  };
+  for(const d of [.02,.05,.1]){
+    assert.equal(sheetAt(.001,d),0);assert.equal(sheetAt(.001,-d),0);
+    assert.equal(sheetAt(d,.001),1);assert.equal(sheetAt(-d,.001),1);
+  }
+  const start=computeFoldState(m,0).positions;
+  let area=0;
+  for(const [,a,b,c] of paperTriangles(m)){
+    area+=start[b].clone().sub(start[a]).cross(start[c].clone().sub(start[a])).length()/2;
+  }
+  assert.ok(Math.abs(area-8)<1e-8,'both complete squares survive panel merging');
 });
 
 test('cup opens with its folded corners attached to the front wall', async () => {

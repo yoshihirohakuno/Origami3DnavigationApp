@@ -84,8 +84,10 @@ export async function coverage(model, t, { grid = 120, detail = false } = {}) {
   const per = new Map();
   for (let i = 0; i < grid; i++) {
     for (let j = 0; j < grid; j++) {
-      const x = x0 + ((x1 - x0) * (i + 0.5)) / grid;
-      const y = y0 + ((y1 - y0) * (j + 0.5)) / grid;
+      // Avoid sampling a whole diagonal of shared triangle edges: roundoff can
+      // otherwise count the covered reverse face as visible along that seam.
+      const x = x0 + ((x1 - x0) * (i + 0.371)) / grid;
+      const y = y0 + ((y1 - y0) * (j + 0.613)) / grid;
       let best = -1;
       let bestTriangle;
       let bz = -Infinity;
