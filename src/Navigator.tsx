@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { OrigamiModel, FoldType } from './engine/types';
 import { computeFoldState, isGuideFold } from './engine/fold';
+import { computeNavigationState, stepPlayback } from './engine/navigation';
 import { buildStepDiagrams } from './CreasePattern';
 import { PaperScene } from './three/PaperScene';
 import { LangToggle, useLang } from './i18n';
@@ -72,7 +73,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   // 工程一覧の折り図サムネイル。ナビ画面は毎フレーム再描画されるので、
   // 作品ごとに1回だけ作って要素をそのまま使い回す(同じ要素なら React が
   // その部分木の再描画を省く)
-  const stepDiagrams = useMemo(() => buildStepDiagrams(model), [model]);
+  const stepDiagrams = useMemo(() => buildStepDiagrams(model, 44, 'after'), [model]);
   const [shared, setShared] = useState(false);
   const [shareFallback, setShareFallback] = useState<string | null>(null);
   /**
@@ -118,7 +119,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
     let raf = 0;
     let last = performance.now();
     let lastTime = -1;
-    let state = computeFoldState(model, 0);
+    let state = computeNavigationState(model, 0);
     const loop = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.1);
       last = now;
@@ -132,7 +133,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         setPlaying(false);
       }
       if (tRef.current !== lastTime) {
-        state = computeFoldState(model, tRef.current);
+        state = computeNavigationState(model, tRef.current);
         lastTime = tRef.current;
         setUi({ t: lastTime, stepIndex: state.stepIndex, fraction: state.fraction });
       }
@@ -193,6 +194,11 @@ export function Navigator({ model, onExit, onComplete }: Props) {
     setPlaying(false);
   };
   const next = () => goTo(Math.min(Math.floor(tRef.current + 1e-6) + 1, total));
+  const selectStep = (index: number) => {
+    const { start, target } = stepPlayback(index, total);
+    tRef.current = start;
+    goTo(target);
+  };
   const prev = () => {
     const t = tRef.current;
     goTo(Math.abs(t - Math.round(t)) < 1e-6 ? Math.round(t) - 1 : Math.floor(t));
@@ -271,6 +277,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   const foldType = visibleFolds[0]?.type ?? 'assemble';
   const mixed = visibleFolds.some((f) => f.type !== foldType);
   const finished = ui.t >= total;
+  const stepComplete = ui.fraction === 1;
   const left = total - ui.stepIndex - (ui.fraction >= 1 ? 1 : 0);
   const pct = (ui.t / total) * 100;
 
@@ -304,7 +311,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
 
       <div className="canvas-wrap">
         <canvas ref={canvasRef} />
-        {!finished && <div className={`fold-badge ${mixed ? 'mixed' : foldType}`}>
+        {!finished && !stepComplete && <div className={`fold-badge ${mixed ? 'mixed' : foldType}`}>
           <i />
           <div>
             <strong>{mixed ? t('collapse') : L(FOLD_LABEL[foldType])}</strong>
@@ -339,12 +346,12 @@ export function Navigator({ model, onExit, onComplete }: Props) {
           帯にして出す(PCでは右のパネルがあるので非表示) */}
       <nav className="route-rail" aria-label={t('routeList')} ref={railRef}>
         {model.steps.map((s, i) => {
-          const cls = ui.t >= i + 1 - 1e-6 ? 'done' : i === ui.stepIndex ? 'current' : '';
+          const cls = `${ui.t >= i + 1 ? 'done' : ''} ${i === ui.stepIndex ? 'current' : ''}`;
           return (
             <button
               key={i}
               className={`rail-item ${cls}`}
-              onClick={() => goTo(i)}
+              onClick={() => selectStep(i)}
               aria-label={`${t('stepN', { n: i + 1 })} — ${L(s.description)}`}
               aria-current={i === ui.stepIndex ? 'step' : undefined}
             >
@@ -361,11 +368,10 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         </p>
         <ol className="step-list">
           {model.steps.map((s, i) => {
-            const cls =
-              ui.t >= i + 1 - 1e-6 ? 'done' : i === ui.stepIndex ? 'current' : '';
+            const cls = `${ui.t >= i + 1 ? 'done' : ''} ${i === ui.stepIndex ? 'current' : ''}`;
             return (
               <li key={i} className={cls}>
-                <button onClick={() => goTo(i)}>
+                <button onClick={() => selectStep(i)} aria-current={i === ui.stepIndex ? 'step' : undefined}>
                   <span className="sl-num">{String(i + 1).padStart(2, '0')}</span>
                   <span className="sl-thumb">{stepDiagrams[i]}</span>
                   <i className={`sl-dot ${s.folds[0].type}`} />
@@ -380,6 +386,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
       <div className="step-card">
         <p className="step-label">
           {finished ? 'COMPLETE' : `STEP ${String(ui.stepIndex + 1).padStart(2, '0')}`}
+          {!finished && <span className="step-status">{t(stepComplete ? 'stepComplete' : ui.t === 0 ? 'beforeFold' : 'stepInProgress')}</span>}
         </p>
         <p className="step-desc">
           {finished ? t('isComplete', { name: L(model.name) }) : L(step.description)}

@@ -4,6 +4,7 @@ import { readdirSync } from 'node:fs';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { computeFoldState, isGuideFold } from '../src/engine/fold.ts';
+import { computeNavigationState, stepPlayback } from '../src/engine/navigation.ts';
 import { paperTriangles } from '../src/engine/mesh.ts';
 import { renderFaceOffsets } from '../src/engine/renderLayers.ts';
 import { orderPaper } from '../src/engine/painter.ts';
@@ -101,6 +102,56 @@ test('pocket checkpoints are continuous, scrub backwards, and survive JSON expor
         if(Math.abs(t-i)<.001)assert.ok(distance(boundary,computeFoldState(m,t).positions)<.0001);
       }
     });
+  }
+});
+
+test('selecting crane squash steps plays through to matching lower tips and keeps that step selected', () => {
+  const m=MODELS.find(m=>m.id==='crane');
+  for(const [step,tip] of [[4,6],[7,2]]){
+    const {start,target}=stepPlayback(step-1,m.steps.length);
+    assert.equal(start,step-1);
+    const opened=computeNavigationState(m,start);
+    assert.ok(opened.positions[tip].distanceTo(opened.positions[8])>1,'the pocket really starts open');
+    let previousGap=Infinity;
+    for(let t=start+.125;t<=target;t+=.125){
+      const state=computeNavigationState(m,t),gap=state.positions[tip].distanceTo(state.positions[8]);
+      assert.equal(state.stepIndex+1,step,'show the fold being completed');
+      assert.ok(gap<previousGap,'continue closing rather than stop at the opening checkpoint');
+      previousGap=gap;
+    }
+    const closed=computeNavigationState(m,target);
+    assert.equal(target,step,'route selection must reach the end, not the start, of the selected step');
+    assert.ok(closed.positions[tip].distanceTo(closed.positions[8])<1e-9,'front and back lower tips meet');
+    assert.equal(closed.fraction,1);
+    assert.equal(closed.guides.length,0,'do not display the following fold over the completed shape');
+  }
+});
+
+test('navigation labels completed stages consistently in every model without changing paper geometry', () => {
+  for(const m of MODELS){
+    assert.equal(computeNavigationState(m,0).fraction,0);
+    for(let step=1;step<=m.steps.length;step++){
+      const completed=computeNavigationState(m,step),physical=computeFoldState(m,step);
+      assert.equal(completed.stepIndex,step-1,`${m.id} completed step ${step}`);
+      assert.equal(completed.fraction,1);
+      assert.equal(completed.guides.length,0);
+      assert.equal(completed.movingFaces.size,0);
+      assert.equal(distance(completed.positions,physical.positions),0);
+      assert.ok(distance(renderFaceOffsets(m,completed),renderFaceOffsets(m,physical))<1e-10);
+      const during=computeNavigationState(m,step-.5);
+      assert.equal(during.stepIndex,step-1);
+      assert.equal(during.fraction,.5);
+    }
+  }
+});
+
+test('route thumbnails show the completed squash and petal poses rather than their open starting poses', () => {
+  const m=MODELS.find(m=>m.id==='crane');
+  const before=buildStepDiagrams(m),after=buildStepDiagrams(m,44,'after');
+  const paper=element=>renderToStaticMarkup(element).replace(/<line\b[^>]*><\/line>/g,'');
+  for(const i of [3,6,8,10]){
+    assert.equal(paper(after[i]),paper(before[i+1]),`finished pose for step ${i+1}`);
+    assert.notEqual(paper(after[i]),paper(before[i]),'do not reuse the open-pocket thumbnail');
   }
 });
 

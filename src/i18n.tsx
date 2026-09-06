@@ -55,6 +55,9 @@ const DICT = {
   route: { ja: '工程', en: 'Route' },
   routeList: { ja: '工程一覧', en: 'Step list' },
   stepN: { ja: `工程${'{n}'}`, en: `Step ${'{n}'}` },
+  stepComplete: { ja: 'この工程は完了', en: 'Step complete' },
+  beforeFold: { ja: '折る前', en: 'Before folding' },
+  stepInProgress: { ja: '折りの途中', en: 'Fold in progress' },
   reset: { ja: '最初から', en: 'Reset' },
   back: { ja: '戻る', en: 'Back' },
   next: { ja: '次へ', en: 'Next' },
@@ -84,7 +87,7 @@ const DICT = {
   hintTitle: { ja: '使い方', en: 'How it works' },
   hintDrag: { ja: '3Dはドラッグで回せます。ピンチ/ホイールで拡大。', en: 'Drag to turn the model. Pinch or scroll to zoom.' },
   hintSlider: { ja: 'スライダーで折りの途中まで戻せます。', en: 'Drag the slider to scrub through a fold.' },
-  hintList: { ja: '工程の一覧から、好きな工程へ飛べます。', en: 'Jump to any step from the route list.' },
+  hintList: { ja: '工程を選ぶと、その折りを完了するまで再生します。', en: 'Select a step to play that fold through to completion.' },
   hintClose: { ja: 'はじめる', en: 'Got it' },
   showHint: { ja: '使い方', en: 'How it works' },
   hintKeys: {

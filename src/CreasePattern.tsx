@@ -277,9 +277,8 @@ export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; s
 }
 
 /**
- * 工程一覧用の折り図サムネイル。各工程を **折る前** の形(=その工程を押したとき
- * 画面に出る状態)で描き、これから折る線を折り種類の色と破線で重ねる。
- * 折り図と同じ「紙+これから入れる折り線」の見せ方になる。
+ * 工程一覧用の折り図サムネイル。ナビは after を指定し、各工程の完了形を示す。
+ * before では折る前の紙と、これから入れる折り線を描く。
  *
  * 枠(中心)は全工程で共通なので、一覧を上から下へ見ると紙が同じ場所で
  * 畳まれて小さくなっていくのが分かる。ただし畳んだ形が枠に対して小さく
@@ -289,15 +288,15 @@ export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; s
  * 工程数ぶん computeFoldState を回すため、呼び出し側で作品ごとに1回だけ
  * 作って使い回すこと(ナビ画面は毎フレーム再描画されるため)。
  */
-export function buildStepDiagrams(model: OrigamiModel, size = 44): ReactElement[] {
+export function buildStepDiagrams(model: OrigamiModel, size = 44, pose: 'before' | 'after' = 'before'): ReactElement[] {
   const view = viewFor(model);
-  // 各工程の「折る前」= t が 0..N-1 の状態。枠は完成形(t=N)も入れて決める
-  const states = model.steps.map((_, i) => computeFoldState(model, i));
+  const states = model.steps.map((_, i) => computeFoldState(model, i + (pose === 'after' ? 1 : 0)));
+  const initialPositions = computeFoldState(model, 0).positions;
   const finalPositions = computeFoldState(model, model.steps.length).positions;
   const used = usedVertices(model);
   const FILL = 82;
   const common = frameFor(
-    [...states.map(state => state.positions), finalPositions].map((ps) => used.map((vi) => ps[vi])),
+    [initialPositions, ...states.map(state => state.positions), finalPositions].map((ps) => used.map((vi) => ps[vi])),
     view,
     FILL,
   );
@@ -323,7 +322,7 @@ export function buildStepDiagrams(model: OrigamiModel, size = 44): ReactElement[
             事前分割の線まで濃く出ると網目に見えて形が読めなくなる */}
         <PaperPolygons model={model} state={states[i]} view={view} frame={frame}
           edge={{ color: 'rgba(37,38,44,0.4)', width: 0.5 }} />
-        {step.folds.filter(op => isGuideFold(op) && (op.timing?.[0] ?? 0) === 0).map((op, k) => {
+        {pose === 'before' && step.folds.filter(op => isGuideFold(op) && (op.timing?.[0] ?? 0) === 0).map((op, k) => {
           const a = line(positions[op.axis[0]]);
           const b = line(positions[op.axis[1]]);
           return (

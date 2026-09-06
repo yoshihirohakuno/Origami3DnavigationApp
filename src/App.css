@@ -699,7 +699,7 @@
   background: rgba(224, 73, 47, 0.06);
 }
 
-.step-list li.done button {
+.step-list li.done:not(.current) button {
   color: var(--faint);
 }
 
@@ -717,7 +717,7 @@
   width: 30px;
 }
 
-/* 工程の折り図サムネイル(折る前の紙+これから入れる折り線) */
+/* 工程を折り終えた形のサムネイル */
 .sl-thumb {
   display: block;
   flex-shrink: 0;
@@ -734,7 +734,7 @@
   display: block;
 }
 
-.step-list li.done .sl-thumb {
+.step-list li.done:not(.current) .sl-thumb {
   opacity: 0.5;
 }
 
@@ -797,6 +797,12 @@
   font-size: 9px;
   letter-spacing: 0.3em;
   color: var(--accent);
+}
+
+.step-status {
+  margin-left: 12px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
 }
 
 .step-desc {
