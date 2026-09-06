@@ -72,12 +72,19 @@ function planeZ(P, f, x, y) {
 export async function coverage(model, t, { grid = 120, detail = false } = {}) {
   const { computeFoldState } = await import('../src/engine/fold.ts');
   const { paperTriangles } = await import('../src/engine/mesh.ts');
-  const P = computeFoldState(model, t).positions;
+  const { renderFaceOffsets } = await import('../src/engine/renderLayers.ts');
+  const state = computeFoldState(model, t);
+  const P = [...state.positions], offsets = renderFaceOffsets(model, state);
   const used = [...new Set(model.faces.flat())];
   const xs = used.map(vi => P[vi].x);
   const ys = used.map(vi => P[vi].y);
   // Use the actual WebGL triangles, including non-planar quadrilaterals.
-  const triangles = paperTriangles(model).map(([face, ...vertices]) => ({face, vertices}));
+  const triangles = paperTriangles(model).map(([face, ...vertices]) => ({face,
+    vertices: !model.renderLayerSeparation ? vertices : vertices.map(vi => {
+      P.push(state.positions[vi].clone().add(offsets[face]));
+      return P.length - 1;
+    }),
+  }));
   const x0 = Math.min(...xs), x1 = Math.max(...xs);
   const y0 = Math.min(...ys), y1 = Math.max(...ys);
   let hit = 0, back = 0;

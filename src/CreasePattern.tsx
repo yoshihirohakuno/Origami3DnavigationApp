@@ -1,8 +1,9 @@
 import { useId, type ReactElement } from 'react';
-import { computeFoldState, isGuideFold } from './engine/fold';
+import { computeFoldState, isGuideFold, type FoldState } from './engine/fold';
 import type { OrigamiModel, FoldType } from './engine/types';
 import { paperTriangles } from './engine/mesh';
 import { orderPaper } from './engine/painter';
+import { renderFaceOffsets } from './engine/renderLayers';
 
 /** 折り種類ごとの表示色(UI全体で共通) */
 export const FOLD_COLORS: Record<FoldType, string> = {
@@ -206,11 +207,12 @@ const toSvgX = (x: number, frame: Frame) => 50 + (x - frame.cx) * frame.scale;
 const toSvgY = (y: number, frame: Frame) => 50 - (y - frame.cy) * frame.scale;
 
 /** 紙をSVGのポリゴン列にする(奥から手前の順。表裏で色を変える) */
-function PaperPolygons({ model, positions, view, frame,
+function PaperPolygons({ model, state, view, frame,
   edge = { color: '#25262c', width: 0.85 },
-}: { model: OrigamiModel; positions: Point3[]; view: View; frame: Frame;
+}: { model: OrigamiModel; state: FoldState; view: View; frame: Frame;
   edge?: { color: string; width: number } }): ReactElement[] {
   const clipId = useId();
+  const positions = state.positions;
   // 作品ごとの紙色(sheetColors)を使う。ハート・箱・くじら・兜などは
   // 既定の「薄い赤/白」ではないので、既定色のままだと完成形が無色に見える
   const sheetColorOf = (faceIndex: number): { front: string; back: string } => {
@@ -218,10 +220,13 @@ function PaperPolygons({ model, positions, view, frame,
     return model.sheetColors?.[sheet] ?? { front: PAPER_FRONT, back: PAPER_BACK };
   };
 
-  const projected = positions.map(p => ({ ...flatten(p, view),
-    z: view ? p.x * view.zAxis[0] + p.y * view.zAxis[1] + p.z * view.zAxis[2] : p.z,
-  }));
-  const triangles = paperTriangles(model).map(([face, ...ids]) => ({ face, points: ids.map(vi => projected[vi]) }))
+  const offsets = renderFaceOffsets(model, state);
+  const project = (p: Point3) => ({ ...flatten(p, view),
+    z: view ? p.x * view.zAxis[0] + p.y * view.zAxis[1] + p.z * view.zAxis[2] : p.z });
+  const common = positions.map(project);
+  const projected = model.faces.map((_, fi) => model.renderLayerSeparation
+    ? positions.map(position => project(position.clone().add(offsets[fi]))) : common);
+  const triangles = paperTriangles(model).map(([face, ...ids]) => ({ face, points: ids.map(vi => projected[face][vi]) }))
     .filter(p => Math.abs(projectedArea(p.points)) > 1e-10);
   const svgPoint = (p: { x: number; y: number }) =>
     `${toSvgX(p.x, frame).toFixed(4)},${toSvgY(p.y, frame).toFixed(4)}`;
@@ -234,7 +239,7 @@ function PaperPolygons({ model, positions, view, frame,
       const b = polygon.points[(i + 1) % polygon.points.length];
       if (Math.hypot(a.x - b.x, a.y - b.y) < 1e-8) return [];
       const onEdge = face.some((vi, j) => {
-        const p = projected[vi], q = projected[face[(j + 1) % face.length]];
+        const p = projected[polygon.face][vi], q = projected[polygon.face][face[(j + 1) % face.length]];
         const dx = q.x - p.x, dy = q.y - p.y, length = Math.hypot(dx, dy);
         const on = (r: Point3) => length > 1e-9 &&
           Math.abs(dx * (r.y - p.y) - dy * (r.x - p.x)) < 1e-7 * length &&
@@ -266,7 +271,7 @@ export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; s
 
   return (
     <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
-      <PaperPolygons model={model} positions={positions} view={view} frame={frame} />
+      <PaperPolygons model={model} state={state} view={view} frame={frame} />
     </svg>
   );
 }
@@ -287,18 +292,18 @@ export function FinalShapePreview({ model, size = 96 }: { model: OrigamiModel; s
 export function buildStepDiagrams(model: OrigamiModel, size = 44): ReactElement[] {
   const view = viewFor(model);
   // 各工程の「折る前」= t が 0..N-1 の状態。枠は完成形(t=N)も入れて決める
-  const states = model.steps.map((_, i) => computeFoldState(model, i).positions);
+  const states = model.steps.map((_, i) => computeFoldState(model, i));
   const finalPositions = computeFoldState(model, model.steps.length).positions;
   const used = usedVertices(model);
   const FILL = 82;
   const common = frameFor(
-    [...states, finalPositions].map((ps) => used.map((vi) => ps[vi])),
+    [...states.map(state => state.positions), finalPositions].map((ps) => used.map((vi) => ps[vi])),
     view,
     FILL,
   );
 
   return model.steps.map((step, i) => {
-    const positions = states[i];
+    const positions = states[i].positions;
     // 共通の中心を保ったままこの工程の紙が枠いっぱいに入る縮尺(寄れる上限)
     const offset = used
       .map((vi) => flatten(positions[vi], view))
@@ -316,7 +321,7 @@ export function buildStepDiagrams(model: OrigamiModel, size = 44): ReactElement[
       <svg key={i} viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
         {/* 面の境目(=すでについている折りすじ)は細く薄く。小さいサムネイルでは
             事前分割の線まで濃く出ると網目に見えて形が読めなくなる */}
-        <PaperPolygons model={model} positions={positions} view={view} frame={frame}
+        <PaperPolygons model={model} state={states[i]} view={view} frame={frame}
           edge={{ color: 'rgba(37,38,44,0.4)', width: 0.5 }} />
         {step.folds.filter(op => isGuideFold(op) && (op.timing?.[0] ?? 0) === 0).map((op, k) => {
           const a = line(positions[op.axis[0]]);

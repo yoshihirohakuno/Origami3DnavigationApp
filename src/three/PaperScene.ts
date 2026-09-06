@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { OrigamiModel } from '../engine/types';
 import { computeFoldState, type FoldState } from '../engine/fold';
 import { paperTriangles } from '../engine/mesh';
+import { renderFaceOffsets } from '../engine/renderLayers';
 
 const COLOR_FRONT = new THREE.Color('#eda6a2'); // 紙の表(薄い赤)
 const COLOR_FRONT_HL = new THREE.Color('#f5c2bd'); // 表・折る面ハイライト
@@ -43,7 +44,7 @@ export class PaperScene {
   /** 面ごとの三角形分割 [faceIndex, v0, v1, v2] */
   private tris: [number, number, number, number][] = [];
   /** 面の輪郭線の頂点ペア */
-  private edgePairs: [number, number][] = [];
+  private edgePairs: [number, number, number][] = [];
   /** 2枚組み用:面→シート番号。null なら単一シート(グローバル色) */
   private faceSheet: number[] | null = null;
   /** シートごとの [表, 表HL, 裏, 裏HL] 色 */
@@ -116,9 +117,9 @@ export class PaperScene {
     });
     this.tris = paperTriangles(model);
     this.edgePairs = [];
-    model.faces.forEach((face) => {
+    model.faces.forEach((face, fi) => {
       for (let i = 0; i < face.length; i++) {
-        this.edgePairs.push([face[i], face[(i + 1) % face.length]]);
+        this.edgePairs.push([fi, face[i], face[(i + 1) % face.length]]);
       }
     });
     const triCount = this.tris.length;
@@ -163,6 +164,7 @@ export class PaperScene {
 
   private updateGeometry(state: FoldState): void {
     const pos = state.positions;
+    const offsets = renderFaceOffsets(this.model!, state);
 
     const a = new THREE.Vector3();
     const b = new THREE.Vector3();
@@ -190,7 +192,8 @@ export class PaperScene {
         }
         for (const [k, p] of [p0, p1, p2].entries()) {
           const idx = ti * 3 + k;
-          pAttr.setXYZ(idx, p.x, p.y, p.z);
+          const offset = offsets[fi];
+          pAttr.setXYZ(idx, p.x + offset.x, p.y + offset.y, p.z + offset.z);
           nAttr.setXYZ(idx, n.x, n.y, n.z);
           cAttr.setXYZ(idx, col.r, col.g, col.b);
         }
@@ -202,9 +205,10 @@ export class PaperScene {
     }
 
     const eAttr = this.edgeLines.geometry.getAttribute('position') as THREE.BufferAttribute;
-    this.edgePairs.forEach(([v0, v1], i) => {
-      eAttr.setXYZ(i * 2, pos[v0].x, pos[v0].y, pos[v0].z);
-      eAttr.setXYZ(i * 2 + 1, pos[v1].x, pos[v1].y, pos[v1].z);
+    this.edgePairs.forEach(([fi, v0, v1], i) => {
+      const offset = offsets[fi];
+      eAttr.setXYZ(i * 2, pos[v0].x + offset.x, pos[v0].y + offset.y, pos[v0].z + offset.z);
+      eAttr.setXYZ(i * 2 + 1, pos[v1].x + offset.x, pos[v1].y + offset.y, pos[v1].z + offset.z);
     });
     eAttr.needsUpdate = true;
     this.edgeLines.geometry.computeBoundingSphere();

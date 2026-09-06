@@ -28,12 +28,12 @@ const PLANS: Record<string, Record<number, Plan>> = {
       ['こちらも左右を内側へたたみ、細いひし形にします。', 'Tuck these sides inward into a narrow diamond too.'],
     ] },
     8: { captions: [
-      ['下の細い先を1本、紙の間へ中割り折りして立てます。', 'Inside-reverse one thin lower point upward between the layers.'],
-      ['立てた先を斜めに開き、首の向きを整えます。', 'Angle the raised point outward to position the neck.'],
+      ['下の先を1本、斜めの折り線で途中まで持ち上げます。', 'Lift one lower point halfway along the diagonal crease.'],
+      ['同じ折り線で最後まで折り上げ、首にします。', 'Finish folding along the same crease to form the neck.'],
     ] },
     9: { captions: [
-      ['もう1本の細い先を、紙の間へ中割り折りして立てます。', 'Inside-reverse the other thin point upward.'],
-      ['首とは反対へ斜めに開き、尾の向きを整えます。', 'Angle this point away from the neck to position the tail.'],
+      ['もう1本の下の先を、反対向きの折り線で持ち上げます。', 'Lift the other lower point along the opposite diagonal crease.'],
+      ['同じ折り線で最後まで折り上げ、尾にします。', 'Finish folding along that crease to form the tail.'],
     ] },
     11: { captions: [
       ['手前の大きな1枚を開き、片方の羽にします。', 'Open the front large flap into one wing.'],

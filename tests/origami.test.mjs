@@ -5,6 +5,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { computeFoldState, isGuideFold } from '../src/engine/fold.ts';
 import { paperTriangles } from '../src/engine/mesh.ts';
+import { renderFaceOffsets } from '../src/engine/renderLayers.ts';
 import { orderPaper } from '../src/engine/painter.ts';
 import { splitFacesByLine } from '../src/engine/split.ts';
 import { FinalShapePreview, buildStepDiagrams } from '../src/CreasePattern.tsx';
@@ -128,6 +129,72 @@ test('separate collinear corners do not move together, but overlapping layers st
   const other=dog.steps[2].folds.find(isGuideFold).moving;
   assert.ok(other.every(vi=>before[vi].distanceTo(oneEar[vi])<1e-8),'second ear stays put');
   assert.ok(other.some(vi=>both[vi].distanceTo(oneEar[vi])>.1),'second ear moves on the next action');
+});
+
+test('crane petal folds lift opposite pages and keep adjoining corners attached', () => {
+  const m=MODELS.find(m=>m.id==='crane');
+  const base=computeFoldState(m,7).positions;
+  for(const t of [7.25,7.5,8,8.5,9]){
+    const p=computeFoldState(m,t).positions;
+    for(const vi of [4,6,8]) assert.ok(p[vi].distanceTo(base[vi])<1e-8,'the other tips stay down');
+  }
+  const first=computeFoldState(m,9).positions, both=computeFoldState(m,11).positions;
+  assert.ok(first[2].y>.5 && first[6].y< -1);
+  assert.ok(both[2].y>.5 && both[6].y>.5,'opposite corners become wings');
+  assert.ok(both[4].y< -1 && both[8].y< -1,'neck and tail remain below');
+  for(const vi of [1,3,5,7])assert.ok(both[vi].distanceTo(both[11])<1e-8,'shared side points meet the center hinge');
+});
+
+test('crane retains every panel shape and triangle area through all 18 stages', () => {
+  const m=MODELS.find(m=>m.id==='crane'),q=computeFoldState(m,0).positions;
+  const triangles=paperTriangles(m);
+  const area=(p,a,b,c)=>p[b].clone().sub(p[a]).cross(p[c].clone().sub(p[a])).length()/2;
+  const areas=triangles.map(([,a,b,c])=>area(q,a,b,c));
+  for(let t=0;t<=18;t+=.025){
+    const p=computeFoldState(m,t).positions;
+    for(const f of m.faces)for(const a of f)for(const b of f)
+      assert.ok(Math.abs(p[a].distanceTo(p[b])-q[a].distanceTo(q[b]))<1e-8,`stretched panel at ${t}`);
+    triangles.forEach(([,a,b,c],i)=>assert.ok(Math.abs(area(p,a,b,c)-areas[i])<1e-8,`collapsed panel at ${t}`));
+  }
+  const edges=new Map();
+  for(const f of m.faces)f.forEach((a,i)=>{const b=f[(i+1)%f.length],k=[a,b].sort((x,y)=>x-y).join(',');
+    edges.set(k,(edges.get(k)??0)+1);});
+  const unit=modelOf('square-base').vertices[1][0];
+  const onBoundary=(a,b)=>[1,-1].some(sign=>
+    Math.abs(q[a].x+q[a].y-sign*2*unit)<1e-8&&Math.abs(q[b].x+q[b].y-sign*2*unit)<1e-8 ||
+    Math.abs(q[a].x-q[a].y-sign*2*unit)<1e-8&&Math.abs(q[b].x-q[b].y-sign*2*unit)<1e-8);
+  for(const [k,n]of edges){const [a,b]=k.split(',').map(Number);assert.equal(n,onBoundary(a,b)?1:2,`unjoined material edge ${k}`);}
+  assert.ok(Math.abs(areas.reduce((a,b)=>a+b,0)-8*unit*unit)<1e-8,'one complete square');
+});
+
+test('crane outer pocket and petal layers keep the colored surface outside', async () => {
+  const m=MODELS.find(m=>m.id==='crane');
+  assert.equal(await coverage(m,0),100,'start white side up');
+  for(const t of [1,2,4,5,7,9,11,18])assert.equal(await coverage(m,t),0,`outside color at ${t}`);
+  const bird=computeFoldState(m,11).positions;
+  // The two halves of each lower point lie on the same side of the body.
+  assert.ok(bird[10].x<0 && bird[14].x<0,'neck packet is on the left');
+  assert.ok(bird[9].x>0 && bird[12].x>0,'tail packet is on the right');
+});
+
+test('display layer spacing leaves the connected geometry untouched and turns over with the sheet', () => {
+  const m=MODELS.find(m=>m.id==='crane');
+  for(const t of [0,4,5,7,8.5,9,10.5,11,18]){
+    const state=computeFoldState(m,t), original=state.positions.map(p=>p.clone());
+    const offsets=renderFaceOffsets(m,state);
+    assert.equal(distance(state.positions,original),0,'rendering cannot stretch paper');
+    assert.ok(offsets.every(p=>Number.isFinite(p.length()) && p.length()<.001));
+    const restored=JSON.parse(JSON.stringify(m));
+    assert.ok(distance(offsets,renderFaceOffsets(restored,computeFoldState(restored,t)))<1e-10);
+  }
+  const before=renderFaceOffsets(m,computeFoldState(m,4)),after=renderFaceOffsets(m,computeFoldState(m,5));
+  before.forEach((p,i)=>assert.ok(p.clone().add(after[i]).length()<1e-9,'turning over reverses the stack depth'));
+  for(let i=1;i<m.steps.length;i++){
+    const at=renderFaceOffsets(m,computeFoldState(m,i));
+    for(const t of [i-.00001,i+.00001])assert.ok(distance(at,renderFaceOffsets(m,computeFoldState(m,t)))<1e-7,'no layer jump at a checkpoint');
+  }
+  const empty={...m,steps:[]};
+  assert.ok(renderFaceOffsets(empty,computeFoldState(empty,0)).every(p=>p.length()===0));
 });
 
 test('an unfold which leaves the paper partly folded is retained', () => {

@@ -64,6 +64,9 @@ export interface FoldOp {
   /** Four triangular panels of a square/waterbomb pocket. The rim rotates
    * about axis; the tip follows the sphere constraints against the fixed pivot. */
   pocket?: { rim: number; tip: number; pivot: number };
+  /** Lift a petal while both shared edge points remain the intersection of
+   * spheres about their crease anchor, the lifted tip and the adjacent tip. */
+  petal?: { tip: number; sides: [point: number, anchor: number, neighbor: number][] };
 }
 
 /**
@@ -111,4 +114,6 @@ export interface OrigamiModel {
   triangles?: [face: number, a: number, b: number, c: number][];
   /** Rendered copies of the same material point must stay connected, including at creases. */
   vertexWelds?: number[][];
+  /** Opt-in display-only layer spacing for exactly flat connected mechanisms. */
+  renderLayerSeparation?: number;
 }

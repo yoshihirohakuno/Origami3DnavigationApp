@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { OrigamiModel, FoldOp, FoldType } from './types';
+import { petalSide } from './petal';
 
 /** イージング(工程内アニメーション用) */
 export function easeInOut(a: number): number {
@@ -81,6 +82,7 @@ function buildArrowPath(
   range: [number, number] = [0, 1],
 ): THREE.Vector3[] {
   if (op.pocket) return buildArrowPath({ ...op, pocket: undefined, moving: [op.pocket.rim] }, sign, positions, p1, axisDir, range);
+  if (op.petal) return buildArrowPath({ ...op, petal: undefined, moving: [op.petal.tip] }, sign, positions, p1, axisDir, range);
   if (op.targets?.length) {
     const target = op.targets.reduce((best, p) => {
       const distance = (v: typeof p) => positions[v[0]].distanceToSquared(new THREE.Vector3(v[1], v[2], v[3]));
@@ -177,7 +179,8 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
         _q.setFromAxisAngle(axisDir, angle);
         if (op.spinZ) _qSpin.setFromAxisAngle(Z_AXIS, THREE.MathUtils.degToRad(op.spinZ) * e);
         const tr = op.translate;
-        for (const vi of op.pocket ? [op.pocket.rim] : op.moving) {
+        const beforeTip = op.petal ? positions[op.petal.tip].clone() : undefined;
+        for (const vi of op.pocket ? [op.pocket.rim] : op.petal ? [op.petal.tip] : op.moving) {
           rotateAbout(positions[vi], p1, _q);
           if (op.spinZ) rotateAbout(positions[vi], p1, _qSpin);
           if (tr) {
@@ -185,6 +188,10 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
             positions[vi].y += tr[1] * e;
             positions[vi].z += tr[2] * e;
           }
+        }
+        if (op.petal) for (const [point, anchor, neighbor] of op.petal.sides) {
+          positions[point].copy(petalSide(positions[point], positions[anchor], positions[neighbor],
+            beforeTip!, positions[op.petal.tip]));
         }
         if (op.pocket) {
           // The hinge endpoint is one intersection of the tip's three spheres.
