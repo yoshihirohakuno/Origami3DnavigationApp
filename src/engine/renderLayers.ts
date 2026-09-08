@@ -40,7 +40,12 @@ export function renderFaceOffsets(model: OrigamiModel, state: FoldState): Vector
         Math.abs(a.distanceToSquared(b) - near[i].distanceToSquared(near[j])) < 1e-10));
       if (rigid) { layers.push([...previous]); continue; }
       const nearNormals = normals(model, near);
-      const depth = model.faces.map((face, fi) => face.reduce((sum, vi) => sum + near[vi].z - end[vi].z, 0) / face.length
+      const endDepth = model.faces.map(face => face.reduce((sum, vi) => sum + end[vi].z, 0) / face.length);
+      // Compiled flat folds already have a real stack order. Expand that order
+      // for depth-buffer precision; an approach-based order would invert tucks.
+      // Exactly coplanar connected mechanisms still need the approach heuristic.
+      const separated = Math.max(...endDepth) - Math.min(...endDepth) > 1e-8;
+      const depth = separated ? endDepth : model.faces.map((face, fi) => face.reduce((sum, vi) => sum + near[vi].z - end[vi].z, 0) / face.length
         + nearNormals[fi].z * previous[fi] * 1e-6);
       const order = model.faces.map((_, fi) => fi).sort((a, b) => depth[a] - depth[b] || a - b);
       const next = [...previous];

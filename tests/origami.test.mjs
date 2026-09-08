@@ -14,6 +14,7 @@ import { coverage } from '../tools/audit-cover.mjs';
 import { referenceOf } from '../src/modelReferences.ts';
 import { MODELS } from '../src/modelLibrary.ts';
 import { withoutCreasePreparation } from '../src/engine/withoutCreasePreparation.ts';
+import { categoryOf } from '../src/catalog.ts';
 
 const models = [];
 for (const file of readdirSync(new URL('../src/models/', import.meta.url)).filter(f => f.endsWith('.ts'))) {
@@ -465,6 +466,83 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.05,.4).front,true);
   assert.equal(visibleAt(acorn,.05,-.15).front,false);
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
+});
+
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10]]) {
+  test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
+    const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
+    assert.equal(m.steps.length,count);
+    assert.notEqual(categoryOf(id),'other');
+    assert.ok(m.steps.every(s=>s.folds.filter(isGuideFold).length===1));
+    const triangleArea=paperTriangles(m).reduce((sum,[,a,b,c])=>sum+initial[b].clone().sub(initial[a]).cross(initial[c].clone().sub(initial[a])).length()/2,0);
+    assert.ok(Math.abs(triangleArea-area)<1e-8,'all the original paper is retained');
+    const copies=new Map();
+    for(const vi of new Set(m.faces.flat())){
+      const key=m.vertices[vi].map(n=>Math.round(n*1e8)).join(',');
+      if(!copies.has(key))copies.set(key,[]);
+      copies.get(key).push(vi);
+    }
+    for(let tick=0;tick<=m.steps.length*20;tick++){
+      const p=computeFoldState(m,tick/20).positions;
+      for(const face of m.faces)for(const a of face)for(const b of face)
+        assert.ok(Math.abs(p[a].distanceTo(p[b])-initial[a].distanceTo(initial[b]))<1e-8,`panel distortion at ${tick/20}`);
+      for(const group of copies.values())for(const vi of group)
+        assert.ok(p[vi].distanceTo(p[group[0]])<.001,`material seam exceeds display layer thickness at ${tick/20}`);
+    }
+  });
+}
+
+test('new works reveal the intended colored faces, white walls, cream and rind', async () => {
+  for(const [id,points] of [
+    ['house',[[.12,.6,true],[.12,-.6,false]]],
+    ['soft-cream',[[.12,.6,false],[.12,-.25,true]]],
+    ['watermelon',[[.12,.3,true],[.12,-.65,false]]],
+  ])for(const [x,y,front] of points)assert.equal(visibleAt(modelOf(id),x,y)?.front,front,`${id} at ${x},${y}`);
+  for(const id of ['butterfly','egg'])assert.equal(await coverage(modelOf(id),modelOf(id).steps.length),0);
+  const house=modelOf('house'),p=computeFoldState(house,2).positions;
+  for(const corner of [[-1,1],[1,1]]){
+    const indices=house.faces.flat().filter(vi=>house.vertices[vi].every((n,j)=>Math.abs(n-corner[j])<1e-8));
+    assert.ok(indices.length>0);
+    for(const vi of indices)assert.ok(Math.hypot(p[vi].x,p[vi].y)<1e-8,'roof corners meet at the center');
+  }
+});
+
+test('soft serve pleat folds only its small tip while the cone stays fixed', () => {
+  const m=modelOf('soft-cream'),before=computeFoldState(m,4).positions;
+  const body=[...new Set(m.faces.flat())].filter(vi=>before[vi].y<.4);
+  assert.ok(body.length>0);
+  for(const t of [4.1,4.25,4.5,4.75,5]){
+    const p=computeFoldState(m,t).positions;
+    for(const vi of body)assert.ok(p[vi].distanceTo(before[vi])<1e-8,'do not fold the underlying cone with the tip');
+  }
+  const after=computeFoldState(m,5).positions;
+  assert.ok(m.faces.flat().some(vi=>after[vi].distanceTo(before[vi])>.1),'the small tip really folds');
+  const vs=m.faces.flat().map(vi=>after[vi]);
+  assert.ok(Math.abs(Math.max(...vs.map(p=>p.y))-.8)<1e-8);
+  assert.ok(Math.abs(Math.min(...vs.map(p=>p.y))+1)<1e-8);
+});
+
+test('egg stays open during rounding and butterfly turns without flipping its face', () => {
+  const egg=modelOf('egg'),flat=computeFoldState(egg,9).positions,round=computeFoldState(egg,10).positions;
+  const ids=[...new Set(egg.faces.flat())];
+  const width=p=>Math.max(...ids.map(vi=>p[vi].x))-Math.min(...ids.map(vi=>p[vi].x));
+  assert.ok(width(round)>width(flat)*.97,'rounding must not close the egg in half');
+  assert.ok(Math.max(...ids.map(vi=>Math.abs(round[vi].z)))>.1,'a shallow bend is visible');
+  const butterfly=modelOf('butterfly'),a=computeFoldState(butterfly,3).positions,b=computeFoldState(butterfly,4).positions;
+  for(const vi of butterfly.faces.flat()){
+    assert.ok(Math.abs(b[vi].x+a[vi].y)<1e-8);
+    assert.ok(Math.abs(b[vi].y-a[vi].x)<1e-8);
+    assert.ok(Math.abs(b[vi].z-a[vi].z)<1e-8,'orientation change is not a turnover');
+  }
+});
+
+test('render spacing retains the existing stack order through egg tucks and turnover', async () => {
+  const m=modelOf('egg'),physical={...m,renderLayerSeparation:undefined};
+  for(let t=0;t<=m.steps.length;t++){
+    assert.deepEqual(computeFoldState(m,t).positions,computeFoldState(physical,t).positions,'display spacing never moves the folding geometry');
+    const rendered=await coverage(m,t),original=await coverage(physical,t);
+    assert.ok(Math.abs(rendered-original)<=1,`layer order changed at ${t}: ${original} -> ${rendered}`);
+  }
 });
 
 test('every model has an explicit source and each rendered SVG owns its clips', () => {

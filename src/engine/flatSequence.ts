@@ -6,6 +6,9 @@ export interface FlatMove {
   line: [Point, Point];
   side: 1 | -1;
   type?: 'valley' | 'mountain' | 'unfold' | 'assemble';
+  /** Fold only the flap moved by this earlier operation (zero-based).
+   * Used for a pleat tip without folding the underlying body as well. */
+  fromFold?: number;
 }
 interface FlatStep {
   moves: FlatMove[];
@@ -26,7 +29,7 @@ const EPS = 1e-9;
  */
 export function flatSequence(
   metadata: Pick<OrigamiModel, 'id' | 'name' | 'difficulty' | 'sheetColors'>,
-  outline: Point[], whiteUp: boolean, sequence: FlatStep[],
+  outline: Point[], whiteUp: boolean, sequence: FlatStep[], layerThickness?: number,
 ): OrigamiModel {
   let panels: Panel[] = [{ points: outline.map(p => ({ initial: [...p], current: [...p] })), history: [] }];
   const operations: FlatMove[] = [];
@@ -35,6 +38,9 @@ export function flatSequence(
     const indices: number[] = [];
     for (const move of step.moves) {
       const index = operations.length;
+      if (move.fromFold !== undefined && (!Number.isInteger(move.fromFold) || move.fromFold < 0 || move.fromFold >= index)) {
+        throw new Error(`${metadata.id}: flap must refer to an earlier fold`);
+      }
       operations.push(move); indices.push(index);
       const [a, b] = move.line, dx = b[0] - a[0], dy = b[1] - a[1], d2 = dx * dx + dy * dy;
       if (d2 < EPS) throw new Error(`${metadata.id}: empty crease`);
@@ -44,6 +50,7 @@ export function flatSequence(
         return [p[0] + 2 * dy * s, p[1] - 2 * dx * s];
       };
       panels = panels.flatMap(panel => {
+        if (move.fromFold !== undefined && !panel.history.includes(move.fromFold)) return [panel];
         const signs = panel.points.map(p => signed(p.current));
         const crosses = signs.some(s => s > EPS) && signs.some(s => s < -EPS);
         const pieces: Panel[] = [];
@@ -95,5 +102,5 @@ export function flatSequence(
   model.steps = sequence.map((step, i): FoldStep => ({
     description: step.description, caution: step.caution, folds: stepOps[i].map(j => folds[j]),
   }));
-  return withRigidFolds(model);
+  return withRigidFolds(model, {}, layerThickness);
 }

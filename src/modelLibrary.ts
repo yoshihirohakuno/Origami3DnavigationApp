@@ -31,6 +31,11 @@ import { busModel } from './models/bus';
 import { elephantModel } from './models/elephant';
 import { pizzaModel } from './models/pizza';
 import { acornModel } from './models/acorn';
+import { houseModel } from './models/house';
+import { butterflyModel } from './models/butterfly';
+import { softCreamModel } from './models/softCream';
+import { watermelonModel } from './models/watermelon';
+import { eggModel } from './models/egg';
 import type { OrigamiModel, LocalizedText } from './engine/types';
 import { withoutCreasePreparation } from './engine/withoutCreasePreparation';
 import { separateFoldSteps } from './engine/separateFoldSteps';
@@ -72,6 +77,11 @@ const SOURCES: OrigamiModel[] = [
   elephantModel,
   pizzaModel,
   acornModel,
+  houseModel,
+  butterflyModel,
+  softCreamModel,
+  watermelonModel,
+  eggModel,
 ];
 
 function wording(text: LocalizedText): LocalizedText {

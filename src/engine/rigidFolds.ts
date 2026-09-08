@@ -4,7 +4,8 @@ import type { FoldOp, OrigamiModel } from './types';
 /** Compile simple flat folds into rigid panels with a consistent paper stack. */
 type Pocket = number | { face: number; at: [number, number]; angle: number };
 const THICKNESS = 0.00001;
-export function withRigidFolds(source: OrigamiModel, tuckUnder: Record<number, Pocket> = {}): OrigamiModel {
+export function withRigidFolds(source: OrigamiModel, tuckUnder: Record<number, Pocket> = {}, thickness = THICKNESS): OrigamiModel {
+  if (!Number.isFinite(thickness) || thickness <= 0) throw new Error(`${source.id}: invalid display layer thickness`);
   const model: OrigamiModel = { ...source, vertices: source.vertices.map(p => [...p]), faces: [], steps: [] };
   model.faces = source.faces.map(face => face.map(vi => {
     model.vertices.push([...source.vertices[vi]]);
@@ -60,10 +61,10 @@ export function withRigidFolds(source: OrigamiModel, tuckUnder: Record<number, P
       const heights = model.faces.flat().map(vi => p[vi].z);
       const towardFront = raw.type === 'valley' ||
         ((raw.type === 'inside-reverse' || raw.type === 'outside-reverse') && raw.sweep !== 'back');
-      const hinge = towardFront ? Math.max(...heights) + THICKNESS : Math.min(...heights) - THICKNESS;
+      const hinge = towardFront ? Math.max(...heights) + thickness : Math.min(...heights) - thickness;
       const pocket = tuckUnder[model.steps.length];
       let shift = pocket === undefined ? 2 * (hinge - origin.z)
-        : Math.min(...model.faces[typeof pocket === 'number' ? pocket : pocket.face].map(vi => p[vi].z)) - THICKNESS
+        : Math.min(...model.faces[typeof pocket === 'number' ? pocket : pocket.face].map(vi => p[vi].z)) - thickness
           - (2 * origin.z - Math.min(...vertices.map(vi => p[vi].z)));
       if (typeof pocket === 'object') {
         // Insertion crosses the pocket lip: the top of the flap lies above the
@@ -82,7 +83,7 @@ export function withRigidFolds(source: OrigamiModel, tuckUnder: Record<number, P
         if (Math.abs(normal.z) < 1e-9) throw new Error(`${source.id}: pocket flap has no projected area`);
         const [x, y] = pocket.at;
         const z = points[0].z - (normal.x * (x - points[0].x) + normal.y * (y - points[0].y)) / normal.z;
-        shift = p[model.faces[pocket.face][0]].z - THICKNESS - z;
+        shift = p[model.faces[pocket.face][0]].z - thickness - z;
       }
       compiled.folds.push({ axis: raw.axis, moving: vertices, type: 'assemble', angle: 0,
         direction: 1, translate: [0, 0, shift], guide: false });

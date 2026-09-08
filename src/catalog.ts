@@ -64,6 +64,11 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   riceball: 'food',
   pizza: 'food',
   acorn: 'food',
+  house: 'decorate',
+  butterfly: 'animal',
+  'soft-cream': 'food',
+  watermelon: 'food',
+  egg: 'decorate',
   'square-base': 'basic',
   'waterbomb-base': 'basic',
 };
