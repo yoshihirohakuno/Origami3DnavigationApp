@@ -12,6 +12,7 @@ const diagrams: Record<string, string> = {
   tv: 'easy/other/tv/tv/zu.gif',
   fuji: 'easy/other/fuji/fuji/zu.gif',
   owl: 'easy/animal/owl/owl/zu.gif',
+  cicada: 'traditional/cicada/cicada/zu.gif',
   acorn: 'easy/food/acom/acom2/zu.gif',
   bear: 'rn-image/zu/bear.gif', boots: 'rn-image/zu/boots.gif',
   box: 'traditional/box/zu.gif', bus: 'rn-image/zu/bus.gif',

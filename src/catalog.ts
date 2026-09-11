@@ -74,6 +74,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   tv: 'decorate',
   fuji: 'decorate',
   owl: 'animal',
+  cicada: 'animal',
   'square-base': 'basic',
   'waterbomb-base': 'basic',
 };
