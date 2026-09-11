@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -491,6 +491,24 @@ for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2
     }
   });
 }
+
+test('the television keeps a white screen and fuji keeps a white cap over brown', () => {
+  const tv=modelOf('tv'),p=computeFoldState(tv,tv.steps.length).positions;
+  const used=[...new Set(tv.faces.flat())];
+  // ふちを4分の1の折り目へ折るので枠は ±.75。下だけ深く折る。
+  assert.ok(Math.abs(Math.min(...used.map(vi=>p[vi].x))+.75)<1e-8);
+  assert.ok(Math.abs(Math.max(...used.map(vi=>p[vi].y))-.75)<1e-8);
+  assert.ok(Math.abs(Math.min(...used.map(vi=>p[vi].y))+.64)<1e-8);
+  assert.equal(visibleAt(tv,0,0)?.front,false,'screen stays white');
+  assert.equal(visibleAt(tv,0,.6)?.front,true,'top frame is colored');
+  assert.equal(visibleAt(tv,-.6,0)?.front,true,'left frame is colored');
+
+  const fuji=modelOf('fuji'),q=computeFoldState(fuji,fuji.steps.length).positions;
+  const top=Math.max(...[...new Set(fuji.faces.flat())].map(vi=>q[vi].y));
+  assert.ok(Math.abs(top-.75)<1e-8,'the summit is flat at the quarter line');
+  assert.equal(visibleAt(fuji,0,.2)?.front,true,'the slope is colored');
+  assert.equal(visibleAt(fuji,.12,.71)?.front,false,'the cap is white');
+});
 
 test('octopus keeps its skirt and pancake closes into a regular octagon', () => {
   const octopus=modelOf('octopus'),p=computeFoldState(octopus,octopus.steps.length).positions;
