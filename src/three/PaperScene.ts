@@ -38,9 +38,16 @@ export class PaperScene {
 
   private model: OrigamiModel | null = null;
   private lastState: FoldState | null = null;
+  /** 最初の折り状態が届くまでの当て(展開図の頂点) */
   private framePoints: THREE.Vector3[] = [];
   private autoFrame = true;
   private viewAngle = 0;
+  /** オートフィットの注視点・距離(現在値と目標値。工程が変わるたびに寄せ引きする) */
+  private fitCenter = new THREE.Vector3();
+  private fitDistance = CAMERA_POS.length();
+  private fitTargetCenter = new THREE.Vector3();
+  private fitTargetDistance = CAMERA_POS.length();
+  private lastFrameTime = 0;
   /** 面ごとの三角形分割 [faceIndex, v0, v1, v2] */
   private tris: [number, number, number, number][] = [];
   /** 面の輪郭線の頂点ペア */
@@ -102,10 +109,8 @@ export class PaperScene {
     this.model = model;
     this.lastState = null;
     const used = [...new Set(model.faces.flat())];
-    this.framePoints = Array.from({ length: model.steps.length + 1 }, (_, t) => {
-      const positions = computeFoldState(model, t).positions;
-      return used.map(vi => positions[vi]);
-    }).flat();
+    const flat = computeFoldState(model, 0).positions;
+    this.framePoints = used.map(vi => flat[vi]);
     this.resetCamera();
     // 2枚組みの色分けを準備(ハイライトは白へ寄せた明色)
     this.faceSheet = model.faceSheet ?? null;
@@ -139,12 +144,11 @@ export class PaperScene {
   update(state: FoldState): void {
     if (!this.model) return;
     if (state !== this.lastState) {
-      const finished = state.fraction >= 1 && state.stepIndex === this.model.steps.length - 1;
-      const wasFinished = this.lastState?.fraction === 1 && this.lastState.stepIndex === this.model.steps.length - 1;
       this.updateGeometry(state);
       this.lastState = state;
-      if (finished !== wasFinished && this.autoFrame) this.setViewAngle(this.viewAngle);
+      if (this.autoFrame) this.aimFrame();
     }
+    if (this.autoFrame) this.easeFrame();
     this.controls.update();
     // Paper layers are much closer together than ordinary 3D objects. A fixed
     // 0.1–100 clip range loses their depth precision when the camera pulls back.
@@ -278,33 +282,72 @@ export class PaperScene {
     this.autoFrame = true;
     const angle = THREE.MathUtils.degToRad(angleDeg);
     const base = this.model?.cameraPos ?? [CAMERA_POS.x, CAMERA_POS.y, CAMERA_POS.z];
-    this.camera.position.set(
-      base[0] * Math.cos(angle) + base[2] * Math.sin(angle),
-      base[1],
-      -base[0] * Math.sin(angle) + base[2] * Math.cos(angle),
-    );
-    // Fit both sheets on narrow displays; the default distance used to crop them.
-    const direction = this.camera.position.clone().normalize();
+    // 距離はオートフィットが決めるので、cameraPos と cameraAngle は見る向きの指定として使う
+    this.camera.position
+      .set(
+        base[0] * Math.cos(angle) + base[2] * Math.sin(angle),
+        base[1],
+        -base[0] * Math.sin(angle) + base[2] * Math.cos(angle),
+      )
+      .add(this.controls.target);
+    this.aimFrame();
+    this.fitCenter.copy(this.fitTargetCenter);
+    this.fitDistance = this.fitTargetDistance;
+    this.easeFrame();
+  }
+
+  /**
+   * 工程ごとのオートフィット:いまの形が画面に収まる注視点と最小距離を決める。
+   * 見る向き(cameraAngle / cameraPos)はそのまま、寄り引きと注視点だけを動かすので、
+   * 2枚が横に並ぶ工程でも見切れず、組み上がるにつれて自然に寄っていく。
+   */
+  private aimFrame(): void {
+    const used = this.model ? [...new Set(this.model.faces.flat())] : [];
+    const points = this.lastState ? used.map(vi => this.lastState!.positions[vi]) : this.framePoints;
+    if (!points.length) return;
+
+    const direction = new THREE.Vector3().subVectors(this.camera.position, this.controls.target);
+    if (direction.lengthSq() < 1e-8) direction.copy(CAMERA_POS);
+    direction.normalize();
     const right = new THREE.Vector3(0, 1, 0).cross(direction).normalize();
     const up = direction.clone().cross(right);
     const tangent = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
-    const finished = this.lastState?.fraction === 1 && this.lastState.stepIndex === (this.model?.steps.length ?? 0) - 1;
-    const points = finished && this.model
-      ? [...new Set(this.model.faces.flat())].map(vi => this.lastState!.positions[vi])
-      : this.framePoints;
-    const center = finished && points.length
-      ? new THREE.Box3().setFromPoints(points).getCenter(new THREE.Vector3())
-      : new THREE.Vector3();
-    let distance = finished ? this.controls.minDistance : this.camera.position.length();
+
+    // 折り種バッジと「正面」ボタンが重なる上辺は厚めに余白をとる
+    const w = this.canvas.clientWidth || 1, h = this.canvas.clientHeight || 1;
+    const padTop = Math.min(66, h * 0.16), padBottom = Math.min(24, h * 0.08), padSide = Math.min(24, w * 0.06);
+    const usableW = Math.max(0.3, (w - padSide * 2) / w), usableH = Math.max(0.3, (h - padTop - padBottom) / h);
+
+    const center = new THREE.Box3().setFromPoints(points).getCenter(new THREE.Vector3());
+    let distance = this.controls.minDistance;
     for (const p of points) {
       const relative = p.clone().sub(center);
-      const span = Math.max(Math.abs(relative.dot(right)) / this.camera.aspect, Math.abs(relative.dot(up)));
-      distance = Math.max(distance, relative.dot(direction) + 1.2 * span / tangent);
+      const span = Math.max(
+        Math.abs(relative.dot(right)) / (this.camera.aspect * usableW),
+        Math.abs(relative.dot(up)) / usableH,
+      );
+      distance = Math.max(distance, relative.dot(direction) + 1.05 * span / tangent);
     }
-    this.camera.position.copy(center).addScaledVector(direction, distance);
-    this.controls.maxDistance = Math.max(10, distance * 2);
-    this.controls.target.copy(center);
-    this.controls.update();
+    // 余白が上下で違うので、形の中心が余白の中央に来るよう注視点をずらす
+    this.fitTargetCenter.copy(center).addScaledVector(up, -((padBottom - padTop) / h) * distance * tangent);
+    this.fitTargetDistance = distance;
+  }
+
+  /** オートフィットの目標へなめらかに寄せる(工程を送るたびにカメラがすっと動く) */
+  private easeFrame(): void {
+    const now = performance.now();
+    const dt = this.lastFrameTime ? Math.min((now - this.lastFrameTime) / 1000, 0.1) : 0;
+    this.lastFrameTime = now;
+    const k = 1 - Math.exp(-7 * dt);
+    this.fitCenter.lerp(this.fitTargetCenter, k);
+    this.fitDistance += (this.fitTargetDistance - this.fitDistance) * k;
+
+    const direction = new THREE.Vector3().subVectors(this.camera.position, this.controls.target);
+    if (direction.lengthSq() < 1e-8) direction.copy(CAMERA_POS);
+    direction.normalize();
+    this.controls.maxDistance = Math.max(10, this.fitDistance * 2);
+    this.controls.target.copy(this.fitCenter);
+    this.camera.position.copy(this.fitCenter).addScaledVector(direction, this.fitDistance);
   }
 
   resize(): void {
