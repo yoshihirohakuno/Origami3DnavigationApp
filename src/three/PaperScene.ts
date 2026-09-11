@@ -20,6 +20,9 @@ const GUIDE_COLORS: Record<string, THREE.Color> = {
 
 const CAMERA_POS = new THREE.Vector3(0, 0, 5);
 
+/** 1工程の画角を決めるとき、折りの途中を何コマ見るか */
+const FRAME_SAMPLES = 5;
+
 /**
  * 折り紙の3D表示を担当する(React非依存)。
  * 折り状態が変わったときだけジオメトリを更新し、カメラ操作は毎フレーム反映する。
@@ -48,6 +51,8 @@ export class PaperScene {
   private fitTargetCenter = new THREE.Vector3();
   private fitTargetDistance = CAMERA_POS.length();
   private lastFrameTime = 0;
+  /** いま画角を合わせている工程(-1=完成形、NaN=未設定)。工程が変わるまで動かさない */
+  private frameKey = Number.NaN;
   /** 面ごとの三角形分割 [faceIndex, v0, v1, v2] */
   private tris: [number, number, number, number][] = [];
   /** 面の輪郭線の頂点ペア */
@@ -146,7 +151,7 @@ export class PaperScene {
     if (state !== this.lastState) {
       this.updateGeometry(state);
       this.lastState = state;
-      if (this.autoFrame) this.aimFrame();
+      if (this.autoFrame) this.aimFrame(state);
     }
     if (this.autoFrame) this.easeFrame();
     this.controls.update();
@@ -290,20 +295,41 @@ export class PaperScene {
         -base[0] * Math.sin(angle) + base[2] * Math.cos(angle),
       )
       .add(this.controls.target);
-    this.aimFrame();
+    this.frameKey = Number.NaN;
+    this.aimFrame(this.lastState);
     this.fitCenter.copy(this.fitTargetCenter);
     this.fitDistance = this.fitTargetDistance;
     this.easeFrame();
   }
 
   /**
-   * 工程ごとのオートフィット:いまの形が画面に収まる注視点と最小距離を決める。
+   * 工程ごとのオートフィット:その工程の折りが収まる注視点と最小距離を決める。
    * 見る向き(cameraAngle / cameraPos)はそのまま、寄り引きと注視点だけを動かすので、
    * 2枚が横に並ぶ工程でも見切れず、組み上がるにつれて自然に寄っていく。
+   *
+   * 画角はその工程の「折りはじめから折り終わりまで」をまとめて覆うように決め、
+   * 工程が変わるまで固定する。毎フレーム今の形に合わせ直すと、折られた面が手前へ
+   * 起き上がるのに合わせてカメラが寄り引きし、画面がゆらゆら揺れてしまう。
    */
-  private aimFrame(): void {
-    const used = this.model ? [...new Set(this.model.faces.flat())] : [];
-    const points = this.lastState ? used.map(vi => this.lastState!.positions[vi]) : this.framePoints;
+  private aimFrame(state: FoldState | null): void {
+    if (!this.model) return;
+    const steps = this.model.steps.length;
+    const finished = !!state && state.fraction >= 1 && state.stepIndex === steps - 1;
+    const key = !state ? Number.NEGATIVE_INFINITY : finished ? -1 : state.stepIndex;
+    if (key === this.frameKey) return;
+    this.frameKey = key;
+
+    const used = [...new Set(this.model.faces.flat())];
+    // 完成形はその形だけ、途中の工程は折りの途中も含めた範囲に合わせる
+    const points = !state
+      ? this.framePoints
+      : finished
+        ? used.map(vi => state.positions[vi])
+        : Array.from({ length: FRAME_SAMPLES }, (_, i) => {
+            const t = state.stepIndex + i / (FRAME_SAMPLES - 1);
+            const positions = computeFoldState(this.model!, t).positions;
+            return used.map(vi => positions[vi]);
+          }).flat();
     if (!points.length) return;
 
     const direction = new THREE.Vector3().subVectors(this.camera.position, this.controls.target);
