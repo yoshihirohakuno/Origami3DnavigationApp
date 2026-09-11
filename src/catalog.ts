@@ -73,6 +73,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   pancake: 'food',
   tv: 'decorate',
   fuji: 'decorate',
+  owl: 'animal',
   'square-base': 'basic',
   'waterbomb-base': 'basic',
 };

@@ -40,6 +40,7 @@ import { octopusModel } from './models/octopus';
 import { pancakeModel } from './models/pancake';
 import { tvModel } from './models/tv';
 import { fujiModel } from './models/fuji';
+import { owlModel } from './models/owl';
 import type { OrigamiModel, LocalizedText } from './engine/types';
 import { withoutCreasePreparation } from './engine/withoutCreasePreparation';
 import { separateFoldSteps } from './engine/separateFoldSteps';
@@ -90,6 +91,7 @@ const SOURCES: OrigamiModel[] = [
   pancakeModel,
   tvModel,
   fujiModel,
+  owlModel,
 ];
 
 function wording(text: LocalizedText): LocalizedText {

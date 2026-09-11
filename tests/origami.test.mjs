@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -508,6 +508,19 @@ test('the television keeps a white screen and fuji keeps a white cap over brown'
   assert.ok(Math.abs(top-.75)<1e-8,'the summit is flat at the quarter line');
   assert.equal(visibleAt(fuji,0,.2)?.front,true,'the slope is colored');
   assert.equal(visibleAt(fuji,.12,.71)?.front,false,'the cap is white');
+});
+
+test('the owl closes into a square with white brows and a white beak', () => {
+  const owl=modelOf('owl'),p=computeFoldState(owl,owl.steps.length).positions;
+  const used=[...new Set(owl.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  assert.ok(Math.abs((Math.max(...xs)-Math.min(...xs))-1)<1e-8);
+  assert.ok(Math.abs((Math.max(...ys)-Math.min(...ys))-1)<1e-8);
+  // 上の折り返しと下の折り返しの先が同じ点で出会う
+  assert.ok(Math.abs(Math.max(...ys)-2/3)<1e-8);
+  assert.equal(visibleAt(owl,-.35,.45)?.front,false,'the brow stays white');
+  assert.equal(visibleAt(owl,0,-.2)?.front,true,'the breast is colored');
+  assert.equal(visibleAt(owl,0,.15)?.front,false,'the beak shows the white back');
 });
 
 test('octopus keeps its skirt and pancake closes into a regular octagon', () => {
