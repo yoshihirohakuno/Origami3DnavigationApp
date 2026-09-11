@@ -36,6 +36,8 @@ import { butterflyModel } from './models/butterfly';
 import { softCreamModel } from './models/softCream';
 import { watermelonModel } from './models/watermelon';
 import { eggModel } from './models/egg';
+import { octopusModel } from './models/octopus';
+import { pancakeModel } from './models/pancake';
 import type { OrigamiModel, LocalizedText } from './engine/types';
 import { withoutCreasePreparation } from './engine/withoutCreasePreparation';
 import { separateFoldSteps } from './engine/separateFoldSteps';
@@ -82,6 +84,8 @@ const SOURCES: OrigamiModel[] = [
   softCreamModel,
   watermelonModel,
   eggModel,
+  octopusModel,
+  pancakeModel,
 ];
 
 function wording(text: LocalizedText): LocalizedText {

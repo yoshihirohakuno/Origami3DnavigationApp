@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -491,6 +491,28 @@ for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2
     }
   });
 }
+
+test('octopus keeps its skirt and pancake closes into a regular octagon', () => {
+  const octopus=modelOf('octopus'),p=computeFoldState(octopus,octopus.steps.length).positions;
+  const used=[...new Set(octopus.faces.flat())];
+  // 足のすそは帯の外へ出る。上のふちは紙の高さの1/3だけ折り下げる。
+  assert.ok(Math.abs(Math.min(...used.map(vi=>p[vi].x))+.8)<1e-8);
+  assert.ok(Math.abs(Math.max(...used.map(vi=>p[vi].x))-.8)<1e-8);
+  assert.ok(Math.abs(Math.max(...used.map(vi=>p[vi].y))-1/3)<1e-8);
+  assert.ok(Math.abs(Math.min(...used.map(vi=>p[vi].y))+1)<1e-8);
+  // 下にある紙は折らないので、中央は欠けず色の面が残る
+  assert.equal(visibleAt(octopus,0,-.8)?.front,true);
+
+  const pancake=modelOf('pancake'),q=computeFoldState(pancake,pancake.steps.length).positions;
+  const corner=(2-Math.SQRT2)/2, outline=[...new Set(pancake.faces.flat())].map(vi=>[q[vi].x,q[vi].y]);
+  const xs=outline.map(v=>v[0]), ys=outline.map(v=>v[1]);
+  assert.ok(Math.abs((Math.max(...xs)-Math.min(...xs))-1)<1e-8);
+  assert.ok(Math.abs((Math.max(...ys)-Math.min(...ys))-1)<1e-8);
+  for(const [x,y] of [[corner,0],[1-corner,0],[1,-corner],[1,-1+corner],[1-corner,-1],[corner,-1],[0,-1+corner],[0,-corner]]){
+    const near=Math.min(...outline.map(v=>Math.hypot(v[0]-x-Math.min(...xs),v[1]-y-Math.max(...ys)-0)));
+    assert.ok(near<1e-8,`octagon corner ${x},${y}`);
+  }
+});
 
 test('new works reveal the intended colored faces, white walls, cream and rind', async () => {
   for(const [id,points] of [
