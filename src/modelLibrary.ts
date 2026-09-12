@@ -42,6 +42,7 @@ import { tvModel } from './models/tv';
 import { fujiModel } from './models/fuji';
 import { owlModel } from './models/owl';
 import { cicadaModel } from './models/cicada';
+import { walletModel } from './models/wallet';
 import type { OrigamiModel, LocalizedText } from './engine/types';
 import { withoutCreasePreparation } from './engine/withoutCreasePreparation';
 import { separateFoldSteps } from './engine/separateFoldSteps';
@@ -94,6 +95,7 @@ const SOURCES: OrigamiModel[] = [
   fujiModel,
   owlModel,
   cicadaModel,
+  walletModel,
 ];
 
 function wording(text: LocalizedText): LocalizedText {

@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -508,6 +508,18 @@ test('the television keeps a white screen and fuji keeps a white cap over brown'
   assert.ok(Math.abs(top-.75)<1e-8,'the summit is flat at the quarter line');
   assert.equal(visibleAt(fuji,0,.2)?.front,true,'the slope is colored');
   assert.equal(visibleAt(fuji,.12,.71)?.front,false,'the cap is white');
+});
+
+test('the wallet folds every edge to the center and closes to half its height', () => {
+  const wallet=modelOf('wallet'),p=computeFoldState(wallet,wallet.steps.length).positions;
+  const used=[...new Set(wallet.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  assert.ok(Math.abs(Math.min(...xs)+.5)<1e-8 && Math.abs(Math.max(...xs)-.5)<1e-8);
+  assert.ok(Math.abs(Math.min(...ys)+.5)<1e-8 && Math.abs(Math.max(...ys))<1e-8);
+  // 白い面は内側に隠れ、外はすべて色の面になる
+  for(const [x,y] of [[0,-.25],[-.4,-.1],[.4,-.4]]) {
+    assert.equal(visibleAt(wallet,x,y)?.front,true,`outside stays colored at ${x},${y}`);
+  }
 });
 
 test('the cicada raises both corners to the top point and steps its wings', () => {
