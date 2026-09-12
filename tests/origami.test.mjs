@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -549,6 +549,24 @@ test('the vest opens a deeper V at the neck than the shorts do at the legs', () 
   for(const [x,y] of [[0,-.3],[-.4,0],[-.25,.45],[.25,.45]])
     assert.equal(visibleAt(m,x,y)?.front,true,`the outside stays colored at ${x},${y}`);
   assert.equal(visibleAt(modelOf('shorts'),0,.05)?.front,true,'the shorts keep their apex at the middle');
+});
+
+test('the gloves fold only the near sheet for the thumb and turn over colored', () => {
+  const m=modelOf('gloves'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  // 本体は幅1・高さ1.5、親指はそこから .294 はみ出す(折り図❼の実測 .33)
+  assert.ok(Math.abs(Math.max(...xs))<1e-8 && Math.abs(Math.min(...xs)+1.294488)<1e-5);
+  assert.ok(Math.abs(Math.min(...ys)+.5)<1e-8 && Math.abs(Math.max(...ys)-1)<1e-8);
+  // 上の両角は45°に落としてある(折り図❼は左右とも .2×.2)
+  assert.equal(visibleAt(m,-.95,.95),undefined);
+  assert.equal(visibleAt(m,-.05,.95),undefined);
+  for(const [x,y] of [[-.5,.5],[-.5,-.4],[-1.2,.25]])
+    assert.equal(visibleAt(m,x,y)?.front,true,`the glove is all colored at ${x},${y}`);
+  // ❹は手前の紙だけを折る。折り図❺の塗り分け(めくれた紙が白、帯だけ色)と一致する
+  assert.equal(visibleAt(m,-.9,.5,3)?.front,false,'the layer laid bare is white');
+  assert.equal(visibleAt(m,-.2,.5,3)?.front,false,'the turned flap shows white');
+  assert.equal(visibleAt(m,-.5,-.25,3)?.front,true,'the cuff band stays colored');
 });
 
 test('the cicada raises both corners to the top point and steps its wings', () => {
