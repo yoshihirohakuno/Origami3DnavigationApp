@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -520,6 +520,21 @@ test('the wallet folds every edge to the center and closes to half its height', 
   for(const [x,y] of [[0,-.25],[-.4,-.1],[.4,-.4]]) {
     assert.equal(visibleAt(wallet,x,y)?.front,true,`outside stays colored at ${x},${y}`);
   }
+});
+
+test('the shorts close to a square and open a white gap between the legs', () => {
+  const m=modelOf('shorts'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  // よこ2の紙の左右のふちを中心線へ折るので、たてよこ1の正方形のズボンになる
+  assert.ok(Math.abs(Math.min(...xs)+.5)<1e-8 && Math.abs(Math.max(...xs)-.5)<1e-8);
+  assert.ok(Math.abs(Math.min(...ys)+.5)<1e-8 && Math.abs(Math.max(...ys)-.5)<1e-8);
+  // 中央の下だけ白いVが開く(両足のあいだ)。先は紙の中心の高さ
+  for(const [x,y] of [[0,-.45],[0,-.1],[-.18,-.48],[.18,-.48]])
+    assert.equal(visibleAt(m,x,y)?.front,false,`the leg gap stays white at ${x},${y}`);
+  // ❷で折り上げた三角は❸❹の下にはさまれるので、外はすべて色の面のまま
+  for(const [x,y] of [[0,.05],[-.4,0],[.4,.3],[-.25,-.45],[.25,-.45]])
+    assert.equal(visibleAt(m,x,y)?.front,true,`the outside stays colored at ${x},${y}`);
 });
 
 test('the cicada raises both corners to the top point and steps its wings', () => {

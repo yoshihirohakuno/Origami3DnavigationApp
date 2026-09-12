@@ -76,6 +76,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   owl: 'animal',
   cicada: 'animal',
   wallet: 'useful',
+  shorts: 'useful',
   'square-base': 'basic',
   'waterbomb-base': 'basic',
 };
