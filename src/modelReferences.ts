@@ -15,6 +15,7 @@ const diagrams: Record<string, string> = {
   cicada: 'traditional/cicada/cicada/zu.gif',
   wallet: 'traditional/cly/zu.gif',
   shorts: 'easy/clothes/shorts/shorts/zu.gif',
+  vest: 'easy/clothes/vest/vest/zu.gif',
   acorn: 'easy/food/acom/acom2/zu.gif',
   bear: 'rn-image/zu/bear.gif', boots: 'rn-image/zu/boots.gif',
   box: 'traditional/box/zu.gif', bus: 'rn-image/zu/bus.gif',
