@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -602,6 +602,23 @@ test('the boy keeps a dark hairline over a white face', () => {
   // 四隅は落としてある
   assert.equal(visibleAt(m,-.47,.47),undefined);
   assert.equal(visibleAt(m,.47,.47),undefined);
+  assert.equal(visibleAt(m,-.47,-.63),undefined);
+});
+
+test('the girl keeps side locks beside a white face', () => {
+  const m=modelOf('girl'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  assert.ok(Math.abs(Math.min(...xs)+.5)<1e-8 && Math.abs(Math.max(...xs)-.5)<1e-8);
+  assert.ok(Math.abs(Math.min(...ys)+2/3)<1e-8 && Math.abs(Math.max(...ys)-.5)<1e-8);
+  // 前髪は y=.5〜0、横の髪は左右のはしだけ y=-.2 まで下がる
+  for(const [x,y] of [[0,.3],[-.45,-.1],[.45,-.1]])
+    assert.equal(visibleAt(m,x,y)?.front,true,`the hair stays colored at ${x},${y}`);
+  for(const [x,y] of [[0,-.1],[0,-.4],[-.3,-.3]])
+    assert.equal(visibleAt(m,x,y)?.front,false,`the face stays white at ${x},${y}`);
+  // 上のふちは .6 幅、四隅は落としてある
+  assert.equal(visibleAt(m,-.45,.47),undefined);
+  assert.equal(visibleAt(m,.45,.47),undefined);
   assert.equal(visibleAt(m,-.47,-.63),undefined);
 });
 
