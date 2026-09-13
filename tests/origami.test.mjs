@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -620,6 +620,23 @@ test('the girl keeps side locks beside a white face', () => {
   assert.equal(visibleAt(m,-.45,.47),undefined);
   assert.equal(visibleAt(m,.45,.47),undefined);
   assert.equal(visibleAt(m,-.47,-.63),undefined);
+});
+
+test('the father sweeps his hair to one side across a white forehead', () => {
+  const m=modelOf('father'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  // ❷❸で山になり、❺で幅1、❻で下を y=-.5 まで折り上げる
+  assert.ok(Math.abs(Math.min(...xs)+.5)<1e-8 && Math.abs(Math.max(...xs)-.5)<1e-8);
+  assert.ok(Math.abs(Math.min(...ys)+.5)<1e-8 && Math.abs(Math.max(...ys)-.75)<1e-8);
+  // 二回のうらがえしのあと、髪は左右で厚みが違う(右が広く残る)
+  assert.equal(visibleAt(m,0,.65)?.front,true,'the top of the hair is colored');
+  assert.equal(visibleAt(m,.4,.38)?.front,true,'the hair stays thick on one side');
+  assert.equal(visibleAt(m,-.45,.38)?.front,true,'a thin lock stays on the other side');
+  assert.equal(visibleAt(m,0,.38)?.front,false,'the forehead is white between them');
+  for(const [x,y] of [[0,0],[-.3,-.2],[.3,-.3]])
+    assert.equal(visibleAt(m,x,y)?.front,false,`the face stays white at ${x},${y}`);
+  assert.equal(visibleAt(m,-.47,-.47),undefined,'the jaw corners are folded away');
 });
 
 test('the cicada raises both corners to the top point and steps its wings', () => {

@@ -49,6 +49,7 @@ import { glovesModel } from './models/gloves';
 import { moonModel } from './models/moon';
 import { boyModel } from './models/boy';
 import { girlModel } from './models/girl';
+import { fatherModel } from './models/father';
 import type { OrigamiModel, LocalizedText } from './engine/types';
 import { withoutCreasePreparation } from './engine/withoutCreasePreparation';
 import { separateFoldSteps } from './engine/separateFoldSteps';
@@ -108,6 +109,7 @@ const SOURCES: OrigamiModel[] = [
   moonModel,
   boyModel,
   girlModel,
+  fatherModel,
 ];
 
 function wording(text: LocalizedText): LocalizedText {
