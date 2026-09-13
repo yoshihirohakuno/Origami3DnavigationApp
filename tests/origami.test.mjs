@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -567,6 +567,24 @@ test('the gloves fold only the near sheet for the thumb and turn over colored', 
   assert.equal(visibleAt(m,-.9,.5,3)?.front,false,'the layer laid bare is white');
   assert.equal(visibleAt(m,-.2,.5,3)?.front,false,'the turned flap shows white');
   assert.equal(visibleAt(m,-.5,-.25,3)?.front,true,'the cuff band stays colored');
+});
+
+test('the moon brings its right edge to a point and pleats it back', () => {
+  const m=modelOf('moon'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  // ❹で先が紙の外へ出て、❺で x=.2 まで戻る。うらがえすので完成は x=-1..0
+  assert.ok(Math.abs(Math.min(...xs)+1)<1e-8 && Math.abs(Math.max(...xs))<1e-8);
+  assert.ok(Math.abs(Math.min(...ys)+1)<1e-8 && Math.abs(Math.max(...ys)-1)<1e-8);
+  // ❸のあと右は一点にまとまる(折り図❹の三角は幅ちょうど1)
+  const q=computeFoldState(m,3).positions;
+  assert.ok(Math.abs(Math.max(...used.map(vi=>q[vi].x))-1)<1e-8);
+  // 段折りの前後で先の位置が入れかわる
+  assert.ok(Math.abs(Math.min(...used.map(vi=>computeFoldState(m,4).positions[vi].x))+1)<1e-8);
+  assert.ok(Math.abs(Math.max(...used.map(vi=>computeFoldState(m,5).positions[vi].x))-.2)<1e-8);
+  // うらがえした面は一面が色の面
+  for(const [x,y] of [[-.5,.5],[-.5,-.5],[-.9,0],[-.2,0]])
+    assert.equal(visibleAt(m,x,y)?.front,true,`the moon is all colored at ${x},${y}`);
 });
 
 test('the cicada raises both corners to the top point and steps its wings', () => {

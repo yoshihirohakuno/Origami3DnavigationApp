@@ -79,6 +79,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   shorts: 'useful',
   vest: 'useful',
   gloves: 'useful',
+  moon: 'decorate',
   'square-base': 'basic',
   'waterbomb-base': 'basic',
 };
