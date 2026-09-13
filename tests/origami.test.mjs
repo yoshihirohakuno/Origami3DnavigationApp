@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -585,6 +585,24 @@ test('the moon brings its right edge to a point and pleats it back', () => {
   // うらがえした面は一面が色の面
   for(const [x,y] of [[-.5,.5],[-.5,-.5],[-.9,0],[-.2,0]])
     assert.equal(visibleAt(m,x,y)?.front,true,`the moon is all colored at ${x},${y}`);
+});
+
+test('the boy keeps a dark hairline over a white face', () => {
+  const m=modelOf('boy'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  // ❸で左右を4分の1ずつ後ろへ、❹で上を y=.5、❺で下を y=-2/3
+  assert.ok(Math.abs(Math.min(...xs)+.5)<1e-8 && Math.abs(Math.max(...xs)-.5)<1e-8);
+  assert.ok(Math.abs(Math.min(...ys)+2/3)<1e-8 && Math.abs(Math.max(...ys)-.5)<1e-8);
+  // 髪は y=.5〜0、その下は白い顔
+  for(const [x,y] of [[0,.4],[-.3,.2],[.3,.05]])
+    assert.equal(visibleAt(m,x,y)?.front,true,`the hair stays colored at ${x},${y}`);
+  for(const [x,y] of [[0,-.1],[-.3,-.3],[.3,-.5]])
+    assert.equal(visibleAt(m,x,y)?.front,false,`the face stays white at ${x},${y}`);
+  // 四隅は落としてある
+  assert.equal(visibleAt(m,-.47,.47),undefined);
+  assert.equal(visibleAt(m,.47,.47),undefined);
+  assert.equal(visibleAt(m,-.47,-.63),undefined);
 });
 
 test('the cicada raises both corners to the top point and steps its wings', () => {
