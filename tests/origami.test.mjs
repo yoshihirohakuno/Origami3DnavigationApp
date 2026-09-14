@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,4]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,4],['tea',4,7]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -674,6 +674,34 @@ test('the coffee cup keeps a colored rim over a white body and folds in half beh
   assert.equal(visibleAt(m,.2,.45,3)?.front,true,'the turned corner shows a colored triangle');
   assert.equal(visibleAt(m,.1,.45,3)?.front,false,'the paper around it stays white');
   assert.notEqual(visibleAt(m,.5,.6,3),undefined,'the body still reaches to the right of center');
+});
+
+test('the tea cup tapers to a narrow foot and turns one layer out for a handle', () => {
+  const m=modelOf('tea'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  // ❶で残した色の帯の分だけ、高さは2より低い(y=-.043 で折り上げた)
+  assert.ok(Math.abs(Math.min(...ys)+.043)<1e-8 && Math.abs(Math.max(...ys)-1)<1e-8);
+  // 胴は❹の左右の折りで幅1.5。取っ手は胴の右のふち(x=.5)を .29 ほど越す
+  assert.ok(Math.abs(Math.min(...xs)+1)<1e-8);
+  assert.ok(Math.abs(Math.max(...xs)-.786)<.002,'the handle reaches past the body');
+  // ❶の帯だけが色の面。胴は一面白
+  for(const [x,y] of [[-.9,.95],[-.3,.95],[.3,.96]])
+    assert.equal(visibleAt(m,x,y)?.front,true,`the rim stays colored at ${x},${y}`);
+  for(const [x,y] of [[-.8,.7],[-.3,.3],[.2,.05]])
+    assert.equal(visibleAt(m,x,y)?.front,false,`the cup stays white at ${x},${y}`);
+  // 下がすぼまる。上の角のところには紙があり、その真下にはもう無い
+  assert.notEqual(visibleAt(m,-.9,.8),undefined,'the body is wide at the top');
+  assert.equal(visibleAt(m,-.9,.2),undefined,'and narrow at the foot');
+  assert.notEqual(visibleAt(m,.6,.5),undefined,'the handle sticks out at mid height');
+  assert.equal(visibleAt(m,.6,.95),undefined,'but not beside the rim');
+  // ❻で上の1枚だけを折り返すので、下の1枚の色の面が出る(折り図❼の左半分)
+  assert.equal(visibleAt(m,-.2,.5,6)?.front,true,'the layer underneath shows its colored face');
+  assert.equal(visibleAt(m,-.6,.5,6)?.front,true,'and the turned-out triangle is colored too');
+  assert.equal(visibleAt(m,.3,.5,6)?.front,false,'the rest of the body stays white');
+  // ❹のあと(折り図❺)は、折り返した紙のうち帯より上だけが色の面
+  assert.equal(visibleAt(m,-.25,.95,3)?.front,true,'the band shows on the turned-back edge');
+  assert.equal(visibleAt(m,-.25,.7,3)?.front,false,'below the band it is white');
 });
 
 test('the cicada raises both corners to the top point and steps its wings', () => {

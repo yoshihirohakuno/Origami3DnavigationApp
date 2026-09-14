@@ -23,6 +23,7 @@ const diagrams: Record<string, string> = {
   father: 'easy/human-face/father/zu.gif',
   'water-bottle': 'easy/other/water-bottle/water-bottle/zu.gif',
   coffee: 'easy/food/coffee/zu.gif',
+  tea: 'easy/food/tea/zu.gif',
   acorn: 'easy/food/acom/acom2/zu.gif',
   bear: 'rn-image/zu/bear.gif', boots: 'rn-image/zu/boots.gif',
   box: 'traditional/box/zu.gif', bus: 'rn-image/zu/bus.gif',
