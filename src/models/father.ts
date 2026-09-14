@@ -30,3 +30,4 @@ export const fatherModel = flatSequence({
     description: { ja: 'もう一度うらがえしたら、あとは顔を描くだけです。', en: 'Turn it over once more, and all that is left is to draw the face.' },
     caution: { ja: '目と鼻と口を描くと、おとうさんの顔になります。描く作業はアニメーションには含みません。', en: 'Draw the eyes, nose and mouth to finish. Drawing is a step outside the animation.' } },
 ], 1e-7); // 髪が何枚も重なるので、表示用の紙厚を薄くして継ぎ目を閉じる。
+fatherModel.renderLayerSeparation = .00004;

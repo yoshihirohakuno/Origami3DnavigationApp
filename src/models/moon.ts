@@ -39,3 +39,4 @@ export const moonModel = flatSequence({
     description: { ja: 'うらがえしたら、つきのできあがりです。', en: 'Turn it over and the moon is done.' },
     caution: { ja: '目と口を描くと、つきの顔になります。描く作業はアニメーションには含みません。', en: 'Draw the eye and mouth to finish. Drawing is a step outside the animation.' } },
 ], 1e-6); // 段折りの上にさらに角を折るので、表示用の紙厚を薄くして継ぎ目を閉じる。
+moonModel.renderLayerSeparation = .00004;

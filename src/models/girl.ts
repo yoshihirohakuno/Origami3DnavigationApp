@@ -37,3 +37,4 @@ export const girlModel = flatSequence({
     description: { ja: '右下の角も後ろへ折ったら、あとは顔を描くだけです。', en: 'Fold the bottom-right corner behind, and all that is left is to draw the face.' },
     caution: { ja: '目と口を描くと、おんなのこの顔になります。描く作業はアニメーションには含みません。', en: 'Draw the eyes and mouth to finish. Drawing is a step outside the animation.' } },
 ], 1e-7);
+girlModel.renderLayerSeparation = .00004;

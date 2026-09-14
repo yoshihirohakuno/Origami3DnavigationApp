@@ -43,3 +43,4 @@ export const boyModel = flatSequence({
     description: { ja: '右下の角も後ろへ折ったら、あとは顔を描くだけです。', en: 'Fold the bottom-right corner behind, and all that is left is to draw the face.' },
     caution: { ja: '目と鼻と口を描くと、おとこのこの顔になります。描く作業はアニメーションには含みません。', en: 'Draw the eyes, nose and mouth to finish. Drawing is a step outside the animation.' } },
 ], 1e-7); // 10枚以上が重なるので、表示用の紙厚を薄くして継ぎ目を閉じる。
+boyModel.renderLayerSeparation = .00004;

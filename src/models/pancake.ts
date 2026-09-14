@@ -27,3 +27,4 @@ export const pancakeModel = flatSequence({
     description: { ja: '裏返して、折り目のない面を上にしたら完成です。', en: 'Turn it over so the smooth side faces up.' },
     caution: { ja: '折り図のバターは紙をちぎって作ります。この作業はアニメーションには含みません。', en: 'The butter in the diagram is torn from another sheet, a step outside the animation.' } },
 ], 1e-6); // 四つ折りの上に四隅を折るので、表示用の紙厚を薄くして継ぎ目を閉じる。
+pancakeModel.renderLayerSeparation = .00004;

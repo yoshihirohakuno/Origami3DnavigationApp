@@ -1,6 +1,7 @@
 import { flatSequence } from '../engine/flatSequence';
 
-// 参考: easy/food/coffee/zu.gif。4工程すべて平畳み。目印のある折りは❹だけで、
+// 参考: easy/food/coffee/zu.gif。最後に手前の取っ手を起こす動きを独立した工程にする。
+// 目印のある折りは❹だけで、
 // ほかは実測になる(折り図自身も「8mmぐらい」と書いていて厳密ではない)。
 // ❶ 下のふちを折り上げ、上に色の帯を残す。帯は紙(高さ2)の .227 なので折り線 y=-.114。
 //    ❷❸❹のパネルはどれも高さ255px・帯52pxで一致する
@@ -25,6 +26,8 @@ export const coffeeModel = flatSequence({
     description: { ja: '上のふちの中央から、右上を折り下げます。', en: 'Fold the top-right corner down along a line from the middle of the top edge.' },
     caution: { ja: '折り返した角の裏が出て、色の三角が見えます。', en: 'The back of the folded corner shows, so a triangle of color appears.' } },
   { moves: [{ line: [[0,-1],[0,1]], side: -1, type: 'mountain' }],
-    description: { ja: '中心線で右半分を後ろへ折ったら、こーひーのできあがりです。', en: 'Fold the right half behind along the center line and the coffee is done.' },
-    caution: { ja: '手前に残る白い三角を右へ起こすと、取っ手になります。', en: 'Lift the white triangle left in front out to the right and it becomes the handle.' } },
+    description: { ja: '中心線で右半分を後ろへ折ります。', en: 'Fold the right half behind along the center line.' } },
+  { moves: [{ line: [[0,-1],[0,1]], side: 1, fromFold: 1, exceptFold: 3 }],
+    description: { ja: '手前の白い三角だけを右へ起こし、取っ手を出して完成です。', en: 'Open only the white triangle in front out to the right to finish the handle.' },
+    caution: { ja: 'カップの胴は動かさず、中心線を軸に三角を開きます。', en: 'Keep the cup body still and open the triangle around the center line.' } },
 ]);

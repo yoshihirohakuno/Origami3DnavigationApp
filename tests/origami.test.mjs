@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,4],['tea',4,7]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -657,19 +657,26 @@ test('the water bottle narrows its white cap over a colored body', () => {
   assert.notEqual(visibleAt(m,-.45,-.6),undefined,'the body keeps its full width');
 });
 
-test('the coffee cup keeps a colored rim over a white body and folds in half behind', () => {
+test('the coffee cup opens a white handle outside its stationary body', () => {
   const m=modelOf('coffee'),p=computeFoldState(m,m.steps.length).positions;
   const used=[...new Set(m.faces.flat())];
   const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
   // ❹で右半分を後ろへ折るので、胴は幅ちょうど1。高さは❶の折り残し .114 の分だけ2より低い
-  assert.ok(Math.abs(Math.min(...xs)+1)<1e-8 && Math.abs(Math.max(...xs))<1e-8);
+  assert.ok(Math.abs(Math.min(...xs)+1)<1e-8);
+  assert.ok(Math.max(...xs)>.25 && Math.max(...xs)<.3,'the handle extends beyond the right edge');
   assert.ok(Math.abs(Math.min(...ys)+.114)<1e-8 && Math.abs(Math.max(...ys)-1)<1e-8);
   // ❶で残した帯(y=.772 より上)だけが色の面。下は折り上げた裏で白
   for(const [x,y] of [[-.9,.85],[-.5,.95],[-.1,.8]])
     assert.equal(visibleAt(m,x,y)?.front,true,`the rim stays colored at ${x},${y}`);
   for(const [x,y] of [[-.9,.7],[-.5,.3],[-.1,-.05]])
     assert.equal(visibleAt(m,x,y)?.front,false,`the cup stays white at ${x},${y}`);
-  assert.equal(visibleAt(m,.05,.5),undefined,'nothing reaches past the center fold');
+  assert.equal(visibleAt(m,.05,.5,4),undefined,'the handle starts folded against the body');
+  assert.equal(visibleAt(m,.1,.5)?.front,false,'the completed handle is white');
+  assert.equal(visibleAt(m,.1,.85),undefined,'the handle does not extend into the rim');
+  const before=computeFoldState(m,4).positions;
+  const moving=new Set(m.steps[4].folds.flatMap(op=>op.moving));
+  for(const vi of used) if(!moving.has(vi))
+    assert.ok(before[vi].distanceTo(p[vi])<1e-8,'opening the handle keeps the body still');
   // ❸のあと(折り図❹の姿)は、折り返した角の裏が色の三角になって出る
   assert.equal(visibleAt(m,.2,.45,3)?.front,true,'the turned corner shows a colored triangle');
   assert.equal(visibleAt(m,.1,.45,3)?.front,false,'the paper around it stays white');
@@ -704,17 +711,24 @@ test('the tea cup tapers to a narrow foot and turns one layer out for a handle',
   assert.equal(visibleAt(m,-.25,.7,3)?.front,false,'below the band it is white');
 });
 
-test('the cicada raises both corners to the top point and steps its wings', () => {
+test('the cicada narrows both shoulders and keeps three separate lower tips', () => {
   const cicada=modelOf('cicada'),p=computeFoldState(cicada,cicada.steps.length).positions;
   const used=[...new Set(cicada.faces.flat())];
   const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
-  // ❷の折り線は下辺と斜辺の中点を結ぶので、角はちょうど頂点で出会い、体は一辺1の四角になる
-  assert.ok(Math.abs((Math.max(...xs)-Math.min(...xs))-1)<1e-8);
-  assert.ok(Math.abs(Math.min(...ys))<1e-8,'the tips reach the bottom corner');
+  const before=computeFoldState(cicada,7).positions;
+  const width=positions=>Math.max(...used.map(vi=>positions[vi].x))-Math.min(...used.map(vi=>positions[vi].x));
+  assert.ok(width(p)<width(before)*.7,'the last two folds visibly narrow the body');
+  assert.ok(Math.abs(Math.min(...xs)+Math.max(...xs))<1e-8,'the shoulders are symmetric');
+  assert.equal(visibleAt(cicada,-.3,.6),undefined,'left shoulder is tucked behind');
+  assert.equal(visibleAt(cicada,.3,.6),undefined,'right shoulder is tucked behind');
+  assert.notEqual(visibleAt(cicada,0,.03),undefined,'the middle tail remains');
+  assert.notEqual(visibleAt(cicada,-.1,-.03),undefined,'left wing extends below the middle tail');
+  assert.notEqual(visibleAt(cicada,.1,-.03),undefined,'right wing extends below the middle tail');
+  assert.equal(visibleAt(cicada,0,-.04),undefined,'the two wing tips do not overlap');
   // 2枚のはねは別の高さで折る。上が .669、手前が .628
   assert.ok(Math.abs(Math.max(...ys)-.669)<1e-8);
   assert.equal(visibleAt(cicada,0,.3)?.front,false,'the turned-down wing shows its white back');
-  assert.equal(visibleAt(cicada,-.35,.45)?.front,true,'the body stays colored');
+  assert.equal(visibleAt(cicada,0,.5)?.front,true,'the body stays colored');
 });
 
 test('the owl closes into a square with white brows and a white beak', () => {
@@ -796,8 +810,12 @@ test('egg stays open during rounding and butterfly turns without flipping its fa
   }
 });
 
-test('render spacing retains the existing stack order through egg tucks and turnover', async () => {
-  const m=modelOf('egg'),physical={...m,renderLayerSeparation:undefined};
+for(const id of ['egg','boy','girl','father','moon','pancake','cicada'])
+test(`${id}: render spacing preserves colors while separating thin layers`, async () => {
+  const m=modelOf(id),physical={...m,renderLayerSeparation:undefined};
+  const finalState=computeFoldState(m,m.steps.length);
+  const offsets=renderFaceOffsets(m,finalState);
+  assert.ok(Math.max(...offsets.map(v=>v.length()))>.00002,'thin stacks need visible depth separation');
   for(let t=0;t<=m.steps.length;t++){
     assert.deepEqual(computeFoldState(m,t).positions,computeFoldState(physical,t).positions,'display spacing never moves the folding geometry');
     const rendered=await coverage(m,t),original=await coverage(physical,t);
