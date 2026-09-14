@@ -18,6 +18,7 @@ const diagrams: Record<string, string> = {
   vest: 'easy/clothes/vest/vest/zu.gif',
   gloves: 'easy/clothes/gloves/gloves/zu.gif',
   shoes: 'rn-image/zu/shoes.gif',
+  snail: 'easy/other/snail/snail/zu.gif',
   moon: 'easy/other/moon/moon/zu.gif',
   boy: 'easy/human-face/boy/zu.gif',
   girl: 'easy/human-face/girl/zu.gif',
