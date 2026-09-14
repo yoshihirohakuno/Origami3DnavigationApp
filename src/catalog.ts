@@ -79,6 +79,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   shorts: 'useful',
   vest: 'useful',
   gloves: 'useful',
+  shoes: 'useful',
   moon: 'decorate',
   boy: 'face',
   girl: 'face',

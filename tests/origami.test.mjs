@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -740,6 +740,28 @@ test('the mother turns one folded layer out for side hair and keeps a white fore
   assert.equal(visibleAt(m,0,.6,8)?.front,true,'the hair still shows above the folded edge');
   assert.equal(visibleAt(m,0,.48,8)?.front,false,'and the white back covers the face below it');
   assert.equal(visibleAt(m,-.6,.1,8)?.front,false,'the side hair is white until the last turn');
+});
+
+test('the shoe keeps a white opening above a colored body and slants one toe', () => {
+  const m=modelOf('shoes'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  // ❷で上を y=.84 で後ろへ、❹で下を y=-.16(=.84-1)で折り上げる。高さは1
+  assert.ok(Math.abs(Math.max(...ys)-.84)<1e-8 && Math.abs(Math.min(...ys)+.16)<1e-8);
+  // ❸で幅1.5。❺でうらがえすので、外形は x=-1..0.5
+  assert.ok(Math.abs(Math.min(...xs)+1)<1e-8 && Math.abs(Math.max(...xs)-.5)<1e-8);
+  // 上の帯だけが白い裏。下の胴は色の面
+  for(const [x,y] of [[0,.8],[.3,.8],[-.2,.75]])
+    assert.equal(visibleAt(m,x,y)?.front,false,`the opening stays white at ${x},${y}`);
+  for(const [x,y] of [[0,.6],[-.9,.3],[-.95,0],[.45,.5]])
+    assert.equal(visibleAt(m,x,y)?.front,true,`the body stays colored at ${x},${y}`);
+  // ❹でつま先をななめに落とすので、うらがえすと左上が欠ける
+  assert.equal(visibleAt(m,-.9,.8),undefined,'the toe corner is cut away');
+  assert.equal(visibleAt(m,.6,.3),undefined,'nothing reaches past the folded edge');
+  // ❷のあと(折り図❹)は、折り返した1枚の上のはしだけ白が残る
+  assert.equal(visibleAt(m,-.25,.3,2)?.front,true,'the turned-in edge shows color');
+  assert.equal(visibleAt(m,-.25,.78,2)?.front,false,'but the layer folded behind stays white at the top');
+  assert.equal(visibleAt(m,.5,.3,2)?.front,false,'the rest of the sheet is still white');
 });
 
 test('the cicada narrows both shoulders and keeps three separate lower tips', () => {
