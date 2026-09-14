@@ -50,6 +50,7 @@ import { moonModel } from './models/moon';
 import { boyModel } from './models/boy';
 import { girlModel } from './models/girl';
 import { fatherModel } from './models/father';
+import { waterBottleModel } from './models/waterBottle';
 import type { OrigamiModel, LocalizedText } from './engine/types';
 import { withoutCreasePreparation } from './engine/withoutCreasePreparation';
 import { separateFoldSteps } from './engine/separateFoldSteps';
@@ -110,6 +111,7 @@ const SOURCES: OrigamiModel[] = [
   boyModel,
   girlModel,
   fatherModel,
+  waterBottleModel,
 ];
 
 function wording(text: LocalizedText): LocalizedText {

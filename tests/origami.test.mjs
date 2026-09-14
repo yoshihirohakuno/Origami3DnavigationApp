@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -637,6 +637,24 @@ test('the father sweeps his hair to one side across a white forehead', () => {
   for(const [x,y] of [[0,0],[-.3,-.2],[.3,-.3]])
     assert.equal(visibleAt(m,x,y)?.front,false,`the face stays white at ${x},${y}`);
   assert.equal(visibleAt(m,-.47,-.47),undefined,'the jaw corners are folded away');
+});
+
+test('the water bottle narrows its white cap over a colored body', () => {
+  const m=modelOf('water-bottle'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  // ❶で上を y=.5 へ、❸で左右を x=±.5 へ。高さ1.5・幅1になる
+  assert.ok(Math.abs(Math.min(...xs)+.5)<1e-8 && Math.abs(Math.max(...xs)-.5)<1e-8);
+  assert.ok(Math.abs(Math.min(...ys)+1)<1e-8 && Math.abs(Math.max(...ys)-.5)<1e-8);
+  // ふたは白、胴は色の面。境目はよこの中心線
+  for(const [x,y] of [[0,.4],[-.2,.2],[.2,.05]])
+    assert.equal(visibleAt(m,x,y)?.front,false,`the cap stays white at ${x},${y}`);
+  for(const [x,y] of [[0,-.2],[-.4,-.6],[.4,-.9]])
+    assert.equal(visibleAt(m,x,y)?.front,true,`the body stays colored at ${x},${y}`);
+  // ❹で上の角を落とすので、ふたは胴より細い
+  assert.equal(visibleAt(m,-.45,.4),undefined);
+  assert.equal(visibleAt(m,.45,.4),undefined);
+  assert.notEqual(visibleAt(m,-.45,-.6),undefined,'the body keeps its full width');
 });
 
 test('the cicada raises both corners to the top point and steps its wings', () => {
