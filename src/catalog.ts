@@ -84,6 +84,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   girl: 'face',
   father: 'face',
   'water-bottle': 'useful',
+  coffee: 'food',
   'square-base': 'basic',
   'waterbomb-base': 'basic',
 };

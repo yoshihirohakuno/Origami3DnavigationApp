@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,7],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,4]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -655,6 +655,25 @@ test('the water bottle narrows its white cap over a colored body', () => {
   assert.equal(visibleAt(m,-.45,.4),undefined);
   assert.equal(visibleAt(m,.45,.4),undefined);
   assert.notEqual(visibleAt(m,-.45,-.6),undefined,'the body keeps its full width');
+});
+
+test('the coffee cup keeps a colored rim over a white body and folds in half behind', () => {
+  const m=modelOf('coffee'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  // ❹で右半分を後ろへ折るので、胴は幅ちょうど1。高さは❶の折り残し .114 の分だけ2より低い
+  assert.ok(Math.abs(Math.min(...xs)+1)<1e-8 && Math.abs(Math.max(...xs))<1e-8);
+  assert.ok(Math.abs(Math.min(...ys)+.114)<1e-8 && Math.abs(Math.max(...ys)-1)<1e-8);
+  // ❶で残した帯(y=.772 より上)だけが色の面。下は折り上げた裏で白
+  for(const [x,y] of [[-.9,.85],[-.5,.95],[-.1,.8]])
+    assert.equal(visibleAt(m,x,y)?.front,true,`the rim stays colored at ${x},${y}`);
+  for(const [x,y] of [[-.9,.7],[-.5,.3],[-.1,-.05]])
+    assert.equal(visibleAt(m,x,y)?.front,false,`the cup stays white at ${x},${y}`);
+  assert.equal(visibleAt(m,.05,.5),undefined,'nothing reaches past the center fold');
+  // ❸のあと(折り図❹の姿)は、折り返した角の裏が色の三角になって出る
+  assert.equal(visibleAt(m,.2,.45,3)?.front,true,'the turned corner shows a colored triangle');
+  assert.equal(visibleAt(m,.1,.45,3)?.front,false,'the paper around it stays white');
+  assert.notEqual(visibleAt(m,.5,.6,3),undefined,'the body still reaches to the right of center');
 });
 
 test('the cicada raises both corners to the top point and steps its wings', () => {
