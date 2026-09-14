@@ -21,6 +21,7 @@ const diagrams: Record<string, string> = {
   boy: 'easy/human-face/boy/zu.gif',
   girl: 'easy/human-face/girl/zu.gif',
   father: 'easy/human-face/father/zu.gif',
+  mother: 'easy/human-face/mother/zu.gif',
   'water-bottle': 'easy/other/water-bottle/water-bottle/zu.gif',
   coffee: 'easy/food/coffee/zu.gif',
   tea: 'easy/food/tea/zu.gif',

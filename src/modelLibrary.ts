@@ -50,6 +50,7 @@ import { moonModel } from './models/moon';
 import { boyModel } from './models/boy';
 import { girlModel } from './models/girl';
 import { fatherModel } from './models/father';
+import { motherModel } from './models/mother';
 import { waterBottleModel } from './models/waterBottle';
 import { coffeeModel } from './models/coffee';
 import { teaModel } from './models/tea';
@@ -113,6 +114,7 @@ const SOURCES: OrigamiModel[] = [
   boyModel,
   girlModel,
   fatherModel,
+  motherModel,
   waterBottleModel,
   coffeeModel,
   teaModel,

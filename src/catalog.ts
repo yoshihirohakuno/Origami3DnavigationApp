@@ -83,6 +83,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   boy: 'face',
   girl: 'face',
   father: 'face',
+  mother: 'face',
   'water-bottle': 'useful',
   coffee: 'food',
   tea: 'food',

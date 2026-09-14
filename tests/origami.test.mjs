@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -709,6 +709,37 @@ test('the tea cup tapers to a narrow foot and turns one layer out for a handle',
   // ❹のあと(折り図❺)は、折り返した紙のうち帯より上だけが色の面
   assert.equal(visibleAt(m,-.25,.95,3)?.front,true,'the band shows on the turned-back edge');
   assert.equal(visibleAt(m,-.25,.7,3)?.front,false,'below the band it is white');
+});
+
+test('the mother turns one folded layer out for side hair and keeps a white forehead', () => {
+  const m=modelOf('mother'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  const xs=used.map(vi=>p[vi].x), ys=used.map(vi=>p[vi].y);
+  // ❻で出した三角の先は (±.692,.038)。❼のあともここが左右のはしになる
+  assert.ok(Math.abs(Math.min(...xs)+.692308)<1e-6 && Math.abs(Math.max(...xs)-.692308)<1e-6);
+  // 山の頂点は ❷❸ の交点 (0,5/6)。下は❼の折り上げで y=-.25
+  assert.ok(Math.abs(Math.max(...ys)-5/6)<1e-8 && Math.abs(Math.min(...ys)+.25)<1e-8);
+  // 完成は、上が髪、まんなかが白いひたい、左右に色の横の髪
+  assert.equal(visibleAt(m,0,.7)?.front,true,'the hair peaks at the top');
+  assert.equal(visibleAt(m,0,.45)?.front,false,'the forehead is white below it');
+  for(const x of [-.3,.3]) assert.equal(visibleAt(m,x,.55)?.front,true,`hair frames the forehead at ${x}`);
+  for(const x of [-.6,.6]) assert.equal(visibleAt(m,x,.1)?.front,true,`the side hair is colored at ${x}`);
+  for(const [x,y] of [[0,0],[-.2,-.15],[.2,-.15]])
+    assert.equal(visibleAt(m,x,y)?.front,false,`the face stays white at ${x},${y}`);
+  assert.equal(visibleAt(m,-.47,-.2),undefined,'the chin corners are folded away');
+  assert.equal(visibleAt(m,.47,-.2),undefined);
+  // ❺のあと(折り図❻)は、髪がV字に切れ込み、左右の先だけが下へ伸びる
+  assert.equal(visibleAt(m,0,.6,5)?.front,true,'the hair covers the top');
+  assert.equal(visibleAt(m,0,.4,5)?.front,false,'the V notch shows the white face');
+  for(const x of [-.3,.3]) assert.equal(visibleAt(m,x,.2,5)?.front,true,`the hair tip reaches down at ${x}`);
+  // ❻のあと(折り図❼)は、下に色の面が広がり、胴より外へ出る
+  assert.equal(visibleAt(m,0,-.6,7)?.front,true,'the turned-out corners show color');
+  assert.equal(visibleAt(m,-.6,-.6,7)?.front,true,'and reach past the side of the body');
+  assert.equal(visibleAt(m,0,-.1,7)?.front,false,'above them the face is still white');
+  // ❼のあと(折り図❽)は、折り上げた白い裏が y=.5 まで顔をおおう
+  assert.equal(visibleAt(m,0,.6,8)?.front,true,'the hair still shows above the folded edge');
+  assert.equal(visibleAt(m,0,.48,8)?.front,false,'and the white back covers the face below it');
+  assert.equal(visibleAt(m,-.6,.1,8)?.front,false,'the side hair is white until the last turn');
 });
 
 test('the cicada narrows both shoulders and keeps three separate lower tips', () => {
