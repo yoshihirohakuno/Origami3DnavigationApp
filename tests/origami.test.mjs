@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5],['snail',4,7],['fukusuke',4,17]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5],['snail',4,7],['fukusuke',4,17],['cake',2,11]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -767,6 +767,33 @@ test('the shoe keeps a white opening above a colored body and slants one toe', (
   assert.equal(visibleAt(m,-.25,.3,2)?.front,true,'the turned-in edge shows color');
   assert.equal(visibleAt(m,-.25,.78,2)?.front,false,'but the layer folded behind stays white at the top');
   assert.equal(visibleAt(m,.5,.3,2)?.front,false,'the rest of the sheet is still white');
+});
+
+test('the shortcake pleats one layer into five cream peaks and folds a colored strawberry', () => {
+  const m=modelOf('cake'),used=[...new Set(m.faces.flat())];
+  const A=.575, B=A-(1-A)/4, band=(1-A)/4;
+  // ❷で手前の1枚だけを折るので、奥の1枚は頂点に残る
+  const one=computeFoldState(m,2).positions;
+  assert.ok(Math.abs(Math.max(...used.map(vi=>one[vi].y))-1)<1e-8,'the back layer keeps the top point');
+  assert.equal(visibleAt(m,0,.8,2)?.front,false,'above the crease the white back shows');
+  assert.equal(visibleAt(m,-.6,.3,2)?.front,true,'the body outside the turned-down flap stays colored');
+  // ❺までのじゃばらで、帯は山5つ・谷4つの45°のぎざぎざになる
+  const mid=(A+B)/2, peaks=[-1.95,-1,0,1,1.95].map(k=>k*2*band), valleys=[-3,-1,1,3].map(k=>k*band);
+  for(const x of peaks) assert.equal(visibleAt(m,x,mid,5)?.front,true,`peak at ${x.toFixed(3)} is colored`);
+  for(const x of valleys) assert.equal(visibleAt(m,x,mid,5)?.front,false,`valley at ${x.toFixed(3)} is white`);
+  // ❻の段折りで頂点が下がり、❼で折り下げた先が段折りのふちに重なる
+  const D=.754-.692, Q=.692-D;
+  const pleat=computeFoldState(m,7).positions;
+  assert.ok(Math.abs(Math.max(...used.map(vi=>pleat[vi].y))-(1-2*D))<1e-8,'the pleat lowers the point to 1-2D');
+  const berry=computeFoldState(m,8).positions;
+  assert.ok(Math.abs(Math.max(...used.map(vi=>berry[vi].y))-(1-2*D+Q)/2)<1e-8,'the strawberry crease caps the top');
+  assert.equal(visibleAt(m,0,.7,8)?.front,true,'the strawberry turns over colored');
+  assert.equal(visibleAt(m,-.10,.70,8)?.front,false,'the cream beside it stays white');
+  // ❽で左右を後ろへ折り、下のふちは ±1/3 に狭まる
+  const p=computeFoldState(m,10).positions;
+  assert.ok(Math.abs(Math.max(...used.map(vi=>p[vi].x))-(1-A))<1e-8,'the widest point is the end of the band');
+  assert.equal(visibleAt(m,.30,.02,10)?.front,true,'the hem reaches x=.30');
+  assert.equal(visibleAt(m,.36,.02,10),undefined,'and stops before x=.36');
 });
 
 test('the fukusuke opens two arms and turns one inner layer up into a colored head', () => {
