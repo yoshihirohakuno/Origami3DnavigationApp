@@ -89,6 +89,7 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   'water-bottle': 'useful',
   coffee: 'food',
   tea: 'food',
+  fukusuke: 'decorate',
   'square-base': 'basic',
   'waterbomb-base': 'basic',
 };

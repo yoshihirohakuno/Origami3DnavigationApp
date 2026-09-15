@@ -139,10 +139,28 @@ const PLANS: Record<string, Record<number, Plan>> = {
   },
   acorn: { 3: pair('ふちを後ろへ折り、どんぐりを細くします。', 'fold the edge behind to narrow the acorn.'),
     4: pair('下の角を少し後ろへ折ります。', 'fold the lower corner a little behind.') },
+  fukusuke: {
+    1: { captions: [
+      ['上の角を中心へ折ります。', 'Fold the top corner to the center.'],
+      ['右の角を中心へ折ります。', 'Fold the right corner to the center.'],
+      ['下の角を中心へ折ります。', 'Fold the bottom corner to the center.'],
+      ['左の角も中心へ折り、正方形にします。', 'Fold the left corner in as well to make a square.'],
+    ] },
+    2: { captions: [
+      ['できた右上の角を、もう一度中心へ折ります。', 'Fold the new top-right corner to the center again.'],
+      ['左上の角も中心へ折ります。', 'Fold the top-left corner to the center.'],
+      ['左下の角も中心へ折ります。', 'Fold the bottom-left corner to the center.'],
+      ['右下の角も中心へ折り、ひし形にします。', 'Fold the bottom-right corner in to make a diamond.'],
+    ] },
+    4: pair('角を、上の角から中心線へ折ります。', 'fold the corner in to the center line from the top corner.'),
+    6: pair('中心の1枚を同じ折り線で外へ開き、腕にします。', 'open one center tip outward along that same crease into an arm.'),
+  },
 };
 
 const COUPLED: Record<string, Record<number, string>> = {
   cup: { 6: 'The front and back walls share material seams and must bow together.' },
+  // One crease, one motion: the head flap flips over as the top is folded down.
+  fukusuke: { 8: 'One crease: the top turns down while the inner flap it carries turns up.' },
   tadpole: { 4: 'Two layers of the same tail fold, with a small thickness relief.' },
 };
 

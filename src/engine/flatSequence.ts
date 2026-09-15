@@ -9,9 +9,10 @@ export interface FlatMove {
   /** Fold only the flap moved by this earlier operation (zero-based).
    * Used for a pleat tip without folding the underlying body as well. */
   fromFold?: number;
-  /** Leave material moved by this earlier operation in place. Combined with
-   * fromFold this selects an exposed flap without moving the folded stack. */
-  exceptFold?: number;
+  /** Leave material moved by these earlier operations in place. Combined with
+   * fromFold this selects an exposed flap without moving the folded stack.
+   * A list narrows one flap out of a stack that shares the same earlier fold. */
+  exceptFold?: number | number[];
 }
 interface FlatStep {
   moves: FlatMove[];
@@ -41,7 +42,8 @@ export function flatSequence(
     const indices: number[] = [];
     for (const move of step.moves) {
       const index = operations.length;
-      for (const reference of [move.fromFold, move.exceptFold]) {
+      const excluded = move.exceptFold === undefined ? [] : [move.exceptFold].flat();
+      for (const reference of [move.fromFold, ...excluded]) {
         if (reference !== undefined && (!Number.isInteger(reference) || reference < 0 || reference >= index)) {
           throw new Error(`${metadata.id}: flap must refer to an earlier fold`);
         }
@@ -56,7 +58,7 @@ export function flatSequence(
       };
       panels = panels.flatMap(panel => {
         if (move.fromFold !== undefined && !panel.history.includes(move.fromFold)) return [panel];
-        if (move.exceptFold !== undefined && panel.history.includes(move.exceptFold)) return [panel];
+        if (excluded.some(n => panel.history.includes(n))) return [panel];
         const signs = panel.points.map(p => signed(p.current));
         const crosses = signs.some(s => s > EPS) && signs.some(s => s < -EPS);
         const pieces: Panel[] = [];

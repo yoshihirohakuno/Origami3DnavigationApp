@@ -468,12 +468,17 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5],['snail',4,7]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5],['snail',4,7],['fukusuke',4,17]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
     assert.notEqual(categoryOf(id),'other');
-    assert.ok(m.steps.every(s=>s.folds.filter(isGuideFold).length===1));
+    // One action per step: every guide fold in a step must share the one crease.
+    const crease=op=>op.axis.map(vi=>m.vertices[vi].map(n=>Math.round(n*1e8)).join(':')).join('|');
+    assert.ok(m.steps.every(s=>{
+      const guides=s.folds.filter(isGuideFold);
+      return guides.length>0 && new Set(guides.map(crease)).size===1;
+    }));
     const triangleArea=paperTriangles(m).reduce((sum,[,a,b,c])=>sum+initial[b].clone().sub(initial[a]).cross(initial[c].clone().sub(initial[a])).length()/2,0);
     assert.ok(Math.abs(triangleArea-area)<1e-8,'all the original paper is retained');
     const copies=new Map();
@@ -762,6 +767,31 @@ test('the shoe keeps a white opening above a colored body and slants one toe', (
   assert.equal(visibleAt(m,-.25,.3,2)?.front,true,'the turned-in edge shows color');
   assert.equal(visibleAt(m,-.25,.78,2)?.front,false,'but the layer folded behind stays white at the top');
   assert.equal(visibleAt(m,.5,.3,2)?.front,false,'the rest of the sheet is still white');
+});
+
+test('the fukusuke opens two arms and turns one inner layer up into a colored head', () => {
+  const m=modelOf('fukusuke'),used=[...new Set(m.faces.flat())];
+  const h=Math.SQRT2/2, arm=(Math.SQRT2-1)/2, hem=-(Math.SQRT2-1)*h;
+  // ざぶとん折り2回で、半径 h のひし形になる(面積は4分の1)
+  const two=computeFoldState(m,2).positions;
+  assert.ok(Math.abs(Math.max(...used.map(vi=>two[vi].y))-h)<1e-8,'two blintzes leave a diamond of radius h');
+  // ❽で開いた先は (±1/2, (√2-1)/2)。ここが腕の先になる
+  const open=computeFoldState(m,6).positions;
+  assert.ok(Math.abs(Math.max(...used.map(vi=>open[vi].x))-.5)<1e-8,'the opened tips reach x=1/2');
+  assert.ok(used.some(vi=>Math.abs(open[vi].x-.5)<1e-8&&Math.abs(open[vi].y-arm)<1e-8),'at the arm height');
+  // ❿で上を折り下げると、返った1枚の先が (0,√2-1) に立って頭になる
+  const head=computeFoldState(m,8).positions;
+  assert.ok(Math.abs(Math.max(...used.map(vi=>head[vi].y))-(Math.SQRT2-1))<1e-8,'the head tip stands at y=√2-1');
+  assert.ok(Math.abs(Math.max(...used.map(vi=>head[vi].x))-.5)<1e-8,'the arms keep their span');
+  // ⓫で下を後ろへ折るので、すそは平ら
+  const p=computeFoldState(m,m.steps.length).positions;
+  assert.ok(Math.abs(Math.min(...used.map(vi=>p[vi].y))-hem)<1e-8,'the hem is flat');
+  // うらがえしが3回なので、頭も腕も胴も色の面(原典の完成写真と同じ)
+  for(const [x,y] of [[0,.3],[.1,.25],[-.4,.15],[.4,.15],[0,-.1],[-.3,-.2]])
+    assert.equal(visibleAt(m,x,y)?.front,true,`${x},${y} shows the colored side`);
+  // 腕の先より外、頭の先より上には紙がない
+  assert.equal(visibleAt(m,.6,arm),undefined,'nothing reaches beyond the arm tip');
+  assert.equal(visibleAt(m,0,.5),undefined,'and nothing stands above the head');
 });
 
 test('the snail folds only the near sheet and keeps a colored shell at one corner', () => {
