@@ -192,7 +192,7 @@ const steps: FoldStep[] = [
 
 const source: OrigamiModel = {
   id: 'piano',
-  name: { ja: 'ぴあの', en: 'Piano' },
+  name: { ja: 'ピアノ', en: 'Piano' },
   difficulty: 1,
   cameraAngle: 0,
   vertices: V,

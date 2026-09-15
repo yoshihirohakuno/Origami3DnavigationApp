@@ -16,7 +16,7 @@ import { flatSequence } from '../engine/flatSequence';
 // 「全幅で白」を採った(docs/handoff.md に記録)。
 const lip = 0.84;
 export const shoesModel = flatSequence({
-  id: 'shoes', name: { ja: 'しゅーず', en: 'Shoes' }, difficulty: 2,
+  id: 'shoes', name: { ja: 'シューズ', en: 'Shoes' }, difficulty: 2,
   sheetColors: [{ front: '#5b8f4e', back: '#fbfaf7' }],
 }, [[-1,-1],[1,-1],[1,1],[-1,1]], true, [
   { moves: [{ line: [[-1,lip],[1,lip]], side: 1, type: 'mountain' }],

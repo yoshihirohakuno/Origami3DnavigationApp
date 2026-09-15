@@ -13,7 +13,7 @@ import { flatSequence } from '../engine/flatSequence';
 const shoulder = 0.8;
 const neck = -0.08;
 export const vestModel = flatSequence({
-  id: 'vest', name: { ja: 'べすと', en: 'Vest' }, difficulty: 1,
+  id: 'vest', name: { ja: 'ベスト', en: 'Vest' }, difficulty: 1,
   sheetColors: [{ front: '#7ecee2', back: '#fbfaf7' }],
 }, [[-1,-.5],[1,-.5],[1,.5],[-1,.5]], true, [
   { moves: [{ line: [[-1,neck],[-shoulder,.5]], side: 1 }],

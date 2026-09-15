@@ -12,7 +12,7 @@ import { flatSequence } from '../engine/flatSequence';
 // 完成の実測もこれと合う(Vの先が高さの .48、すその開きが幅の .37)。
 const leg = 0.8;
 export const shortsModel = flatSequence({
-  id: 'shorts', name: { ja: 'はんずぼん', en: 'Shorts' }, difficulty: 1,
+  id: 'shorts', name: { ja: '半ズボン', en: 'Shorts' }, difficulty: 1,
   sheetColors: [{ front: '#7ecee2', back: '#fbfaf7' }],
 }, [[-1,-.5],[1,-.5],[1,.5],[-1,.5]], true, [
   { moves: [{ line: [[-1,0],[-leg,-.5]], side: -1 }],

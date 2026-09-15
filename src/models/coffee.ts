@@ -13,7 +13,7 @@ import { flatSequence } from '../engine/flatSequence';
 // ❹ たての中心線で右半分を後ろへ折る(厳密。❺の胴が幅ちょうど1になる)
 const lip = 0.114;
 export const coffeeModel = flatSequence({
-  id: 'coffee', name: { ja: 'こーひー', en: 'Coffee' }, difficulty: 2,
+  id: 'coffee', name: { ja: 'コーヒー', en: 'Coffee' }, difficulty: 2,
   sheetColors: [{ front: '#dd8a54', back: '#fbfaf7' }],
 }, [[-1,-1],[1,-1],[1,1],[-1,1]], false, [
   { moves: [{ line: [[-1,-lip],[1,-lip]], side: -1 }],

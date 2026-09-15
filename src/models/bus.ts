@@ -222,7 +222,7 @@ const steps: FoldStep[] = [
 
 const source: OrigamiModel = {
   id: 'bus',
-  name: { ja: 'ばす', en: 'Bus' },
+  name: { ja: 'バス', en: 'Bus' },
   difficulty: 2,
   vertices: V,
   faces: backSideUp(F_.map((f) => orient(f, V))),

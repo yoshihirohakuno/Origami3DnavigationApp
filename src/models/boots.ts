@@ -144,7 +144,7 @@ const steps: FoldStep[] = [
 
 const source: OrigamiModel = {
   id: 'boots',
-  name: { ja: 'ぶーつ', en: 'Boots' },
+  name: { ja: 'ブーツ', en: 'Boots' },
   difficulty: 1,
   cameraAngle: 0,
   vertices: V,
