@@ -13,7 +13,7 @@ import { flatSequence } from '../engine/flatSequence';
 // ❻ 右側を、(.45,1)-(1,0) の線で左へ折る(下のはしは右下の角。上は実測)。
 //    折り図❼の右のふちが .455 で切れているのと一致する
 // ❼ 左側を、(-.93,1)-(-.57,0) の線で右へ折る(実測)
-// ❽ うらがえして完成。右上に色の面が三角に残り、ここがからになる
+// ❽ うらがえして完成。右上の色の三角が頭。大きな白い部分に渦巻きを描くと殻になる。
 export const snailModel = flatSequence({
   id: 'snail', name: { ja: 'かたつむり', en: 'Snail' }, difficulty: 2,
   sheetColors: [{ front: '#c9848c', back: '#fbfaf7' }],
@@ -22,7 +22,7 @@ export const snailModel = flatSequence({
     description: { ja: '左上の角を、45°の線で折り下げます。', en: 'Fold the top-left corner down along a 45° line.' },
     caution: { ja: '色の面を上にして始めます。折り返した白い裏が出ます。', en: 'Start colored side up. The white back shows where you fold.' } },
   { moves: [{ line: [[-1,0],[1,0]], side: -1 }],
-    description: { ja: '下半分を、よこの折り目で折り上げます。', en: 'Fold the bottom half up along the horizontal crease.' },
+    description: { ja: '下半分を、よこの中心線で折り上げます。', en: 'Fold the bottom half up along the horizontal center line.' },
     caution: { ja: '白い裏が上になり、欠けた角も埋まって長方形になります。', en: 'The white back comes up and fills the missing corner, making a rectangle.' } },
   { moves: [{ line: [[-1,1],[1,0]], side: 1, fromFold: 1 }],
     description: { ja: '手前の1枚だけを、長方形の対角線で折ります。', en: 'Fold just the front layer along the diagonal of the rectangle.' },
@@ -36,5 +36,5 @@ export const snailModel = flatSequence({
     description: { ja: '左側も、ななめの線で右へ折ります。', en: 'Fold the left side over to the right along a slant as well.' } },
   { moves: [{ line: [[0,-1],[0,1]], side: 1, type: 'assemble' }],
     description: { ja: 'うらがえしたら、かたつむりのできあがりです。', en: 'Turn it over and the snail is done.' },
-    caution: { ja: '右上に残る色の面がからです。うずまきを描くと仕上がります。描く作業はアニメーションには含みません。', en: 'The colored triangle at the top right is the shell. Draw a spiral to finish; drawing is a step outside the animation.' } },
+    caution: { ja: '右上の色の三角が頭です。頭に目を、大きな白い部分に殻のうずまきを描くと仕上がります。描く作業はアニメーションには含みません。', en: 'The colored triangle at the top right is the head. Draw an eye on it and a shell spiral on the large white area. Drawing is a step outside the animation.' } },
 ]);

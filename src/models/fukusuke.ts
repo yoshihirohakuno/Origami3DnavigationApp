@@ -38,7 +38,7 @@ export const fukusukeModel = flatSequence({
     { line: [[-h, -1], [-h, 1]], side: 1 },
   ],
     description: { ja: '4つの角を中心へ折り、正方形にします。', en: 'Fold all four corners to the center to make a square.' },
-    caution: { ja: '白い面を上にして始めます。折り返した色の面が全面に出ます。', en: 'Start white side up. The colored side turned up covers the whole square.' } },
+    caution: { ja: '白い面を上にして始めます。角を折ると、その部分に色の面が出ます。', en: 'Start white side up. Folding a corner reveals the colored side in that area.' } },
   { moves: [
     { line: [[h, 0], [0, h]], side: -1 },
     { line: [[0, h], [-h, 0]], side: -1 },

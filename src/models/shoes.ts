@@ -23,7 +23,7 @@ export const shoesModel = flatSequence({
     description: { ja: '上のふちを、少しだけ後ろへ折ります。', en: 'Fold the top edge a little way behind.' },
     caution: { ja: '白い面を上にして始めます。後ろへ折るので、表は白いままです。', en: 'Start white side up. Folding behind leaves this side white.' } },
   { moves: [{ line: [[-.5,-1],[-.5,1]], side: 1 }],
-    description: { ja: '左のふちを、まんなかの折り目に合わせて折ります。', en: 'Fold the left edge in to the center crease.' },
+    description: { ja: '左のふちを、紙のたての中心線に合わせて折ります。', en: 'Fold the left edge in to the vertical center line of the paper.' },
     caution: { ja: '折り返した色の面が出ます。上のはしだけは、後ろの紙が出て白いままです。', en: 'The colored side turns up, except at the top where the layer folded behind shows white.' } },
   { moves: [{ line: [[-1,lip-1],[1,lip-1]], side: -1 }],
     description: { ja: '下のふちを、後ろへ折った紙のはしまで折り上げます。', en: 'Fold the bottom edge up as far as the edge of the layer folded behind.' },
@@ -32,6 +32,6 @@ export const shoesModel = flatSequence({
     description: { ja: '右上の角を、ななめに折ります。', en: 'Fold the top-right corner down along a slant.' },
     caution: { ja: '目印はありません。折り図の線のとおりに折ります。', en: 'There is no landmark; follow the line in the diagram.' } },
   { moves: [{ line: [[0,-1],[0,1]], side: 1, type: 'assemble' }],
-    description: { ja: 'うらがえしたら、しゅーずのできあがりです。', en: 'Turn it over and the shoe is done.' },
+    description: { ja: 'うらがえしたら、シューズのできあがりです。', en: 'Turn it over and the shoe is done.' },
     caution: { ja: 'ななめに落とした角がつま先、白い帯が口になります。', en: 'The slanted corner is the toe and the white band is the opening.' } },
 ]);

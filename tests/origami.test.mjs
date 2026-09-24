@@ -821,7 +821,7 @@ test('the fukusuke opens two arms and turns one inner layer up into a colored he
   assert.equal(visibleAt(m,0,.5),undefined,'and nothing stands above the head');
 });
 
-test('the snail folds only the near sheet and keeps a colored shell at one corner', () => {
+test('the snail folds only the near sheet and keeps a colored head beside its white shell', () => {
   const m=modelOf('snail'),p=computeFoldState(m,m.steps.length).positions;
   const used=[...new Set(m.faces.flat())];
   const ys=used.map(vi=>p[vi].y);
@@ -834,8 +834,8 @@ test('the snail folds only the near sheet and keeps a colored shell at one corne
   assert.equal(visibleAt(m,.5,.8,3)?.front,true,'the layer underneath keeps its color');
   assert.equal(visibleAt(m,-.9,.8,3)?.front,false,'the near sheet turned over is white');
   assert.equal(visibleAt(m,.2,-.3,3)?.front,true,'the jutting tip shows color');
-  // 完成は白い体の右上に色の三角(から)が残る
-  assert.equal(visibleAt(m,.6,.65)?.front,true,'the shell stays colored');
+  // 完成は白い殻の右上に色の三角(頭)が残る
+  assert.equal(visibleAt(m,.6,.65)?.front,true,'the head stays colored');
   assert.equal(visibleAt(m,.9,.95)?.front,true);
   for(const [x,y] of [[-.2,.65],[0,.25],[-.7,.3],[.5,.5]])
     assert.equal(visibleAt(m,x,y)?.front,false,`the body stays white at ${x},${y}`);
@@ -943,7 +943,7 @@ test('egg stays open during rounding and butterfly turns without flipping its fa
   }
 });
 
-for(const id of ['egg','boy','girl','father','moon','pancake','cicada'])
+for(const id of ['egg','boy','girl','father','mother','fukusuke','moon','pancake','cicada'])
 test(`${id}: render spacing preserves colors while separating thin layers`, async () => {
   const m=modelOf(id),physical={...m,renderLayerSeparation:undefined};
   const finalState=computeFoldState(m,m.steps.length);
