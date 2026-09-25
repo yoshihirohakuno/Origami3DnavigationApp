@@ -27,7 +27,7 @@
 
 const IDS = [
   'tulip', 'dog', 'cup', 'chick', 'squareBase', 'crane', 'shuriken', 'cat', 'fox',
-  'rabbit', 'panda', 'bear', 'whale', 'helmet', 'heart', 'box', 'yacht', 'penguin',
+  'rabbit', 'panda', 'bear', 'whale', 'helmet', 'heart', 'box', 'yacht', 'penguin', 'bat',
   'ship', 'rocket', 'envelope', 'piano', 'turtle', 'sinkansen', 'boots', 'waterbombBase', 'riceball', 'tadpole', 'car', 'bus', 'elephant',
 ];
 

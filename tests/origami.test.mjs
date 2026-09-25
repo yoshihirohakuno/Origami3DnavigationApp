@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5],['snail',4,7],['fukusuke',4,17],['cake',2,11]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5],['snail',4,7],['fukusuke',4,17],['cake',2,11],['bat',2,9]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -496,6 +496,27 @@ for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2
     }
   });
 }
+
+test('bat retains both wing pleats and folds only the face before its shallow final bend', async () => {
+  const m=modelOf('bat'), used=[...new Set(m.faces.flat())];
+  assert.equal(m.difficulty,3);
+  // Independent diagram landmarks: broad symmetric wings, two high shoulders,
+  // short lower tail. Panel 9 measures width/height about 3.15.
+  const flat=computeFoldState(m,8).positions;
+  const hasPoint=(x,y)=>used.some(vi=>Math.hypot(flat[vi].x-x,flat[vi].y-y)<.025);
+  for(const point of [[-.96,.21],[.96,.21],[-.42,.45],[.42,.45],[0,-.14],[0,.15]])
+    assert.ok(hasPoint(...point),`missing reference landmark ${point}`);
+  const finished=computeFoldState(m,9).positions;
+  const span=axis=>Math.max(...used.map(i=>finished[i][axis]))-Math.min(...used.map(i=>finished[i][axis]));
+  assert.ok(Math.abs(span('x')/span('y')/3.15-1)<.05,'reference silhouette aspect ratio');
+  assert.ok(span('z')>.2 && span('x')>1.8,'finish bends slightly without closing the wings');
+  const beforeFace=computeFoldState(m,7).positions;
+  for(const vi of used.filter(i=>Math.abs(beforeFace[i].x)>.3))
+    assert.ok(flat[vi].distanceTo(beforeFace[vi])<.001,'shaping the face must not bend the spread wings');
+  assert.ok(used.some(vi=>flat[vi].distanceTo(beforeFace[vi])>.2),'face tip actually turns down');
+  for(let stage=1;stage<=9;stage++)
+    assert.equal(await coverage(m,stage,{grid:80}),0,`colored outer surface at stage ${stage}`);
+});
 
 test('the television keeps a white screen and fuji keeps a white cap over brown', () => {
   const tv=modelOf('tv'),p=computeFoldState(tv,tv.steps.length).positions;

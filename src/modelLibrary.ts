@@ -58,6 +58,7 @@ import { coffeeModel } from './models/coffee';
 import { teaModel } from './models/tea';
 import { fukusukeModel } from './models/fukusuke';
 import { cakeModel } from './models/cake';
+import { batModel } from './models/bat';
 import type { OrigamiModel, LocalizedText } from './engine/types';
 import { withoutCreasePreparation } from './engine/withoutCreasePreparation';
 import { separateFoldSteps } from './engine/separateFoldSteps';
@@ -126,6 +127,7 @@ const SOURCES: OrigamiModel[] = [
   teaModel,
   fukusukeModel,
   cakeModel,
+  batModel,
 ];
 
 function wording(text: LocalizedText): LocalizedText {
