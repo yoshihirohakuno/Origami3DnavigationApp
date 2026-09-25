@@ -92,6 +92,9 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   fukusuke: 'decorate',
   cake: 'food',
   bat: 'animal',
+  'witch-hat': 'decorate',
+  franken: 'face',
+  skull: 'face',
   'square-base': 'basic',
   'waterbomb-base': 'basic',
 };

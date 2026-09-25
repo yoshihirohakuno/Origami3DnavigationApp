@@ -59,6 +59,9 @@ import { teaModel } from './models/tea';
 import { fukusukeModel } from './models/fukusuke';
 import { cakeModel } from './models/cake';
 import { batModel } from './models/bat';
+import { witchHatModel } from './models/witchHat';
+import { frankenModel } from './models/franken';
+import { skullModel } from './models/skull';
 import type { OrigamiModel, LocalizedText } from './engine/types';
 import { withoutCreasePreparation } from './engine/withoutCreasePreparation';
 import { separateFoldSteps } from './engine/separateFoldSteps';
@@ -128,6 +131,9 @@ const SOURCES: OrigamiModel[] = [
   fukusukeModel,
   cakeModel,
   batModel,
+  witchHatModel,
+  frankenModel,
+  skullModel,
 ];
 
 function wording(text: LocalizedText): LocalizedText {

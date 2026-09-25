@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5],['snail',4,7],['fukusuke',4,17],['cake',2,11],['bat',2,9]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5],['snail',4,7],['fukusuke',4,17],['cake',2,11],['bat',2,9],['witch-hat',2,7],['franken',2,8],['skull',2,10]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -516,6 +516,50 @@ test('bat retains both wing pleats and folds only the face before its shallow fi
   assert.ok(used.some(vi=>flat[vi].distanceTo(beforeFace[vi])>.2),'face tip actually turns down');
   for(let stage=1;stage<=9;stage++)
     assert.equal(await coverage(m,stage,{grid:80}),0,`colored outer surface at stage ${stage}`);
+});
+
+test('witch hat rolls three equal bands upward without closing its crown or reversing its color', async () => {
+  const m=modelOf('witch-hat'), used=[...new Set(m.faces.flat())];
+  const bottom=t=>Math.min(...used.map(i=>computeFoldState(m,t).positions[i].y));
+  const lifts=[5,6,7].map(t=>bottom(t)-bottom(t-1));
+  assert.ok(lifts.every(h=>h>.13 && h<.15),'diagram brim rolls are about one tenth of the crown height');
+  assert.ok(Math.max(...lifts)-Math.min(...lifts)<1e-8,'each roll uses the same band width');
+  const p=computeFoldState(m,7).positions;
+  const width=Math.max(...used.map(i=>p[i].x))-Math.min(...used.map(i=>p[i].x));
+  const height=Math.max(...used.map(i=>p[i].y))-bottom(7);
+  assert.ok(Math.abs(width/height/1.19-1)<.05,'reference final aspect ratio');
+  assert.ok(used.some(i=>Math.abs(p[i].x)<1e-8 && Math.abs(p[i].y-1)<1e-8),'pointed crown stays fixed');
+  for(let stage=3;stage<=7;stage++)assert.equal(await coverage(m,stage,{grid:80}),0,'crown and brim remain colored');
+});
+
+test('Frankenstein keeps three colored hair points above a white face and a flat chin', () => {
+  const m=modelOf('franken'), p=computeFoldState(m,8).positions, used=[...new Set(m.faces.flat())];
+  for(const x of [-1/3,0,1/3])
+    assert.ok(used.some(i=>Math.hypot(p[i].x-x,p[i].y-(1/3-.18))<1e-8),'three hair tips share one level');
+  for(const x of [-.38,0,.38])assert.equal(visibleAt(m,x,.28)?.front,true,'hair is the colored side');
+  for(const [x,y] of [[-.2,.22],[.2,.22],[0,0],[0,-.65]])
+    assert.equal(visibleAt(m,x,y)?.front,false,'forehead gaps and face stay white');
+  const width=Math.max(...used.map(i=>p[i].x))-Math.min(...used.map(i=>p[i].x));
+  const height=Math.max(...used.map(i=>p[i].y))-Math.min(...used.map(i=>p[i].y));
+  assert.ok(Math.abs(width/height/.83-1)<.05,'reference final aspect ratio');
+  assert.ok(used.filter(i=>Math.abs(p[i].y+.8)<1e-8).some(i=>p[i].x>.15),'chin has width, not a hanging point');
+});
+
+test('skull closes the original lower tip into the tooth band after four alternating folds', async () => {
+  const m=modelOf('skull'), used=[...new Set(m.faces.flat())];
+  const tips=used.filter(i=>Math.hypot(m.vertices[i][0],m.vertices[i][1]+1)<1e-8);
+  assert.ok(tips.length>0);
+  // These are the visible intermediate tip locations in the diagram's four
+  // tooth folds. In particular the last point must not protrude below the band.
+  for(const [stage,y] of [[6,-.9],[7,.316],[8,-.596],[9,.012],[10,-.292]]){
+    const p=computeFoldState(m,stage).positions;
+    for(const i of tips)assert.ok(Math.abs(p[i].y-y)<1e-8,`tooth tip at stage ${stage}`);
+  }
+  const p=computeFoldState(m,10).positions;
+  const width=Math.max(...used.map(i=>p[i].x))-Math.min(...used.map(i=>p[i].x));
+  const height=Math.max(...used.map(i=>p[i].y))-Math.min(...used.map(i=>p[i].y));
+  assert.ok(Math.abs(width/height/1.10-1)<.05,'reference final aspect ratio');
+  for(let stage=6;stage<=10;stage++)assert.equal(await coverage(m,stage,{grid:80}),0,'head and tooth pleats show the front');
 });
 
 test('the television keeps a white screen and fuji keeps a white cap over brown', () => {
@@ -964,7 +1008,7 @@ test('egg stays open during rounding and butterfly turns without flipping its fa
   }
 });
 
-for(const id of ['egg','boy','girl','father','mother','fukusuke','moon','pancake','cicada'])
+for(const id of ['egg','boy','girl','father','mother','fukusuke','moon','pancake','cicada','skull'])
 test(`${id}: render spacing preserves colors while separating thin layers`, async () => {
   const m=modelOf(id),physical={...m,renderLayerSeparation:undefined};
   const finalState=computeFoldState(m,m.steps.length);
