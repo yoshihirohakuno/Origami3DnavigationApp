@@ -468,7 +468,7 @@ test('new models preserve the full square and reference silhouettes and colors',
   assert.equal(visibleAt(acorn,.39,-.24),undefined);
 });
 
-for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5],['snail',4,7],['fukusuke',4,17],['cake',2,11],['bat',2,9],['witch-hat',2,7],['franken',2,8],['skull',2,10]]) {
+for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2,6],['watermelon',4,5],['egg',2,10],['octopus',4,6],['pancake',4,7],['tv',4,4],['fuji',2,5],['owl',2,5],['cicada',2,9],['wallet',4,5],['shorts',2,4],['vest',2,4],['gloves',4,6],['moon',4,8],['boy',4,10],['girl',4,8],['father',4,9],['water-bottle',4,7],['coffee',4,5],['tea',4,7],['mother',4,11],['shoes',4,5],['snail',4,7],['fukusuke',4,17],['cake',2,11],['bat',2,9],['witch-hat',2,7],['franken',2,8],['skull',2,10],['santa-face',4,9],['shirt',4,9],['baseball-jersey',4,12],['whale-shark',2,10],['reindeer-face',2,10],['blouse',4,15],['holly',2,6],['pointed-santa',2,16],['flounder',2,13],['santa-cap',2,14]]) {
   test(`${id}: complete sheet, rigid panels, connected crease copies and individual actions`, () => {
     const m=MODELS.find(m=>m.id===id), initial=computeFoldState(m,0).positions;
     assert.equal(m.steps.length,count);
@@ -496,6 +496,35 @@ for (const [id, area, count] of [['house',4,2],['butterfly',4,4],['soft-cream',2
     }
   });
 }
+
+test('new garments and faces retain their intentional front/back color regions', () => {
+  for(const [id,x,y,front] of [
+    ['santa-face',0,.6,true],['santa-face',0,-.4,false],
+    ['shirt',.4,.3,true],['shirt',0,.5,false],
+    ['baseball-jersey',0,.4,true],['baseball-jersey',.3,.4,false],
+    ['blouse',.3,.4,true],['blouse',0,.4,false],
+    ['reindeer-face',0,-.4,true],['reindeer-face',0,-.72,false],
+    ['santa-cap',0,.17,false],['santa-cap',0,.4,true],
+  ]) assert.equal(visibleAt(modelOf(id),x,y)?.front,front,`${id}: palette at ${x},${y}`);
+});
+
+test('holly opens two connected colored leaves and both fish keep their colored outer surface', async () => {
+  const m=modelOf('holly'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  for(const [x,y] of [[-.25,-.75],[.25,-.75],[0,.25]])
+    assert.ok(used.some(i=>Math.hypot(p[i].x-x,p[i].y-y)<1e-8),'leaf tips and common stem');
+  for(const id of ['holly','whale-shark','flounder']){
+    const model=modelOf(id);
+    assert.ok(await coverage(model,model.steps.length,{grid:100})<=1,`${id}: colored exterior`);
+  }
+});
+
+test('bending the Santa hat preserves a pointed crown above the face', () => {
+  const m=modelOf('pointed-santa'),p=computeFoldState(m,m.steps.length).positions;
+  const used=[...new Set(m.faces.flat())];
+  assert.ok(Math.max(...used.map(i=>p[i].y))>.45,'hat tip must emerge above the brim');
+  assert.equal(visibleAt(m,0,-.7)?.front,false,'beard remains white');
+});
 
 test('bat retains both wing pleats and folds only the face before its shallow final bend', async () => {
   const m=modelOf('bat'), used=[...new Set(m.faces.flat())];
@@ -1008,7 +1037,7 @@ test('egg stays open during rounding and butterfly turns without flipping its fa
   }
 });
 
-for(const id of ['egg','boy','girl','father','mother','fukusuke','moon','pancake','cicada','skull'])
+for(const id of ['egg','boy','girl','father','mother','fukusuke','moon','pancake','cicada','skull','santa-face','shirt','baseball-jersey','whale-shark','reindeer-face','blouse','holly','pointed-santa','flounder','santa-cap'])
 test(`${id}: render spacing preserves colors while separating thin layers`, async () => {
   const m=modelOf(id),physical={...m,renderLayerSeparation:undefined};
   const finalState=computeFoldState(m,m.steps.length);

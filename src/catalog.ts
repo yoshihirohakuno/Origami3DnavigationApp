@@ -95,6 +95,17 @@ export const CATEGORY_OF: Record<string, CategoryId> = {
   'witch-hat': 'decorate',
   franken: 'face',
   skull: 'face',
+  'santa-face': 'face',
+  'shirt': 'decorate',
+  'baseball-jersey': 'decorate',
+  'whale-shark': 'animal',
+  'reindeer-face': 'face',
+  'blouse': 'decorate',
+  'holly': 'decorate',
+  'pointed-santa': 'face',
+  'flounder': 'animal',
+  'santa-cap': 'decorate',
+
   'square-base': 'basic',
   'waterbomb-base': 'basic',
 };

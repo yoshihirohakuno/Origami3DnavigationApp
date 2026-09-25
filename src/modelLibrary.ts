@@ -1,3 +1,13 @@
+import { santaFaceModel } from './models/santaFace';
+import { shirtModel } from './models/shirt';
+import { baseballJerseyModel } from './models/baseballJersey';
+import { whaleSharkModel } from './models/whaleShark';
+import { reindeerFaceModel } from './models/reindeerFace';
+import { blouseModel } from './models/blouse';
+import { hollyModel } from './models/holly';
+import { pointedSantaModel } from './models/pointedSanta';
+import { flounderModel } from './models/flounder';
+import { santaCapModel } from './models/santaCap';
 import { dogModel } from './models/dog';
 import { cupModel } from './models/cup';
 import { tulipModel } from './models/tulip';
@@ -134,6 +144,17 @@ const SOURCES: OrigamiModel[] = [
   witchHatModel,
   frankenModel,
   skullModel,
+  santaFaceModel,
+  shirtModel,
+  baseballJerseyModel,
+  whaleSharkModel,
+  reindeerFaceModel,
+  blouseModel,
+  hollyModel,
+  pointedSantaModel,
+  flounderModel,
+  santaCapModel,
+
 ];
 
 function wording(text: LocalizedText): LocalizedText {

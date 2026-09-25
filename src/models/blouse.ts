@@ -1,0 +1,40 @@
+import { flatSequence } from '../engine/flatSequence';
+
+// Reference: fashion/blouse/biouse/zu.gif. Omit grid precreases; retain two edge rolls, collar and sleeve flaps.
+export const blouseModel = flatSequence({
+  id: "blouse", name: { ja: "ブラウス", en: "Blouse" }, difficulty: 3,
+  sheetColors: [{ front: '#d6b957', back: '#fbfaf7' }],
+}, [[-1,-1],[1,-1],[1,1],[-1,1]], false, [
+  { moves: [{"line":[[-0.9166666666666666,-2],[-0.9166666666666666,2]],"side":1}],
+    caution: { ja: '色の面を上にして始めます。表示の折り線に合わせ、一工程ずつ折ります。', en: 'Start colored side up. Follow one displayed crease at a time.' },
+    description: { ja: "左のふちを細く折り、白い帯を出します。", en: "Fold a narrow white strip along the left edge." } },
+  { moves: [{"line":[[0.9166666666666666,-2],[0.9166666666666666,2]],"side":-1}],
+    description: { ja: "右のふちも細く折ります。", en: "Fold the right edge in the same way." } },
+  { moves: [{"line":[[-0.8333333333333334,-2],[-0.8333333333333334,2]],"side":1}],
+    description: { ja: "左の帯をもう一度内側へ巻き込みます。", en: "Roll the left strip inward once more." } },
+  { moves: [{"line":[[0.8333333333333334,-2],[0.8333333333333334,2]],"side":-1}],
+    description: { ja: "右の帯も内側へ巻き込みます。", en: "Roll the right strip inward once more." } },
+  { moves: [{"line":[[0,-2],[0,2]],"side":1,"type":"assemble"}],
+    description: { ja: "うらがえします。", en: "Turn the paper over." } },
+  { moves: [{"line":[[-0.4166666666666667,-2],[-0.4166666666666667,2]],"side":1}],
+    description: { ja: "左の辺を中心線へ合わせます。", en: "Fold the left edge to the center." } },
+  { moves: [{"line":[[0.4166666666666667,-2],[0.4166666666666667,2]],"side":-1}],
+    description: { ja: "右の辺も中心線へ合わせます。", en: "Fold the right edge to the center." } },
+  { moves: [{"line":[[-0.2,1],[0,0.8]],"side":1,"fromFold":5}],
+    description: { ja: "左上の一枚の角を開き、襟にします。", en: "Fold the upper-left flap corner outward for the collar." } },
+  { moves: [{"line":[[0,0.8],[0.2,1]],"side":1,"fromFold":6}],
+    description: { ja: "右上の一枚も襟にします。", en: "Fold the upper-right flap corner outward." } },
+  { moves: [{"line":[[0,-0.1],[-0.4166666666666667,-1]],"side":1,"fromFold":5}],
+    description: { ja: "左下の一枚を外へ折り、袖を広げます。", en: "Fold the lower-left flap outward for a sleeve." } },
+  { moves: [{"line":[[0.4166666666666667,-1],[0,-0.1]],"side":1,"fromFold":6}],
+    description: { ja: "右下の一枚も外へ折ります。", en: "Fold the lower-right flap outward." } },
+  { moves: [{"line":[[-2,-0.1],[2,-0.1]],"side":-1,"type":"mountain"}],
+    description: { ja: "下の部分を後ろへ折り上げます。", en: "Fold the lower part upward behind the blouse." } },
+  { moves: [{"line":[[-0.4166666666666667,0.68],[-0.3,0.8]],"side":1,"type":"mountain"}],
+    description: { ja: "左肩の角を後ろへ折ります。", en: "Fold the left shoulder corner behind." } },
+  { moves: [{"line":[[0.3,0.8],[0.4166666666666667,0.68]],"side":1,"type":"mountain"}],
+    description: { ja: "右肩の角も後ろへ折ります。", en: "Fold the right shoulder corner behind." } },
+  { moves: [{"line":[[-2,-0.02],[2,-0.02]],"side":-1,"type":"mountain"}],
+    description: { ja: "下のふちを細く後ろへ折り、すそを整えます。", en: "Fold a narrow bottom hem behind to finish." } },
+], 1e-8);
+blouseModel.renderLayerSeparation = .00004;

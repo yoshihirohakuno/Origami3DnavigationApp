@@ -2,6 +2,16 @@ import type { LocalizedText } from './engine/types';
 
 const base = 'https://www.origami-club.com/';
 const diagrams: Record<string, string> = {
+  'santa-face': 'xmas/santaface3/zu.gif',
+  'shirt': 'fashion/shirt/shirt/zu.gif',
+  'baseball-jersey': 'fashion/baseball/baseball/zu.gif',
+  'whale-shark': 'sea/whale-shark/zu.gif',
+  'reindeer-face': 'xmas/reindeerface3/zu.gif',
+  'blouse': 'fashion/blouse/biouse/zu.gif',
+  'holly': 'xmas/holly/holly2/zu.gif',
+  'pointed-santa': 'xmas/santa/santa2/zu.gif',
+  'flounder': 'sea/flounder/zu.gif',
+  'santa-cap': 'xmas/cap/cap2/zu.gif',
   house: 'easy/other/house2/house2/zu.gif',
   butterfly: 'easy/other/butterfly/butterfly/zu.gif',
   'soft-cream': 'easy/food/soft-cream2/zu.gif',
@@ -57,6 +67,8 @@ export const referenceOf = (id: string): string | undefined => diagrams[id] ? ba
 
 /** Known differences found by direct diagram comparison, not a blanket accuracy claim. */
 export const MODEL_NOTES: Record<string, LocalizedText> = {
+  'santa-cap': { ja: '平面の帽子飾りに仕上がります。', en: 'This folds into a flat hat decoration.' },
+  'pointed-santa': { ja: '帽子とひげを段折りで作る平面アレンジです。', en: 'A flat variation with a pleated hat and beard.' },
   crane: {
     ja: '首・尾を細く整える折りと、中割り折りの動きは簡略化して表示しています。',
     en: 'Narrowing the neck and tail and the inside-reverse motions are simplified.',
