@@ -625,7 +625,7 @@
   display: block;
 }
 
-.rail-item span {
+.rail-item .rail-number {
   position: absolute;
   left: 0;
   bottom: 0;
@@ -645,7 +645,7 @@
   opacity: 1;
 }
 
-.rail-item.current span {
+.rail-item.current .rail-number {
   color: var(--accent);
 }
 

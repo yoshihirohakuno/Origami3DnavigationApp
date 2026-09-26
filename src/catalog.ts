@@ -33,6 +33,11 @@ export const CATEGORIES: { id: CategoryId | 'all'; label: LocalizedText }[] = [
 ];
 
 export const CATEGORY_OF: Record<string, CategoryId> = {
+  'sonobe-cube': 'decorate',
+  'sonobe-octahedron': 'decorate',
+  'sonobe-icosahedron': 'decorate',
+  'sonobe-triangular-bipyramid': 'decorate',
+  'sonobe-pentagonal-bipyramid': 'decorate',
   dog: 'face',
   cat: 'face',
   fox: 'face',

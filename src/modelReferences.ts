@@ -63,10 +63,17 @@ const diagrams: Record<string, string> = {
 };
 
 /** Development reference links for the audit tools; not displayed in the app. */
-export const referenceOf = (id: string): string | undefined => diagrams[id] ? base + diagrams[id] : undefined;
+export const referenceOf = (id: string): string | undefined => id.startsWith('sonobe-')
+  ? 'https://make-origami.com/HelenaVerrill/sonobe.php'
+  : diagrams[id] ? base + diagrams[id] : undefined;
 
 /** Known differences found by direct diagram comparison, not a blanket accuracy claim. */
 export const MODEL_NOTES: Record<string, LocalizedText> = {
+  'sonobe-triangular-bipyramid': { ja: '正方形9枚で三角の輪を閉じる園部ユニットの幾何学アレンジです。差し込み時の紙のしなりは簡略化しています。', en: 'A geometric Sonobe variation: nine squares close a triangular ring. Paper flex during insertion is simplified.' },
+  'sonobe-pentagonal-bipyramid': { ja: '正方形15枚で五角の輪を閉じる園部ユニットの幾何学アレンジです。差し込み時の紙のしなりは簡略化しています。', en: 'A geometric Sonobe variation: fifteen squares close a pentagonal ring. Paper flex during insertion is simplified.' },
+  'sonobe-cube': { ja: '正方形6枚を使う組み立て作品です。差し込み時の紙のしなりは簡略化しています。', en: 'An assembly of six squares. Paper flex during pocket insertion is simplified.' },
+  'sonobe-octahedron': { ja: '正方形12枚を使う組み立て作品です。差し込み時の紙のしなりは簡略化しています。', en: 'An assembly of twelve squares. Paper flex during pocket insertion is simplified.' },
+  'sonobe-icosahedron': { ja: '正方形30枚を使う組み立て作品です。差し込み時の紙のしなりは簡略化しています。', en: 'An assembly of thirty squares. Paper flex during pocket insertion is simplified.' },
   'santa-cap': { ja: '平面の帽子飾りに仕上がります。', en: 'This folds into a flat hat decoration.' },
   'pointed-santa': { ja: '帽子とひげを段折りで作る平面アレンジです。', en: 'A flat variation with a pleated hat and beard.' },
   crane: {

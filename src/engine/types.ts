@@ -110,6 +110,12 @@ export interface OrigamiModel {
   faceSheet?: number[];
   /** シートごとの表裏色(faceSheet と対応)。未指定時はグローバル色。 */
   sheetColors?: { front: string; back: string }[];
+  /** Modular routes introduce one fresh sheet at a time. Unstarted sheets
+   * remain in the material model but are not displayed on the workbench. */
+  sheetStartSteps?: number[];
+  /** Display-only signed normal inset of tucked tabs, eased in during the
+   * sheet's final assembly step. Requires sheetStartSteps. */
+  assemblyFaceInsets?: number[];
   /** Optional refined surface mesh. Face IDs still refer to the original paper panels. */
   triangles?: [face: number, a: number, b: number, c: number][];
   /** Rendered copies of the same material point must stay connected, including at creases. */

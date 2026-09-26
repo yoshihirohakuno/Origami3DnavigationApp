@@ -4,6 +4,7 @@ import type { OrigamiModel } from '../engine/types';
 import { computeFoldState, type FoldState } from '../engine/fold';
 import { paperTriangles } from '../engine/mesh';
 import { renderFaceOffsets } from '../engine/renderLayers';
+import { faceIsVisible } from '../engine/sheetVisibility';
 
 const COLOR_FRONT = new THREE.Color('#eda6a2'); // 紙の表(薄い赤)
 const COLOR_FRONT_HL = new THREE.Color('#f5c2bd'); // 表・折る面ハイライト
@@ -177,8 +178,9 @@ export class PaperScene {
       const cAttr = mesh.geometry.getAttribute('color') as THREE.BufferAttribute;
       this.tris.forEach(([fi, v0, v1, v2], ti) => {
         const p0 = pos[v0];
-        const p1 = pos[v1];
-        const p2 = pos[v2];
+        const visible = faceIsVisible(this.model!, fi, state);
+        const p1 = visible ? pos[v1] : p0;
+        const p2 = visible ? pos[v2] : p0;
         a.subVectors(p1, p0);
         b.subVectors(p2, p0);
         n.crossVectors(a, b).normalize();
@@ -207,6 +209,7 @@ export class PaperScene {
     const eAttr = this.edgeLines.geometry.getAttribute('position') as THREE.BufferAttribute;
     this.edgePairs.forEach(([fi, v0, v1], i) => {
       const offset = offsets[fi];
+      if (!faceIsVisible(this.model!, fi, state)) v1 = v0;
       eAttr.setXYZ(i * 2, pos[v0].x + offset.x, pos[v0].y + offset.y, pos[v0].z + offset.z);
       eAttr.setXYZ(i * 2 + 1, pos[v1].x + offset.x, pos[v1].y + offset.y, pos[v1].z + offset.z);
     });
@@ -292,7 +295,7 @@ export class PaperScene {
     const points = finished && this.model
       ? [...new Set(this.model.faces.flat())].map(vi => this.lastState!.positions[vi])
       : this.framePoints;
-    const center = finished && points.length
+    const center = (finished || this.model?.sheetStartSteps) && points.length
       ? new THREE.Box3().setFromPoints(points).getCenter(new THREE.Vector3())
       : new THREE.Vector3();
     let distance = finished ? this.controls.minDistance : this.camera.position.length();

@@ -6,6 +6,7 @@ import { buildStepDiagrams } from './CreasePattern';
 import { PaperScene } from './three/PaperScene';
 import { LangToggle, useLang } from './i18n';
 import { MODEL_NOTES } from './modelReferences';
+import { RouteThumbnail } from './RouteThumbnail';
 
 /** 折り種類の名前と、動く向きの補足(バッジの2行) */
 const FOLD_LABEL: Record<FoldType, { ja: string; en: string }> = {
@@ -45,6 +46,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   const { t, L, lang } = useLang();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const railRef = useRef<HTMLElement>(null);
+  const listRef = useRef<HTMLOListElement>(null);
   const sceneRef = useRef<PaperScene | null>(null);
   const tRef = useRef(0);
   const targetRef = useRef(0);
@@ -254,6 +256,16 @@ export function Navigator({ model, onExit, onComplete }: Props) {
     });
   }, [ui.stepIndex]);
 
+  useEffect(() => {
+    const list = listRef.current;
+    const item = list?.children[ui.stepIndex];
+    if (!list || !list.clientHeight || !(item instanceof HTMLElement)) return;
+    const bounds = list.getBoundingClientRect(), row = item.getBoundingClientRect();
+    if (row.top < bounds.top || row.bottom > bounds.bottom) {
+      list.scrollTop += row.top - bounds.top - (list.clientHeight - row.height) / 2;
+    }
+  }, [ui.stepIndex]);
+
   const togglePlay = () => {
     if (playingRef.current) {
       targetRef.current = tRef.current;
@@ -355,8 +367,8 @@ export function Navigator({ model, onExit, onComplete }: Props) {
               aria-label={`${t('stepN', { n: i + 1 })} — ${L(s.description)}`}
               aria-current={i === ui.stepIndex ? 'step' : undefined}
             >
-              {stepDiagrams[i]}
-              <span>{String(i + 1).padStart(2, '0')}</span>
+              <RouteThumbnail>{stepDiagrams[i]}</RouteThumbnail>
+              <span className="rail-number">{String(i + 1).padStart(2, '0')}</span>
             </button>
           );
         })}
@@ -366,14 +378,14 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         <p className="panel-label">
           ROUTE{lang === 'ja' && <span>・ {t('route')}</span>}
         </p>
-        <ol className="step-list">
+        <ol className="step-list" ref={listRef}>
           {model.steps.map((s, i) => {
             const cls = `${ui.t >= i + 1 ? 'done' : ''} ${i === ui.stepIndex ? 'current' : ''}`;
             return (
               <li key={i} className={cls}>
                 <button onClick={() => selectStep(i)} aria-current={i === ui.stepIndex ? 'step' : undefined}>
                   <span className="sl-num">{String(i + 1).padStart(2, '0')}</span>
-                  <span className="sl-thumb">{stepDiagrams[i]}</span>
+                  <span className="sl-thumb"><RouteThumbnail>{stepDiagrams[i]}</RouteThumbnail></span>
                   <i className={`sl-dot ${s.folds[0].type}`} />
                   <span className="sl-text">{L(s.description)}</span>
                 </button>

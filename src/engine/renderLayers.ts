@@ -4,6 +4,28 @@ import type { OrigamiModel } from './types';
 
 const cache = new WeakMap<OrigamiModel, number[][]>();
 
+/** Each sheet is folded on the workbench independently of already assembled,
+ * non-planar sheets. A global coplanarity check would freeze all later stacks. */
+function modularLayers(model: OrigamiModel, thickness: number): number[][] {
+  const layers = [model.faces.map(() => 0)];
+  for (let step = 0; step < model.steps.length; step++) {
+    const next = [...layers[step]];
+    const sheet = model.sheetStartSteps!.findLastIndex(start => start <= step);
+    const ids = model.faces.flatMap((_, fi) => model.faceSheet?.[fi] === sheet ? [fi] : []);
+    if (model.steps[step].folds.some(op => op.type !== 'assemble')) {
+      const positions = computeFoldState(model, step + 1).positions;
+      const normal = normals(model, positions);
+      if (ids.every(fi => Math.abs(normal[fi].z) > 1 - 1e-8)) {
+        const depth = (fi: number) => model.faces[fi].reduce((sum, vi) => sum + positions[vi].z, 0) / model.faces[fi].length;
+        ids.sort((a,b) => depth(a) - depth(b) || a - b);
+        ids.forEach((fi, rank) => { next[fi] = (rank - (ids.length - 1) / 2) * thickness * Math.sign(normal[fi].z); });
+      }
+    }
+    layers.push(next);
+  }
+  return layers;
+}
+
 function normals(model: OrigamiModel, positions: Vector3[]): Vector3[] {
   return model.faces.map(face => {
     const origin = positions[face[0]], normal = new Vector3();
@@ -22,6 +44,10 @@ export function renderFaceOffsets(model: OrigamiModel, state: FoldState): Vector
   const thickness = model.renderLayerSeparation;
   if (!thickness || !model.steps.length) return model.faces.map(() => new Vector3());
   let layers = cache.get(model);
+  if (!layers && model.sheetStartSteps) {
+    layers = modularLayers(model, thickness);
+    cache.set(model, layers);
+  }
   if (!layers) {
     layers = [model.faces.map(() => 0)];
     for (let step = 0; step < model.steps.length; step++) {
@@ -56,5 +82,11 @@ export function renderFaceOffsets(model: OrigamiModel, state: FoldState): Vector
   }
   const from = layers[state.stepIndex], to = layers[state.stepIndex + 1];
   const progress = easeInOut(state.fraction);
-  return normals(model, state.positions).map((normal, fi) => normal.multiplyScalar(from[fi] + (to[fi] - from[fi]) * progress));
+  return normals(model, state.positions).map((normal, fi) => {
+    const sheet = model.faceSheet?.[fi] ?? 0;
+    const placed = model.sheetStartSteps?.[sheet + 1] ?? model.steps.length;
+    const insertion = easeInOut(Math.max(0, Math.min(1, state.stepIndex + state.fraction - placed + 1)));
+    const inset = (model.assemblyFaceInsets?.[fi] ?? 0) * insertion;
+    return normal.multiplyScalar(from[fi] + (to[fi] - from[fi]) * progress + inset);
+  });
 }

@@ -4,6 +4,33 @@ export interface PaperPolygon { face: number; points: PaperPoint[] }
 interface Plane { x: number; y: number; z: number; d: number }
 const EPS = 1e-8;
 
+/** Prune fully covered panels before BSP subdivision. Modular sheets contain
+ * many stacked triangles; splitting their invisible layers can otherwise
+ * produce tens of thousands of SVG fragments. Only whole coverage qualifies. */
+export function removeHiddenLayers(polygons: PaperPolygon[], tolerance = 1e-8): PaperPolygon[] {
+  const items = polygons.map(p => {
+    const plane = planeOf(p.points);
+    const xs = p.points.map(q => q.x), ys = p.points.map(q => q.y);
+    const area = p.points.reduce((s,a,i) => { const b=p.points[(i+1)%p.points.length]; return s+a.x*b.y-a.y*b.x; },0);
+    return { p, plane, sign: Math.sign(area), minX:Math.min(...xs),maxX:Math.max(...xs),minY:Math.min(...ys),maxY:Math.max(...ys) };
+  });
+  return items.filter((item,i) => !items.some((cover,j) => {
+    if(i===j || !cover.plane || Math.abs(cover.plane.z)<1e-8 || !cover.sign) return false;
+    if(item.minX<cover.minX-tolerance || item.maxX>cover.maxX+tolerance || item.minY<cover.minY-tolerance || item.maxY>cover.maxY+tolerance)return false;
+    let inFront=false;
+    for(const point of item.p.points){
+      for(let k=0;k<cover.p.points.length;k++){
+        const a=cover.p.points[k],b=cover.p.points[(k+1)%cover.p.points.length];
+        if(cover.sign*((b.x-a.x)*(point.y-a.y)-(b.y-a.y)*(point.x-a.x))< -tolerance*Math.hypot(b.x-a.x,b.y-a.y))return false;
+      }
+      const depth=(cover.plane.d-cover.plane.x*point.x-cover.plane.y*point.y)/cover.plane.z-point.z;
+      if(depth< -1e-8)return false;
+      if(depth>1e-8)inFront=true;
+    }
+    return inFront || j>i;
+  })).map(item=>item.p);
+}
+
 function planeOf(points: PaperPoint[]): Plane | null {
   const a = points[0];
   for (let i = 1; i < points.length - 1; i++) {

@@ -1051,7 +1051,9 @@ test(`${id}: render spacing preserves colors while separating thin layers`, asyn
 });
 
 test('every model has an explicit source and each rendered SVG owns its clips', () => {
-  for(const m of models) assert.match(referenceOf(m.id),/^https:\/\/www\.origami-club\.com\//);
+  for(const m of models) assert.match(referenceOf(m.id),m.id.startsWith('sonobe-')
+    ? /^https:\/\/make-origami\.com\/HelenaVerrill\/sonobe\.php$/
+    : /^https:\/\/www\.origami-club\.com\//);
   const html=renderToStaticMarkup(createElement('div',{},models.slice(0,4).map(m=>createElement(FinalShapePreview,{model:m,key:m.id}))));
   const ids=[...html.matchAll(/<clipPath id="([^"]+)"/g)].map(m=>m[1]);
   assert.ok(ids.length>4);assert.equal(new Set(ids).size,ids.length);

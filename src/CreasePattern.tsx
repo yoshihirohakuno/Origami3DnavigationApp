@@ -2,8 +2,9 @@ import { useId, type ReactElement } from 'react';
 import { computeFoldState, isGuideFold, type FoldState } from './engine/fold';
 import type { OrigamiModel, FoldType } from './engine/types';
 import { paperTriangles } from './engine/mesh';
-import { orderPaper } from './engine/painter';
+import { orderPaper, removeHiddenLayers } from './engine/painter';
 import { renderFaceOffsets } from './engine/renderLayers';
+import { faceIsVisible } from './engine/sheetVisibility';
 
 /** 折り種類ごとの表示色(UI全体で共通) */
 export const FOLD_COLORS: Record<FoldType, string> = {
@@ -189,13 +190,14 @@ function flatten(p: Point3, view: View): { x: number; y: number } {
 
 /** 与えた状態(複数可)がすべて収まる枠を作る。fill は 100 のうち紙が占める幅 */
 function frameFor(states: Point3[][], view: View, fill: number): Frame {
-  const points = states.flat().map((p) => flatten(p, view));
-  const xs = points.map((p) => p.x);
-  const ys = points.map((p) => p.y);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
+  // Modular routes can contain hundreds of stages. Spreading their vertices
+  // into Math.min/max exceeds the browser's argument limit and blanks the app.
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const state of states) for (const position of state) {
+    const p = flatten(position, view);
+    minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+    minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+  }
   return {
     cx: (minX + maxX) / 2,
     cy: (minY + maxY) / 2,
@@ -224,13 +226,20 @@ function PaperPolygons({ model, state, view, frame,
   const project = (p: Point3) => ({ ...flatten(p, view),
     z: view ? p.x * view.zAxis[0] + p.y * view.zAxis[1] + p.z * view.zAxis[2] : p.z });
   const common = positions.map(project);
-  const projected = model.faces.map((_, fi) => model.renderLayerSeparation
-    ? positions.map(position => project(position.clone().add(offsets[fi]))) : common);
-  const triangles = paperTriangles(model).map(([face, ...ids]) => ({ face, points: ids.map(vi => projected[face][vi]) }))
+  // Projection is linear. Add each face's projected offset on demand instead
+  // of allocating every vertex for every face (millions on modular models).
+  const projectedOffsets = offsets.map(project);
+  const pointFor = (face: number, vi: number) => {
+    const p = common[vi], offset = projectedOffsets[face];
+    return model.renderLayerSeparation ? { x: p.x + offset.x, y: p.y + offset.y, z: p.z + offset.z } : p;
+  };
+  const triangles = paperTriangles(model).filter(([face]) => faceIsVisible(model, face, state))
+    .map(([face, ...ids]) => ({ face, points: ids.map(vi => pointFor(face, vi)) }))
     .filter(p => Math.abs(projectedArea(p.points)) > 1e-10);
   const svgPoint = (p: { x: number; y: number }) =>
     `${toSvgX(p.x, frame).toFixed(4)},${toSvgY(p.y, frame).toFixed(4)}`;
-  return orderPaper(triangles).filter(p => Math.abs(projectedArea(p.points)) > 1e-10).map((polygon, index) => {
+  const visible = model.sheetStartSteps ? removeHiddenLayers(triangles, .0005) : triangles;
+  return orderPaper(visible).filter(p => Math.abs(projectedArea(p.points)) > 1e-10).map((polygon, index) => {
     const colors = sheetColorOf(polygon.face);
     const fill = projectedArea(polygon.points) >= 0 ? colors.front : colors.back;
     // Draw only real face edges, never triangulation or BSP subdivision seams.
@@ -239,7 +248,7 @@ function PaperPolygons({ model, state, view, frame,
       const b = polygon.points[(i + 1) % polygon.points.length];
       if (Math.hypot(a.x - b.x, a.y - b.y) < 1e-8) return [];
       const onEdge = face.some((vi, j) => {
-        const p = projected[polygon.face][vi], q = projected[polygon.face][face[(j + 1) % face.length]];
+        const p = pointFor(polygon.face, vi), q = pointFor(polygon.face, face[(j + 1) % face.length]);
         const dx = q.x - p.x, dy = q.y - p.y, length = Math.hypot(dx, dy);
         const on = (r: Point3) => length > 1e-9 &&
           Math.abs(dx * (r.y - p.y) - dy * (r.x - p.x)) < 1e-7 * length &&
