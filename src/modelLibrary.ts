@@ -1,13 +1,6 @@
-import { flappingBirdModel } from './models/flappingBird';
-import { pterosaurModel } from './models/pterosaur';
-import { phoenixModel } from './models/phoenix';
-import { waterbirdModel } from './models/waterbird';
-import { crestedBirdModel } from './models/crestedBird';
-import { sonobeCrownModel } from './models/sonobeCrown';
-import { sonobeTriangularTowerModel } from './models/sonobeTriangularTower';
-import { sonobeSquareTowerModel } from './models/sonobeSquareTower';
-import { sonobePentagonalTowerModel } from './models/sonobePentagonalTower';
-import { sonobeTwistedTowerModel } from './models/sonobeTwistedTower';
+import { fortuneTellerModel } from './models/fortuneTeller';
+import { jumpingFrogModel } from './models/jumpingFrog';
+import { foldingFanModel } from './models/foldingFan';
 import { santaFaceModel } from './models/santaFace';
 import { shirtModel } from './models/shirt';
 import { baseballJerseyModel } from './models/baseballJersey';
@@ -18,11 +11,7 @@ import { hollyModel } from './models/holly';
 import { pointedSantaModel } from './models/pointedSanta';
 import { flounderModel } from './models/flounder';
 import { santaCapModel } from './models/santaCap';
-import { sonobeCubeModel } from './models/sonobeCube';
-import { sonobeOctahedronModel } from './models/sonobeOctahedron';
 import { sonobeIcosahedronModel } from './models/sonobeIcosahedron';
-import { sonobeTriangularBipyramidModel } from './models/sonobeTriangularBipyramid';
-import { sonobePentagonalBipyramidModel } from './models/sonobePentagonalBipyramid';
 import { dogModel } from './models/dog';
 import { cupModel } from './models/cup';
 import { tulipModel } from './models/tulip';
@@ -169,23 +158,10 @@ const SOURCES: OrigamiModel[] = [
   pointedSantaModel,
   flounderModel,
   santaCapModel,
-  sonobeCubeModel,
-  sonobeOctahedronModel,
   sonobeIcosahedronModel,
-  sonobeTriangularBipyramidModel,
-  sonobePentagonalBipyramidModel,
-  sonobeCrownModel,
-  sonobeTriangularTowerModel,
-  sonobeSquareTowerModel,
-  sonobePentagonalTowerModel,
-  sonobeTwistedTowerModel,
-  flappingBirdModel,
-  pterosaurModel,
-  phoenixModel,
-  waterbirdModel,
-  crestedBirdModel,
-
-
+  jumpingFrogModel,
+  fortuneTellerModel,
+  foldingFanModel,
 
 ];
 

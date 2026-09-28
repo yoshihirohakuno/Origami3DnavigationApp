@@ -26,20 +26,10 @@
  */
 
 const IDS = [
-  'flappingBird',
-  'pterosaur',
-  'phoenix',
-  'waterbird',
-  'crestedBird',
+  'jumpingFrog', 'fortuneTeller', 'foldingFan',
 
-  'sonobeCrown',
-  'sonobeTriangularTower',
-  'sonobeSquareTower',
-  'sonobePentagonalTower',
-  'sonobeTwistedTower',
+    'sonobeIcosahedron',
 
-  'sonobeCube', 'sonobeOctahedron', 'sonobeIcosahedron',
-  'sonobeTriangularBipyramid', 'sonobePentagonalBipyramid',
   'tulip', 'dog', 'cup', 'chick', 'squareBase', 'crane', 'shuriken', 'cat', 'fox',
   'rabbit', 'panda', 'bear', 'whale', 'helmet', 'heart', 'box', 'yacht', 'penguin', 'bat', 'witchHat', 'franken', 'skull', 'santaFace', 'shirt', 'baseballJersey', 'whaleShark', 'reindeerFace', 'blouse', 'holly', 'pointedSanta', 'flounder', 'santaCap',
   'ship', 'rocket', 'envelope', 'piano', 'turtle', 'sinkansen', 'boots', 'waterbombBase', 'riceball', 'tadpole', 'car', 'bus', 'elephant',

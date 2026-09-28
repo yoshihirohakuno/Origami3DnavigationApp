@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { OrigamiModel, FoldOp, FoldType } from './types';
 import { petalSide } from './petal';
+import { fingerPocketPoint } from './fingerPockets';
 
 /** イージング(工程内アニメーション用) */
 export function easeInOut(a: number): number {
@@ -81,6 +82,17 @@ function buildArrowPath(
   axisDir: THREE.Vector3,
   range: [number, number] = [0, 1],
 ): THREE.Vector3[] {
+  if (op.fingerPockets) {
+    const tip=op.fingerPockets.find(([,x,y])=>Math.abs(x)+Math.abs(y)>.99)!;
+    return Array.from({length:17},(_,i)=>fingerPocketPoint(tip[1],tip[2],tip[3],tip[4],tip[5],range[0]+(range[1]-range[0])*i/16));
+  }
+  if (op.waterbombCollapse) {
+    const {centerY,half,flip}=op.waterbombCollapse;
+    return Array.from({length:17},(_,i)=>{
+      const a=Math.PI*(range[0]+(range[1]-range[0])*i/16);
+      return new THREE.Vector3(0,centerY+flip*half*Math.cos(a),half*Math.sin(a));
+    });
+  }
   if (op.pocket) return buildArrowPath({ ...op, pocket: undefined, moving: [op.pocket.rim] }, sign, positions, p1, axisDir, range);
   if (op.petal) return buildArrowPath({ ...op, petal: undefined, moving: [op.petal.tip] }, sign, positions, p1, axisDir, range);
   if (op.targets?.length) {
@@ -204,6 +216,19 @@ export function computeFoldState(model: OrigamiModel, t: number): FoldState {
           const hinge = p2.clone().sub(p1);
           if (normal.lengthSq() > 1e-12) positions[op.pocket.tip].copy(hinge)
             .addScaledVector(normal, -2 * hinge.dot(normal)).add(p1);
+        }
+        for (const [vi, x, y, sx, sy, outer] of op.fingerPockets ?? []) {
+          positions[vi].copy(fingerPocketPoint(x, y, sx, sy, outer, e));
+        }
+        if (op.waterbombCollapse) {
+          const {nodes,centerY,half:h,flip:f}=op.waterbombCollapse;
+          const a=Math.PI*e,b=a/2,s=Math.sin(b),k=2*h*s/(1+s*s);
+          const rim=h-k*s;
+          const xy: [number,number,number][]=[[0,0,0],[rim,-k*s,k*Math.cos(b)],
+            [h,h*Math.cos(a),h*Math.sin(a)],[0,h*Math.cos(a),h*Math.sin(a)],
+            [-h,h*Math.cos(a),h*Math.sin(a)],[-rim,-k*s,k*Math.cos(b)],
+            [-h,-h,0],[0,-h,0],[h,-h,0]];
+          nodes.forEach((vi,j)=>positions[vi].set(xy[j][0],centerY+f*xy[j][1],xy[j][2]));
         }
         for (const [vi, x, y, z] of op.targets ?? []) positions[vi].lerp(_tmp.set(x, y, z), e);
         for (const [vi, a, b, c, u, v, w] of op.surfacePoints ?? []) {

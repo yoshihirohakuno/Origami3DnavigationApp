@@ -6,11 +6,11 @@ import type { FoldOp, FoldStep, OrigamiModel } from './types';
  * the corner are cut by the same spatial line and rotate on that actual hinge. */
 export function foldFlap(model: OrigamiModel, corner: number, origin: [number, number],
   degrees: number, caption: Pick<FoldStep, 'description' | 'caution'>, sweep: 'front' | 'back' = 'front',
-  halves = false): OrigamiModel {
+  halves = false, wholeStackSide?: 1 | -1, selectFace?: (face: number[]) => boolean): OrigamiModel {
   const p = computeFoldState(model, model.steps.length).positions;
   const radians = degrees * Math.PI / 180, dx = Math.cos(radians), dy = Math.sin(radians);
   const side = (vi: number) => dx * (p[vi].y - origin[1]) - dy * (p[vi].x - origin[0]);
-  const tipSide = Math.sign(side(corner));
+  const tipSide = wholeStackSide ?? Math.sign(side(corner));
   const vertices = [...model.vertices], faces: number[][] = [], sheets: number[] = [];
   const bindings: NonNullable<FoldOp['surfacePoints']> = [], hinges: number[] = [];
   const intersections = new Map<string, number>(), moving = new Set<number>();
@@ -29,7 +29,8 @@ export function foldFlap(model: OrigamiModel, corner: number, origin: [number, n
   };
   model.faces.forEach((face, fi) => {
     const add = (f: number[]) => { if(f.length >= 3){ faces.push(f); sheets.push(model.faceSheet?.[fi] ?? 0); } };
-    if (!face.includes(corner)) { add(face); return; }
+    if ((wholeStackSide === undefined && !face.includes(corner)) || (selectFace && !selectFace(face))) { add(face); return; }
+    for (const vi of face) if (Math.abs(side(vi)) < 1e-9) hinges.push(vi);
     for(const vi of face) if (side(vi) * tipSide > 1e-9) moving.add(vi);
     for(const sign of [1,-1]){
       const polygon: number[] = [];

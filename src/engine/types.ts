@@ -67,6 +67,10 @@ export interface FoldOp {
   /** Lift a petal while both shared edge points remain the intersection of
    * spheres about their crease anchor, the lifted tip and the adjacent tip. */
   petal?: { tip: number; sides: [point: number, anchor: number, neighbor: number][] };
+  /** Double-blintz finger pockets. Coordinates are on the folded square;
+   * outer flaps use the other sphere-intersection branch to open the pockets. */
+  fingerPockets?: [vertex: number, x: number, y: number, quadrantX: number, quadrantY: number, outer: number][];
+  waterbombCollapse?: { nodes: number[]; centerY: number; half: number; flip: 1 | -1 };
 }
 
 /**

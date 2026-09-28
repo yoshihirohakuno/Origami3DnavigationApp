@@ -15,6 +15,14 @@ const pocket = (front: string, shape: string, en: string): Plan => ({ checkpoint
  * Every multi-guide step is reviewed here. Layer translations and coordinate
  * reference rotations stay with their physical fold, never become user steps. */
 const PLANS: Record<string, Record<number, Plan>> = {
+  'jumping-frog': {
+    1: {checkpoint:.5,captions:[['上側の両脇を内側へ寄せます。','Bring the upper sides inward.'],['上の辺を下げ、三角に押さえます。','Lower the top edge and flatten the triangle.']]},
+    2: {checkpoint:.5,captions:[['下側の両脇も内側へ寄せます。','Bring the lower sides inward.'],['下の辺を上げ、二つ目の三角にします。','Raise the bottom edge and flatten the second triangle.']]},
+  },
+  'fortune-teller': {10:{checkpoint:.5,captions:[
+    ['裏の四つのふくろに指を入れ、口を開きます。','Insert your fingers into the four pockets and open them.'],
+    ['四隅を寄せながら指入れをふくらませます。','Bring the corners together and shape the finger pockets.'],
+  ]}},
   dog: { 2: pair('角を下へ折って、たれ耳にします。', 'fold the corner down into a floppy ear.') },
   'square-base': { 3: pocket('手前の', '四角く', 'the front'), 5: pocket('反対側の', '四角く', 'the opposite') },
   crane: {

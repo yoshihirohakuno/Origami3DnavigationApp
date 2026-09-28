@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { computeFoldState, isGuideFold } from '../src/engine/fold.ts';
-import { flappingBirdModel } from '../src/models/flappingBird.ts';
-import { pterosaurModel } from '../src/models/pterosaur.ts';
-import { phoenixModel } from '../src/models/phoenix.ts';
-import { waterbirdModel } from '../src/models/waterbird.ts';
-import { crestedBirdModel } from '../src/models/crestedBird.ts';
+import { flappingBirdModel } from '../src/retiredModels/flappingBird.ts';
+import { pterosaurModel } from '../src/retiredModels/pterosaur.ts';
+import { phoenixModel } from '../src/retiredModels/phoenix.ts';
+import { waterbirdModel } from '../src/retiredModels/waterbird.ts';
+import { crestedBirdModel } from '../src/retiredModels/crestedBird.ts';
 import { cappedAntiprism } from '../src/engine/antiprismScaffold.ts';
 import { Vector3 } from 'three';
 

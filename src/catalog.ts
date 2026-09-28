@@ -33,23 +33,11 @@ export const CATEGORIES: { id: CategoryId | 'all'; label: LocalizedText }[] = [
 ];
 
 export const CATEGORY_OF: Record<string, CategoryId> = {
-  'sonobe-cube': 'decorate',
-  'flapping-bird': 'animal',
-  'pterosaur': 'animal',
-  'phoenix': 'animal',
-  'waterbird': 'animal',
-  'crestedBird': 'animal',
+  'jumping-frog': 'play',
+  'fortune-teller': 'play',
+  'folding-fan': 'useful',
 
-  'sonobe-crown': 'decorate',
-  'sonobe-triangular-tower': 'decorate',
-  'sonobe-square-tower': 'decorate',
-  'sonobe-pentagonal-tower': 'decorate',
-  'sonobe-twisted-tower': 'decorate',
-
-  'sonobe-octahedron': 'decorate',
   'sonobe-icosahedron': 'decorate',
-  'sonobe-triangular-bipyramid': 'decorate',
-  'sonobe-pentagonal-bipyramid': 'decorate',
   dog: 'face',
   cat: 'face',
   fox: 'face',
