@@ -126,37 +126,51 @@ export default function App() {
 
   return (
     <div className="screen library-screen">
-      <div className="header-deco" aria-hidden="true">
-        <GenericPattern size={300} />
-      </div>
-
       <header className="lib-header">
         <div className="lib-header-top">
           <p className="eyebrow">
             <span className="rule" />
-            {t('eyebrow')}
+            PAPER, PLAY & POSSIBILITY
           </p>
           <LangToggle />
         </div>
-        <h1 className={`serif${lang === 'en' ? ' latin' : ''}`}>
-          {/* 行の途中で折れると読みにくいので、行ごとに nowrap で包む */}
-          <span>{t('heroLine1')}</span>
-          {lang === 'ja' ? <br /> : ' '}
-          <span>{t('heroLine2')}</span>
-        </h1>
-        <p className="hero-en">{t('heroSub')}</p>
+        <div className="family-hero">
+          <div className="hero-copy">
+            <p className="hero-kicker">いちまいの紙から、いっしょに。<span lang="en">A little paper. A little wonder.</span></p>
+            <h1><span lang="ja">折り紙ジェネレーター</span><span className="brand-english" lang="en">Origami Generator</span></h1>
+            <p className="hero-en"><span lang="ja">好きな作品を選んで、ひと折りずつ。<br />親子で「できた！」を楽しもう。</span><span lang="en">Pick a favorite, follow each fold, and share the joy of making.</span></p>
+            <a className="start-link" href="#model-library">作品をえらぶ <span lang="en">Let’s fold</span> <span aria-hidden="true">↗</span></a>
+          </div>
+          <div className="hero-paper" aria-hidden="true">
+            <div className="paper-orbit" />
+            <svg viewBox="0 0 360 300" fill="none">
+              <path d="M40 209Q69 268 124 246" stroke="#d8b64f" strokeWidth="2" strokeDasharray="5 8" />
+              <path d="M68 100L179 156L293 69L221 201L179 156L132 202Z" fill="#6aa78d" />
+              <path d="M68 100L179 156L132 202Z" fill="#a3d3b7" />
+              <path d="M179 156L293 69L202 170Z" fill="#d4ead9" />
+              <path d="M132 202L179 156L202 170L221 201L161 187Z" fill="#438b72" />
+              <path d="M221 201L277 216L245 167Z" fill="#89bca3" />
+              <path d="M277 216L245 167L283 189Z" fill="#c6e1cf" />
+              <path d="M79 54L84 67L98 72L84 77L79 91L74 77L60 72L74 67Z" fill="#efc966" />
+              <circle cx="298" cy="131" r="7" fill="#efb6a6" />
+              <path d="M240 38L249 43L244 52L235 47Z" fill="#aebfe3" />
+              <path d="M65 178L53 181M58 170L60 189" stroke="#e49b87" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            <span className="paper-note">小さな「できた！」を、毎日に。<small>A little win, one fold at a time.</small></span>
+          </div>
+        </div>
         <div className="record-chip">
-          <span className="chip-key">{t('rank')}</span>
+          <span className="chip-key">あなたのきろく / YOUR JOURNEY</span>
           <span className="chip-label">{L(rankTitle)}</span>
           <span className="chip-sep" />
-          <span className="chip-key">{t('folded')}</span>
+          <span className="chip-key">できた作品 / FOLDED</span>
           <span className="chip-label">{records.total}</span>
         </div>
       </header>
 
-      <h2 className="section-title">
-        <span>{t('selectModel')}</span>
-        {lang === 'ja' && <span className="en">{t('selectModelTag')}</span>}
+      <h2 className="section-title" id="model-library">
+        <span>今日は、なにを折ろう？</span>
+        <span className="en" lang="en">What will you make today?</span>
         <span className="line" />
       </h2>
 
@@ -179,7 +193,7 @@ export default function App() {
                 disabled={n === 0 && filter !== c.id}
                 onClick={() => setFilter(c.id)}
               >
-                {L(c.label)}
+                <span>{c.label.ja}<small lang="en">{c.label.en}</small></span>
                 <em>{n}</em>
               </button>
             );
@@ -194,7 +208,7 @@ export default function App() {
             aria-pressed={level === 'all'}
             onClick={() => setLevel('all')}
           >
-            {t('filterAll')}
+            <span>すべて<small lang="en">All</small></span>
             <em>{levelCount('all')}</em>
           </button>
           {usedLevels(MODELS).map((lv) => {
@@ -208,7 +222,7 @@ export default function App() {
                 disabled={n === 0 && level !== lv}
                 onClick={() => setLevel(lv)}
               >
-                {L(levelLabel(lv))}
+                <span>{levelLabel(lv).ja}<small lang="en">{levelLabel(lv).en}</small></span>
                 <em>{n}</em>
               </button>
             );
@@ -242,7 +256,7 @@ export default function App() {
               </span>
               <Difficulty n={m.difficulty} />
             </div>
-            {lang === 'ja' && <div className="work-en">{m.name.en}</div>}
+            <div className="work-en" lang={lang === 'ja' ? 'en' : 'ja'}>{lang === 'ja' ? m.name.en : m.name.ja}</div>
             {MODEL_NOTES[m.id] && <div className="model-note">{L(MODEL_NOTES[m.id])}</div>}
             <div className="work-meta">
               {t('stepsMeta', { n: m.steps.length })}

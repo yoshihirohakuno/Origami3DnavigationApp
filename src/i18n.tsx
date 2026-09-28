@@ -3,13 +3,9 @@ import type { ReactNode } from 'react';
 import type { LocalizedText } from './engine/types';
 
 /**
- * 表示言語(1言語だけ出す)。
- * 作品データは LocalizedText{ja,en} を持っているので、UI 文言も同じ形で持ち、
- * 選んだ言語だけを描く。以前は日英を併記していたが、海外の利用者には
- * 二重表示が読みにくく、日本語話者にも冗長だったため切り替え式にした。
- *
- * 小さな英字ラベル(RANK / STEP / ROUTE など)はデザイン上の記号として
- * 両言語で共通に残す。意味のある文章はすべて言語に応じて切り替える。
+ * 操作・折り方の表示言語。ブランドとライブラリの見出し・作品名は日英併記。
+ * 作品データと案内文は LocalizedText{ja,en} で保持する。
+ * 折り方の長い文章は選択言語、一覧の作品名は選択言語を主・もう一方を副に表示。
  */
 export type Lang = 'ja' | 'en';
 
@@ -29,8 +25,8 @@ function detectLang(): Lang {
 /** UI 文言。作品データと同じ LocalizedText で持つ */
 const DICT = {
   eyebrow: { ja: 'ORIGAMI NAVIGATION', en: 'ORIGAMI NAVIGATION' },
-  heroLine1: { ja: '折り方が、', en: 'Every fold,' },
-  heroLine2: { ja: '3Dで動く。', en: 'in 3D.' },
+  heroLine1: { ja: '折り紙ジェネレーター', en: 'Origami Generator' },
+  heroLine2: { ja: 'Origami Generator', en: '折り紙ジェネレーター' },
   heroSub: {
     ja: '一工程ずつ再生して、回して確かめながら折れます。',
     en: 'Play it step by step and turn it to any angle as you fold.',
@@ -97,10 +93,10 @@ const DICT = {
   share: { ja: '完成をシェア', en: 'Share it' },
   shareDone: { ja: 'シェアしました', en: 'Shared' },
   shareCopyHint: { ja: 'この文をコピーしてシェアしてください', en: 'Copy this text to share' },
-  shareTitle: { ja: 'おりがみナビ', en: 'Origami Navi' },
+  shareTitle: { ja: '折り紙ジェネレーター', en: 'Origami Generator' },
   shareText: {
-    ja: `おりがみナビで「${'{name}'}」を折りました。`,
-    en: `I folded the ${'{name}'} with Origami Navi.`,
+    ja: `折り紙ジェネレーターで「${'{name}'}」を折りました。`,
+    en: `I folded the ${'{name}'} with Origami Generator.`,
   },
 } satisfies Record<string, LocalizedText>;
 
@@ -125,8 +121,8 @@ export function LangProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang;
     document.title =
       lang === 'ja'
-        ? 'おりがみナビ — 折り方が3Dで動く'
-        : 'Origami Navi — Every fold, in 3D';
+        ? '折り紙ジェネレーター / Origami Generator'
+        : 'Origami Generator / 折り紙ジェネレーター';
   }, [lang]);
 
   const value = useMemo<LangCtx>(() => {
