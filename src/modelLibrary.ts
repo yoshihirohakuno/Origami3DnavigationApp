@@ -1,3 +1,13 @@
+import { flappingBirdModel } from './models/flappingBird';
+import { pterosaurModel } from './models/pterosaur';
+import { phoenixModel } from './models/phoenix';
+import { waterbirdModel } from './models/waterbird';
+import { crestedBirdModel } from './models/crestedBird';
+import { sonobeCrownModel } from './models/sonobeCrown';
+import { sonobeTriangularTowerModel } from './models/sonobeTriangularTower';
+import { sonobeSquareTowerModel } from './models/sonobeSquareTower';
+import { sonobePentagonalTowerModel } from './models/sonobePentagonalTower';
+import { sonobeTwistedTowerModel } from './models/sonobeTwistedTower';
 import { santaFaceModel } from './models/santaFace';
 import { shirtModel } from './models/shirt';
 import { baseballJerseyModel } from './models/baseballJersey';
@@ -164,6 +174,18 @@ const SOURCES: OrigamiModel[] = [
   sonobeIcosahedronModel,
   sonobeTriangularBipyramidModel,
   sonobePentagonalBipyramidModel,
+  sonobeCrownModel,
+  sonobeTriangularTowerModel,
+  sonobeSquareTowerModel,
+  sonobePentagonalTowerModel,
+  sonobeTwistedTowerModel,
+  flappingBirdModel,
+  pterosaurModel,
+  phoenixModel,
+  waterbirdModel,
+  crestedBirdModel,
+
+
 
 ];
 

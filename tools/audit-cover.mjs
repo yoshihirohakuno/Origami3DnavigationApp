@@ -26,6 +26,18 @@
  */
 
 const IDS = [
+  'flappingBird',
+  'pterosaur',
+  'phoenix',
+  'waterbird',
+  'crestedBird',
+
+  'sonobeCrown',
+  'sonobeTriangularTower',
+  'sonobeSquareTower',
+  'sonobePentagonalTower',
+  'sonobeTwistedTower',
+
   'sonobeCube', 'sonobeOctahedron', 'sonobeIcosahedron',
   'sonobeTriangularBipyramid', 'sonobePentagonalBipyramid',
   'tulip', 'dog', 'cup', 'chick', 'squareBase', 'crane', 'shuriken', 'cat', 'fox',

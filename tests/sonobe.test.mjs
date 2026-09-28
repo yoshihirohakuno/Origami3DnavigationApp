@@ -1,3 +1,8 @@
+import { sonobeCrownModel } from '../src/models/sonobeCrown.ts';
+import { sonobeTriangularTowerModel } from '../src/models/sonobeTriangularTower.ts';
+import { sonobeSquareTowerModel } from '../src/models/sonobeSquareTower.ts';
+import { sonobePentagonalTowerModel } from '../src/models/sonobePentagonalTower.ts';
+import { sonobeTwistedTowerModel } from '../src/models/sonobeTwistedTower.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { computeFoldState, isGuideFold } from '../src/engine/fold.ts';
@@ -10,7 +15,7 @@ import { sonobePentagonalBipyramidModel } from '../src/models/sonobePentagonalBi
 import { buildStepDiagrams } from '../src/CreasePattern.tsx';
 import { renderFaceOffsets } from '../src/engine/renderLayers.ts';
 import { removeHiddenLayers } from '../src/engine/painter.ts';
-const entries = [[sonobeCubeModel,6,54], [sonobeOctahedronModel,12,120], [sonobeIcosahedronModel,30,300],
+const entries = [[sonobeCrownModel,24,240], [sonobeTriangularTowerModel,27,264], [sonobeSquareTowerModel,36,360], [sonobePentagonalTowerModel,45,450], [sonobeTwistedTowerModel,36,354], [sonobeCubeModel,6,54], [sonobeOctahedronModel,12,120], [sonobeIcosahedronModel,30,300],
   [sonobeTriangularBipyramidModel,9,84], [sonobePentagonalBipyramidModel,15,150]];
 
 for (const [model,sheets,stages] of entries) {

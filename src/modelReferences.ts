@@ -28,6 +28,11 @@ const diagrams: Record<string, string> = {
   vest: 'easy/clothes/vest/vest/zu.gif',
   gloves: 'easy/clothes/gloves/gloves/zu.gif',
   shoes: 'rn-image/zu/shoes.gif',
+  'flapping-bird': 'rn-image/zu/crane.gif',
+  'pterosaur': 'rn-image/zu/crane.gif',
+  'phoenix': 'rn-image/zu/crane.gif',
+  'waterbird': 'rn-image/zu/crane.gif',
+  'crestedBird': 'rn-image/zu/crane.gif',
   snail: 'easy/other/snail/snail/zu.gif',
   moon: 'easy/other/moon/moon/zu.gif',
   boy: 'easy/human-face/boy/zu.gif',
@@ -69,6 +74,18 @@ export const referenceOf = (id: string): string | undefined => id.startsWith('so
 
 /** Known differences found by direct diagram comparison, not a blanket accuracy claim. */
 export const MODEL_NOTES: Record<string, LocalizedText> = {
+  'pterosaur': { ja: '鶴の基本形を使った創作アレンジです。中割り折りの層の入れ替えは簡略化しています。', en: 'An original bird-base variation. Layer rearrangement during inside-reverse folds is simplified.' },
+  'phoenix': { ja: '鶴の基本形を使った創作アレンジです。中割り折りの層の入れ替えは簡略化しています。', en: 'An original bird-base variation. Layer rearrangement during inside-reverse folds is simplified.' },
+  'waterbird': { ja: '鶴の基本形を使った創作アレンジです。中割り折りの層の入れ替えは簡略化しています。', en: 'An original bird-base variation. Layer rearrangement during inside-reverse folds is simplified.' },
+  'crestedBird': { ja: '鶴の基本形を使った創作アレンジです。中割り折りの層の入れ替えは簡略化しています。', en: 'An original bird-base variation. Layer rearrangement during inside-reverse folds is simplified.' },
+  'flapping-bird': { ja: '尾を細く折らない伝承のはばたく鳥です。中割り折りと紙のしなりは簡略化し、尾を引いて羽ばたかせる操作は再現していません。', en: 'A traditional flapping bird with a broad tail. Reverse-fold layering and paper flex are simplified; tail-pull flapping is not simulated.' },
+
+  'sonobe-crown': { ja: '正方形24枚の園部ユニットで作る幾何学アレンジ。2段の輪を順番につなぎます。差し込み時のしなりは簡略化しています。', en: 'A geometric assembly of 24 Sonobe modules in 2 successive rings. Flex during pocket insertion is simplified.' },
+  'sonobe-triangular-tower': { ja: '正方形27枚の園部ユニットで作る幾何学アレンジ。3段の輪を順番につなぎます。差し込み時のしなりは簡略化しています。', en: 'A geometric assembly of 27 Sonobe modules in 3 successive rings. Flex during pocket insertion is simplified.' },
+  'sonobe-square-tower': { ja: '正方形36枚の園部ユニットで作る幾何学アレンジ。3段の輪を順番につなぎます。差し込み時のしなりは簡略化しています。', en: 'A geometric assembly of 36 Sonobe modules in 3 successive rings. Flex during pocket insertion is simplified.' },
+  'sonobe-pentagonal-tower': { ja: '正方形45枚の園部ユニットで作る幾何学アレンジ。3段の輪を順番につなぎます。差し込み時のしなりは簡略化しています。', en: 'A geometric assembly of 45 Sonobe modules in 3 successive rings. Flex during pocket insertion is simplified.' },
+  'sonobe-twisted-tower': { ja: '正方形36枚の園部ユニットで作る幾何学アレンジ。4段の輪を順番につなぎます。差し込み時のしなりは簡略化しています。', en: 'A geometric assembly of 36 Sonobe modules in 4 successive rings. Flex during pocket insertion is simplified.' },
+
   'sonobe-triangular-bipyramid': { ja: '正方形9枚で三角の輪を閉じる園部ユニットの幾何学アレンジです。差し込み時の紙のしなりは簡略化しています。', en: 'A geometric Sonobe variation: nine squares close a triangular ring. Paper flex during insertion is simplified.' },
   'sonobe-pentagonal-bipyramid': { ja: '正方形15枚で五角の輪を閉じる園部ユニットの幾何学アレンジです。差し込み時の紙のしなりは簡略化しています。', en: 'A geometric Sonobe variation: fifteen squares close a pentagonal ring. Paper flex during insertion is simplified.' },
   'sonobe-cube': { ja: '正方形6枚を使う組み立て作品です。差し込み時の紙のしなりは簡略化しています。', en: 'An assembly of six squares. Paper flex during pocket insertion is simplified.' },

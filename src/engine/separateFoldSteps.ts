@@ -157,6 +157,11 @@ const PLANS: Record<string, Record<number, Plan>> = {
   },
 };
 
+// These models share only the square-base and petal-fold stages with the crane.
+for (const id of ['flapping-bird', 'pterosaur', 'phoenix', 'waterbird', 'crestedBird']) {
+  PLANS[id] = Object.fromEntries([3, 5, 6, 7].map(step => [step, PLANS.crane[step]]));
+}
+
 const COUPLED: Record<string, Record<number, string>> = {
   cup: { 6: 'The front and back walls share material seams and must bow together.' },
   // One crease, one motion: the head flap flips over as the top is folded down.
