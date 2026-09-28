@@ -7,6 +7,7 @@ import { PaperScene } from './three/PaperScene';
 import { LangToggle, useLang } from './i18n';
 import { MODEL_NOTES } from './modelReferences';
 import { RouteThumbnail } from './RouteThumbnail';
+import { FortuneTellerPreview } from './FortuneTellerPreview';
 
 /** 折り種類の名前と、動く向きの補足(バッジの2行) */
 const FOLD_LABEL: Record<FoldType, { ja: string; en: string }> = {
@@ -54,6 +55,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   const [ui, setUi] = useState<UiState>({ t: 0, stepIndex: 0, fraction: 0 });
   const [playing, setPlaying] = useState(false);
   const [done, setDone] = useState(false);
+  const [preview, setPreview] = useState(false);
   // 初回だけ操作のヒントを出す(3Dが回せる/スライダーで途中を見られる、が伝わらないため)
   const [hint, setHint] = useState(() => {
     try {
@@ -128,7 +130,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
       const t = tRef.current;
       const target = targetRef.current;
       if (t !== target) {
-        const d = Math.sign(target - t) * PLAY_SPEED * dt;
+        const d = Math.sign(target - t) * (model.id === 'fortune-teller' && t >= 9 ? .3 : PLAY_SPEED) * dt;
         tRef.current = Math.abs(target - t) <= Math.abs(d) ? target : t + d;
       } else if (playingRef.current && t >= total) {
         playingRef.current = false;
@@ -210,6 +212,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = document.activeElement as HTMLElement | null;
+      if (document.querySelector('dialog[open]')) return;
       if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
       switch (e.key) {
         case 'ArrowRight':
@@ -287,6 +290,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
   // バッジは工程の代表折り。山谷が混在する工程は「たたむ」と表示する
   const visibleFolds = step.folds.filter(isGuideFold);
   const foldType = visibleFolds[0]?.type ?? 'assemble';
+  const openingPockets = visibleFolds.some(f => f.fingerPockets);
   const mixed = visibleFolds.some((f) => f.type !== foldType);
   const finished = ui.t >= total;
   const stepComplete = ui.fraction === 1;
@@ -326,8 +330,8 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         {!finished && !stepComplete && <div className={`fold-badge ${mixed ? 'mixed' : foldType}`}>
           <i />
           <div>
-            <strong>{mixed ? t('collapse') : L(FOLD_LABEL[foldType])}</strong>
-            <span>{mixed ? t('collapseHint') : L(FOLD_HINT[foldType])}</span>
+            <strong>{openingPockets ? L({ja:'ふくろを開く',en:'Open pockets'}) : mixed ? t('collapse') : L(FOLD_LABEL[foldType])}</strong>
+            <span>{openingPockets ? L({ja:'四つを連動させる',en:'Move all four together'}) : mixed ? t('collapseHint') : L(FOLD_HINT[foldType])}</span>
           </div>
         </div>}
         <button className="view-reset" onClick={() => sceneRef.current?.resetCamera()}>
@@ -404,6 +408,10 @@ export function Navigator({ model, onExit, onComplete }: Props) {
           {finished ? t('isComplete', { name: L(model.name) }) : L(step.description)}
         </p>
         {step.caution && <p className="step-caution">※ {L(step.caution)}</p>}
+        {model.id === 'fortune-teller' && <div className="fortune-actions">
+          {ui.stepIndex >= 9 && <button className="btn-main" onClick={() => sceneRef.current?.setViewAngle(180)}>{L({ja:'指を入れる裏側を見る',en:'View finger pockets underneath'})}</button>}
+          <button className="btn-main" onClick={() => { goTo(tRef.current, true); setPreview(true); }}>{L({ja:'完成後のパクパクを見る',en:'Preview the finished toy'})}</button>
+        </div>}
         {MODEL_NOTES[model.id] && <p className="model-notice">{L(MODEL_NOTES[model.id])}</p>}
       </div>
 
@@ -446,6 +454,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
         </div>
       </div>
 
+      {preview && <FortuneTellerPreview model={model} onClose={() => setPreview(false)} />}
       {done && (
         <div className="overlay">
           <div className="overlay-card">

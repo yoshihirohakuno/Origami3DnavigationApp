@@ -2010,3 +2010,14 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+.fortune-preview { width: min(760px, 94vw); max-height: 92dvh; overflow: auto; border: 1px solid var(--border); border-radius: 24px; padding: 24px; color: var(--text); background: #fffdf8; }
+.fortune-preview::backdrop { background: #19352d88; }
+.fortune-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.fortune-preview h2 { font-size: 1.3rem; }
+.fortune-preview p { line-height: 1.7; margin: 12px 0; }
+.fortune-preview canvas { display: block; width: 100%; height: min(42dvh, 400px); border-radius: 16px; }
+.fortune-preview-buttons, .fortune-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.fortune-preview-slider { display: grid; gap: 12px; margin-top: 20px; }
+.fortune-preview-slider input { width: 100%; accent-color: #387a63; }
+.fortune-actions .btn-main { padding: 8px 12px; font-size: .85rem; }

@@ -20,8 +20,8 @@ const PLANS: Record<string, Record<number, Plan>> = {
     2: {checkpoint:.5,captions:[['下側の両脇も内側へ寄せます。','Bring the lower sides inward.'],['下の辺を上げ、二つ目の三角にします。','Raise the bottom edge and flatten the second triangle.']]},
   },
   'fortune-teller': {10:{checkpoint:.5,captions:[
-    ['裏の四つのふくろに指を入れ、口を開きます。','Insert your fingers into the four pockets and open them.'],
-    ['四隅を寄せながら指入れをふくらませます。','Bring the corners together and shape the finger pockets.'],
+    ['裏の四つの袋に、両手の親指と人差し指を1本ずつ入れ、少しずつ起こします。','Slip both thumbs and index fingers into the four pockets underneath and gently lift them.'],
+    ['指を入れたまま、四隅を中央へ寄せます。10から続く動きで、新たに折り返す工程ではありません。','Keep your fingers inside and bring the four corners to the center. Continue step 10; do not make another fold.'],
   ]}},
   dog: { 2: pair('角を下へ折って、たれ耳にします。', 'fold the corner down into a floppy ear.') },
   'square-base': { 3: pocket('手前の', '四角く', 'the front'), 5: pocket('反対側の', '四角く', 'the opposite') },
