@@ -33,8 +33,9 @@ export function foldSpatialFlap(
     }
   }
   for (const face of selected) for (const i of face) {
-    if (Math.abs(p[i].clone().sub(origin).dot(normal)) > 5e-7) {
-      throw new Error(`${model.id}: selected spatial flap is not planar`);
+    const distance = Math.abs(p[i].clone().sub(origin).dot(normal));
+    if (distance > 5e-7) {
+      throw new Error(`${model.id}: selected spatial flap is not planar (vertex ${i}, distance ${distance})`);
     }
   }
   const vertices = [...model.vertices], faces: number[][] = [], faceSheet: number[] = [];

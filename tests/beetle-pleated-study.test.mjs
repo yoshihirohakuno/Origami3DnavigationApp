@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {beetlePleatedStudy as m,beetleSquareOpenStart,beetleSquareCorners,beetlePleatStart,
  beetleFlatNarrowStart,beetleHornHalfStart,beetleLegSpreadStart,beetleLegRoots,
- beetleBackTuckStart,beetleFrontTuckStart,beetleSpatialHornStart,beetleFrontShoulderStart,beetleFrontShoulderFraction,
- beetleFrontKneeFraction,beetleSpatialFootStart,beetleSpatialHookStart} from '../src/experiments/beetlePleatedStudy.ts';
+ beetleBackTuckStart,beetleFrontTuckStart,beetleShieldStart,beetleShieldCreases,beetleSpatialHornStart,beetleFrontShoulderStart,beetleFrontShoulderFraction,
+ beetleFrontKneeFraction,beetleOtherLegBendFraction,beetleSpatialFootStart,beetleSpatialHookStart} from '../src/experiments/beetlePleatedStudy.ts';
 import {Vector3} from 'three';
 import {computeFoldState} from '../src/engine/fold.ts';
 import {paperTriangles} from '../src/engine/mesh.ts';
@@ -62,8 +62,8 @@ test('the retained wide front-leg layers tuck across their own centerline withou
  }
 });
 
-test('all 114 operations preserve the intact sheet and the dimensions of every panel',()=>{
- assert.equal(m.steps.length,114);const initial=computeFoldState(m,0).positions;
+test('all 116 operations preserve the intact sheet and the dimensions of every panel',()=>{
+ assert.equal(m.steps.length,116);const initial=computeFoldState(m,0).positions;
  let area=0;for(const f of m.faces)for(let i=1;i<f.length-1;i++)area+=initial[f[i]].clone().sub(initial[f[0]]).cross(initial[f[i+1]].clone().sub(initial[f[0]])).length()/2;
  assert.ok(Math.abs(area-4)<1e-8);
  for(let tick=0;tick<=m.steps.length*16;tick++){
@@ -131,6 +131,51 @@ test('front legs rise before bending down, with stationary knees one third along
  assert.ok(Math.abs(knees[0].y-knees[1].y)<eps&&Math.abs(knees[0].z-knees[1].z)<eps);
  assert.ok(Math.abs(finished[2].x+finished[4].x)<eps);
  assert.ok(Math.abs(finished[2].y-finished[4].y)<eps&&Math.abs(finished[2].z-finished[4].z)<eps);
+});
+
+test('the four other legs bend near their free roots rather than ending in short bent feet',()=>{
+ const finished=computeFoldState(m,beetleSpatialFootStart+6).positions;
+ for(let j=2;j<6;j++){
+  const time=beetleSpatialFootStart+j,[tip,,height]=beetleLegRoots[j];
+  const before=computeFoldState(m,time).positions,root=new Vector3(0,height,0);
+  const hinge=root.clone().lerp(before[tip],beetleOtherLegBendFraction);
+  const op=m.steps[time].folds[0];
+  const axis=before[op.axis[1]].clone().sub(before[op.axis[0]]).normalize();
+  assert.ok(hinge.clone().sub(before[op.axis[0]]).cross(axis).length()<eps);
+  assert.ok(hinge.distanceTo(before[tip])>3*root.distanceTo(hinge)-eps,'most of the leg stays beyond its hinge');
+  for(let tick=0;tick<=16;tick++){
+   const p=computeFoldState(m,time+tick/16).positions;
+   assert.ok(p[op.axis[0]].distanceTo(before[op.axis[0]])<eps);
+   assert.ok(p[op.axis[1]].distanceTo(before[op.axis[1]])<eps);
+   assert.ok(Math.abs(p[tip].distanceTo(hinge)-before[tip].distanceTo(hinge))<eps);
+  }
+  assert.ok(finished[tip].z<hinge.z-.15,'the long leg extends downward');
+ }
+ for(const [left,right]of [[6,8],[11,12]]){
+  assert.ok(Math.abs(finished[left].x+finished[right].x)<eps);
+  assert.ok(Math.abs(finished[left].y-finished[right].y)<eps&&Math.abs(finished[left].z-finished[right].z)<eps);
+ }
+});
+
+test('the shield tip forms a lasting pleat without dragging the back, horns, legs or neighboring shield layers',()=>{
+ const before=computeFoldState(m,beetleShieldStart).positions;
+ const first=computeFoldState(m,beetleShieldStart+1).positions;
+ const after=computeFoldState(m,beetleBackTuckStart).positions;
+ assert.equal(beetleBackTuckStart-beetleShieldStart,2);
+ assert.equal(m.steps[beetleShieldStart].folds[0].type,'mountain');
+ assert.equal(m.steps[beetleShieldStart+1].folds[0].type,'valley');
+ assert.ok(Math.abs(first[3].y-(2*beetleShieldCreases[0]-before[3].y))<eps);
+ assert.ok(first[3].y>-.5+eps,'the tucked tip stays clear of the horn root');
+ assert.ok(Math.abs(after[3].y-before[3].y+2*(beetleShieldCreases[0]-beetleShieldCreases[1]))<eps);
+ assert.ok(after[3].distanceTo(before[3])>.019,'the return fold leaves a pleat rather than undoing the first fold');
+ for(let tick=0;tick<=64;tick++){
+  const p=computeFoldState(m,beetleShieldStart+tick/32).positions;
+  for(const i of [...tips,1,5,7])assert.ok(p[i].distanceTo(before[i])<eps,`shield pleat dragged ${i}`);
+ }
+ for(let j=0;j<2;j++){
+  const time=beetleShieldStart+j,op=m.steps[time].folds[0],p=computeFoldState(m,time).positions;
+  for(const i of op.axis)assert.ok(Math.abs(p[i].y-beetleShieldCreases[j])<eps);
+ }
 });
 
 test('this unresolved beetle study stays private and never uses a position morph',()=>{
