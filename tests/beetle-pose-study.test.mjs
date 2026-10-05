@@ -114,3 +114,10 @@ test('faceted pocket approximation remains explicitly unfinished and outside the
  assert.ok(!MODELS.some(publicModel=>publicModel.id===m.id));
  assert.match(m.steps.at(-1).caution.en,/Unfinished.*Pocket opening/);
 });
+
+test('faceted body depth still leaves the distinct material mouth points coincident, documenting unfinished pocket inflation',()=>{
+ const p=computeFoldState(m,beetlePoseCoreEnd).positions,mouth=[38,51,41,54,44,57,47,60];
+ for(const a of mouth)for(const b of mouth)assert.ok(p[a].distanceTo(p[b])<eps);
+ assert.ok(Math.hypot(m.vertices[38][0]-m.vertices[51][0],m.vertices[38][1]-m.vertices[51][1])>.3,'these must be distinct material points, not copies of the same vertex');
+ assert.match(m.steps.at(-1).caution.en,/Pocket opening.*under review/);
+});
