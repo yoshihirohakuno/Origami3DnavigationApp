@@ -1,3 +1,4 @@
+import { candleModel } from './models/candle';
 import { threePieceTreeModel } from './models/threePieceTree';
 import { puddingModel } from './models/pudding';
 import { fortuneTellerModel } from './models/fortuneTeller';
@@ -166,6 +167,7 @@ const SOURCES: OrigamiModel[] = [
   foldingFanModel,
   puddingModel,
   threePieceTreeModel,
+  candleModel,
 
 ];
 

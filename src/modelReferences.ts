@@ -4,6 +4,7 @@ const base = 'https://www.origami-club.com/';
 const diagrams: Record<string, string> = {
   pudding: 'easy/food/puddig/zu.gif',
   'three-piece-tree': 'easy/flowers/tree/zu/zu.gif',
+  candle: 'easy/other/candle2/candle/zu.gif',
   'santa-face': 'xmas/santaface3/zu.gif',
   'shirt': 'fashion/shirt/shirt/zu.gif',
   'baseball-jersey': 'fashion/baseball/baseball/zu.gif',
