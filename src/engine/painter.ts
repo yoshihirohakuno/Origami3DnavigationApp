@@ -79,7 +79,10 @@ export function orderPaper(polygons: PaperPolygon[]): PaperPolygon[] {
       if (clipped.length >= 3) tiles[j * 8 + i].push({ face: polygon.face, points: clipped });
     }
   }
-  return tiles.flatMap(orderNode);
+  // A panel may be only partially covered globally but completely hidden in
+  // an individual tile. Pruning here prevents invisible stacked layers from
+  // generating thousands of BSP fragments inside finely folded bases.
+  return tiles.flatMap(tile => orderNode(removeHiddenLayers(tile)));
 }
 
 function orderNode(polygons: PaperPolygon[]): PaperPolygon[] {

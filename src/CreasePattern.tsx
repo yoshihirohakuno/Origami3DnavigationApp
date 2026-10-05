@@ -238,7 +238,11 @@ function PaperPolygons({ model, state, view, frame,
     .filter(p => Math.abs(projectedArea(p.points)) > 1e-10);
   const svgPoint = (p: { x: number; y: number }) =>
     `${toSvgX(p.x, frame).toFixed(4)},${toSvgY(p.y, frame).toFixed(4)}`;
-  const visible = model.sheetStartSteps ? removeHiddenLayers(triangles, .0005) : triangles;
+  // Dense single-sheet bases also have many completely covered panels.
+  // Prune them before BSP; keep the stricter geometric tolerance for these
+  // models so small exposed tips and the colors of visible layers remain.
+  const visible = model.sheetStartSteps ? removeHiddenLayers(triangles, .0005)
+    : triangles.length > 128 ? removeHiddenLayers(triangles) : triangles;
   return orderPaper(visible).filter(p => Math.abs(projectedArea(p.points)) > 1e-10).map((polygon, index) => {
     const colors = sheetColorOf(polygon.face);
     const fill = projectedArea(polygon.points) >= 0 ? colors.front : colors.back;

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { beetleStudy as m, beetleNarrowStart, beetleNarrowEnd, beetlePointRouteStart, beetleLegRootStart,
- beetleShoulderStart, beetleBodyStart, beetleBodyBindings, beetleHornStart, beetleJointStart } from '../src/experiments/beetleStudy.ts';
+ beetleShoulderStart, beetleBodyStart, beetleBodyBindings, beetleHornStart, beetleJointStart, beetleHookStart } from '../src/experiments/beetleStudy.ts';
 import { computeFoldState } from '../src/engine/fold.ts';
 import { MODELS } from '../src/modelLibrary.ts';
 import { paperTriangles } from '../src/engine/mesh.ts';
@@ -122,5 +122,21 @@ test('petal panels have no transverse interior crossings at the sampled poses',(
  const petals=m.steps.flatMap((step,i)=>step.folds.some(f=>f.petal?.sides.length===2)?[i]:[]);
  for(const i of petals)for(let tick=1;tick<8;tick++){
   assert.deepEqual(intersectingPanels(triangles,computeFoldState(m,i+tick/8).positions,1),[],`crossing at ${i+tick/8}`);
+ }
+});
+
+test('raised horn hooks turn toward each other without dragging legs, body or the opposing horn',()=>{
+ const triangles=paperTriangles(m);
+ for(let j=0;j<2;j++){
+  const corner=9+j,start=beetleHookStart+j,before=computeFoldState(m,start).positions;
+  const op=m.steps[start].folds[0];
+  for(let tick=1;tick<=16;tick++){
+   const p=computeFoldState(m,start+tick/16).positions;
+   for(const i of landmarks.filter(i=>i!==corner))assert.ok(p[i].distanceTo(before[i])<tolerance,'another appendage must stay fixed');
+   for(const i of op.axis)assert.ok(p[i].distanceTo(before[i])<tolerance,'raised crease stays fixed');
+   assert.deepEqual(intersectingPanels(triangles,p,1),[],'hook must not cross another panel');
+  }
+  const after=computeFoldState(m,start+1).positions;
+  assert.ok((after[corner].z-before[corner].z)*(j===0?-1:1)>.02,'upper hook bends down; lower hook bends up');
  }
 });

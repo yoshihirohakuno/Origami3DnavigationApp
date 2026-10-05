@@ -3,6 +3,7 @@ import { squareBaseModel } from '../models/squareBase';
 import { computeFoldState } from '../engine/fold';
 import { foldFlap } from '../engine/foldFlap';
 import { foldConnectedFlap } from '../engine/foldConnectedFlap';
+import { foldSpatialFlap } from '../engine/foldSpatialFlap';
 
 /** Development-only blintz frog-base research; never a finished library model. */
 const vertices:[number,number][]=squareBaseModel.vertices.map(([x,y])=>[x/1.4142,y/1.4142]);
@@ -57,6 +58,7 @@ for(const b of [2,4,6,8]){
  model.steps.push({folds:[{axis:[pl,pr],moving:[b,dl,dr],type:'valley',angle:180,direction,petal:{tip:b,sides:[[dl,pl,left],[dr,pr,right]]},surfacePoints:[...followers]}],description:{ja:'下の一枚を開き、両側を内側にたたみます。',en:'Lift the lower flap and tuck both sides inward.'}});
 
 }
+export const beetlePetalBase: OrigamiModel = model;
 // Fold the small lifted flaps down individually; their side tucks remain.
 for(const b of [2,4,6,8])model=foldFlap(model,b,[0,1-Math.SQRT2],0,{description:{ja:'起こした細い先を下へ折り下げます。',en:'Fold the lifted narrow flap down.'}});
 model=foldFlap(model,0,[0,-.08],0,{description:{ja:'中央の閉じた先を折り込み、背中を短く整えます。',en:'Tuck the closed central point inward to shorten the back.'}},'back');
@@ -87,7 +89,6 @@ for(const [corner,angle,height] of [[2,30,-.5],[4,-30,-.5],[6,45,-.55],[8,-45,-.
 }
 export const beetleShoulderStart=model.steps.length;
 for(const corner of [3,7])model=foldConnectedFlap(model,corner,[0,-.65],0,{description:{ja:'頭の付け根の角を折り込み、輪郭を整えます。',en:'Tuck the point beside the head to refine the outline.'}},'back');
-for(const corner of [9,10])model=foldFlap(model,corner,[0,-.72],0,{description:{ja:'角の先を小さく折り返します。',en:'Fold back the tip of the horn.'}});
 const flatHornStart=model.steps.length;
 export const beetleBodyStart=flatHornStart;
 export const beetleHornStart=flatHornStart+2;
@@ -125,6 +126,26 @@ for(const step of flatSteps.slice(flatHornStart))model.steps.push({...step,folds
  }
  return {...op,moving:[...moving],surfacePoints:undefined};
 })});
+// Shape the hooks AFTER raising the horns, using their actual 3D plane.
+// A flat 180-degree tip tuck followed by lifting the whole horn cannot create
+// opposing hooks: it leaves both tips folded back along the same straight line.
+const turn=model.steps.pop()!;
+export const beetleHookStart=model.steps.length;
+for(const [corner,angle,zsign]of [[9,85,-1],[10,45,1]]){
+ const p=computeFoldState(model,model.steps.length).positions;
+ const root=model.steps[beetleHornStart+(corner===9?0:1)].folds[0];
+ const center=p[root.axis[0]].clone().lerp(p[root.axis[1]],.5);
+ const tip=p[corner],along=tip.clone().sub(center).normalize();
+ const face=model.faces.find(f=>f.includes(corner)&&p[f[1]].clone().sub(p[f[0]]).cross(p[f[2]].clone().sub(p[f[0]])).length()>1e-8)!;
+ const normal=p[face[1]].clone().sub(p[face[0]]).cross(p[face[2]].clone().sub(p[face[0]])).normalize();
+ const crease=normal.clone().cross(along).normalize();
+ const direction=(Math.sign(crease.clone().cross(along).z)*zsign) as 1|-1;
+ model=foldSpatialFlap(model,corner,center.clone().lerp(tip,.75),crease,along,angle,direction,{
+  description:{ja:corner===9?'上の角の先を下へ曲げます。':'下の角の先を上へ曲げます。',
+   en:corner===9?'Bend the upper horn tip downward.':'Bend the lower horn tip upward.'},
+ });
+}
+model.steps.push({...turn,folds:turn.folds.map(op=>({...op,moving:model.vertices.map((_,i)=>i)}))});
 // Preserve the material winding; every original face starts white-side up.
 model.faces=model.faces.map(f=>{const [p,q,r]=f.map(i=>model.vertices[i]);return (q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0])<0?f:[...f].reverse();});
 model.faceSheet=model.faces.map(()=>0);

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { computeFoldState, type FoldState } from '../engine/fold';
 import { PaperScene } from '../three/PaperScene';
-import { beetleStudy } from './beetleStudy';
+import { beetleStudy as defaultBeetleStudy } from './beetleStudy';
+import type { OrigamiModel } from '../engine/types';
 import './beetleStudyPreview.css';
 
 /** Isolated authoring workbench. Not imported by the public library or app. */
-export function BeetleStudyPreview() {
+export function BeetleStudyPreview({ model = defaultBeetleStudy }: { model?: OrigamiModel }) {
+  const beetleStudy=model;
   const canvas = useRef<HTMLCanvasElement>(null);
   const scene = useRef<PaperScene | null>(null);
   const pose = useRef<FoldState | null>(null);
@@ -37,11 +39,11 @@ export function BeetleStudyPreview() {
       scene.current = null;
       paper.dispose();
     };
-  }, []);
+  }, [beetleStudy]);
   useEffect(() => {
     current.current = time;
     pose.current = computeFoldState(beetleStudy, time);
-  }, [time]);
+  }, [time, beetleStudy]);
   useEffect(() => {
     if (!playing) return;
     let frame = 0;
@@ -68,6 +70,7 @@ export function BeetleStudyPreview() {
   return <main className="study-workbench">
     <header>
       <h1>カブトムシ・構造試作 <span lang="en">Beetle structure study</span></h1>
+      <p>{beetleStudy.name.ja} <span lang="en">{beetleStudy.name.en}</span></p>
       <p role="status">未完成・作品一覧への追加前です。<span lang="en">Work in progress — not a released model.</span></p>
     </header>
     <div className="study-view"><canvas ref={canvas} aria-label="カブトムシの折り構造 / Beetle fold structure" /></div>
