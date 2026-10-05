@@ -20,8 +20,8 @@ for(const [rim,tip,anchor]of [[22,9,21],[24,9,23],[26,10,25],[28,10,27],[30,11,2
  const p=computeFoldState(model,model.steps.length).positions;
  const d=p[anchor].clone().sub(p[tip]);
  model=foldConnectedFlap(model,rim,[p[tip].x,p[tip].y],Math.atan2(d.y,d.x)*180/Math.PI,{
-  description:{ja:[22,26,30,34].includes(rim)?'小さな部分基本形の左側を開きます。':'右側も開き、小さな正方形にします。',
-   en:[22,26,30,34].includes(rim)?'Open the left side of the small partial base.':'Open its right side to form a small square.'},
+  description:{ja:[22,26,30,34].includes(rim)?'小さな部分基本形の片側を開きます。':'反対側も開き、小さな正方形にします。',
+   en:[22,26,30,34].includes(rim)?'Open one side of the small partial base.':'Open the other side to form a small square.'},
  },'front');
  model.steps.at(-1)!.folds[0].type='valley';
 }
@@ -67,6 +67,20 @@ for(const [tip,degrees,height]of beetleLegRoots){
  model=foldConnectedFlap(model,tip,[0,height],degrees,{
   description:{ja:'脚の付け根の外側の角を通る折り線で、一本を外へ開きます。',en:'Spread one leg on the diagonal crease through its outer root corner.'},
  });
+}
+export const beetleFrontTuckStart=model.steps.length;
+// The two retained wide layers belong to the front legs and shield. Tuck
+// only the free outer half of each leg; the opposite side would fold the
+// closed back point too. The broad shoulder at the root remains in place.
+for(const [tip,side,height]of [[2,-1,beetleLegRoots[0][2]],[4,1,beetleLegRoots[1][2]]]){
+ const p=computeFoldState(model,model.steps.length).positions,origin=p[tip];
+ const dx=-origin.x,dy=height-origin.y;
+ const seeds=[...new Set(model.faces.filter(f=>f.includes(tip)).flat())]
+  .filter(i=>(dx*(p[i].y-origin.y)-dy*(p[i].x-origin.x))*side>1e-8);
+ model=foldConnectedFlap(model,seeds,[origin.x,origin.y],Math.atan2(dy,dx)*180/Math.PI,{
+  description:{ja:`${tip===2?'左':'右'}の前脚の広い層を内側へ折り込み、脚を細くします。`,en:`Tuck the wide layer into the ${tip===2?'left':'right'} front leg to narrow it.`},
+ },'back');
+ model.steps.at(-1)!.folds[0].type='mountain';
 }
 export const beetlePleatedBase: OrigamiModel=structuredClone(model);
 
@@ -143,8 +157,11 @@ model.steps.push({folds:[{axis:[0,1],moving:model.vertices.map((_,i)=>i),type:'a
  description:{ja:'角を上に向けて全体を回します。',en:'Turn the model so its horns point upward.'},
  caution:{ja:'未完成の構造試作です。背中・盾・角の付け根・残りの脚と表裏は確認中です。',en:'Unfinished structural study. The back, shield, horn roots, remaining legs and paper sides are still under review.'},
 });
-model.renderLayerSeparation=.000003;
+// One offset per physical planar region needs enough separation for the
+// perspective depth buffer; subdividing a region must not supply its thickness.
+model.renderLayerSeparation=.00004;
 // The sphere-constrained base is coplanar to within numerical solver drift.
 // Do not sort its hidden subdivisions by those few nanometers of end depth.
 model.renderLayerDepthTolerance=5e-7;
+model.renderCoherentPanels=true;
 export const beetlePleatedStudy=model;

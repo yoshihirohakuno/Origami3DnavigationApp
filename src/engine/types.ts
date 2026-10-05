@@ -130,4 +130,7 @@ export interface OrigamiModel {
    * Below this depth spread, render order follows the folding approach instead
    * of treating solver noise as physical layer thickness. Default: 1e-8. */
   renderLayerDepthTolerance?: number;
+  /** Keep connected coplanar subdivisions on one display layer. Opt-in;
+   * material edge contact, sheet identity and physical plane must all agree. */
+  renderCoherentPanels?: boolean;
 }

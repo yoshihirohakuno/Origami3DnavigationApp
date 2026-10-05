@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {beetlePleatedStudy as m,beetleSquareOpenStart,beetleSquareCorners,beetlePleatStart,
  beetleFlatNarrowStart,beetleHornHalfStart,beetleLegSpreadStart,beetleLegRoots,
- beetleBackTuckStart,beetleSpatialHornStart,beetleFrontShoulderStart,beetleFrontShoulderFraction,
+ beetleBackTuckStart,beetleFrontTuckStart,beetleSpatialHornStart,beetleFrontShoulderStart,beetleFrontShoulderFraction,
  beetleFrontKneeFraction,beetleSpatialFootStart,beetleSpatialHookStart} from '../src/experiments/beetlePleatedStudy.ts';
 import {Vector3} from 'three';
 import {computeFoldState} from '../src/engine/fold.ts';
@@ -17,7 +17,7 @@ test('partial-square opening restores four actual squares with no displaced tip'
   const square=[joint,left,tip,right];
   for(let i=0;i<4;i++)assert.ok(Math.abs(p[square[i]].distanceTo(p[square[(i+1)%4]])-.5)<eps);
   assert.ok(Math.abs(p[left].y-p[right].y)<eps);
-  assert.ok(Math.abs(p[left].x+Math.SQRT1_2/2)<eps);
+  assert.ok(Math.abs(Math.abs(p[left].x)-Math.SQRT1_2/2)<eps);
  }
  for(let t=beetleSquareOpenStart*16;t<=beetleBackTuckStart*16;t++){
   if(t>=beetleLegSpreadStart*16)break;
@@ -43,8 +43,27 @@ test('six root folds spread symmetric legs without dragging any other leg or hor
  }
 });
 
-test('all 103 operations preserve the intact sheet and the dimensions of every panel',()=>{
- assert.equal(m.steps.length,103);const initial=computeFoldState(m,0).positions;
+test('the retained wide front-leg layers tuck across their own centerline without moving the shield or other tips',()=>{
+ for(let j=0;j<2;j++){
+  const time=beetleFrontTuckStart+j,op=m.steps[time].folds[0];
+  const before=computeFoldState(m,time).positions,after=computeFoldState(m,time+1).positions;
+  const a=before[op.axis[0]],along=before[op.axis[1]].clone().sub(a).normalize();
+  const signed=p=>along.x*(p.y-a.y)-along.y*(p.x-a.x);
+  assert.equal(op.type,'mountain');assert.ok(op.moving.length>0);
+  for(const vi of op.moving){
+   assert.ok(Math.abs(signed(before[vi])+signed(after[vi]))<eps,'the wide half reflects into the leg');
+   assert.ok(Math.abs(after[vi].clone().sub(a).dot(along)-before[vi].clone().sub(a).dot(along))<eps);
+  }
+  for(let tick=1;tick<=16;tick++){
+   const p=computeFoldState(m,time+tick/16).positions;
+   for(const vi of tips)assert.ok(p[vi].distanceTo(before[vi])<eps,`tuck ${j} dragged tip ${vi}`);
+   for(const vi of [1,3,5,7])assert.ok(p[vi].distanceTo(before[vi])<eps,'the shoulder points remain in place');
+  }
+ }
+});
+
+test('all 114 operations preserve the intact sheet and the dimensions of every panel',()=>{
+ assert.equal(m.steps.length,114);const initial=computeFoldState(m,0).positions;
  let area=0;for(const f of m.faces)for(let i=1;i<f.length-1;i++)area+=initial[f[i]].clone().sub(initial[f[0]]).cross(initial[f[i+1]].clone().sub(initial[f[0]])).length()/2;
  assert.ok(Math.abs(area-4)<1e-8);
  for(let tick=0;tick<=m.steps.length*16;tick++){
