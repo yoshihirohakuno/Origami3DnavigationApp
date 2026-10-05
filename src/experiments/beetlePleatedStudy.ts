@@ -90,16 +90,41 @@ for(const [tip,side,angle,direction]of [[9,1,55,-1],[10,-1,15,1]]){
   description:{ja:tip===9?'上の角を斜め上へ起こします。':'下の角を斜め下へ開きます。',en:tip===9?'Raise the upper horn diagonally.':'Lower the bottom horn diagonally.'},
  });
 }
-export const beetleSpatialFootStart=model.steps.length;
-for(const [tip,,height]of beetleLegRoots){
+export const beetleFrontShoulderStart=model.steps.length;
+export const beetleFrontShoulderFraction=.2;
+export const beetleFrontKneeFraction=1/3;
+// The free front leg starts beyond the folded root's broad shoulder. Do not
+// rotate the whole material fan at the nominal spine point: it is not planar
+// after shaping the back, and would drag the shield and neighboring layers.
+const frontKnees=new Map<number,[number,number,number]>();
+for(const [tip,,height]of beetleLegRoots.slice(0,2)){
  const p=computeFoldState(model,model.steps.length).positions;
- const root=new Vector3(0,height,0),along=p[tip].clone().sub(root).normalize();
+ const nominalRoot=new Vector3(0,height,0);
+ const shoulder=nominalRoot.clone().lerp(p[tip],beetleFrontShoulderFraction);
+ const along=p[tip].clone().sub(shoulder).normalize();
  const face=model.faces.find(f=>f.includes(tip)&&p[f[1]].clone().sub(p[f[0]]).cross(p[f[2]].clone().sub(p[f[0]])).length()>1e-8)!;
  const normal=p[face[1]].clone().sub(p[face[0]]).cross(p[face[2]].clone().sub(p[face[0]])).normalize();
  const crease=normal.clone().cross(along).normalize();
- model=foldSpatialFlap(model,tip,root.clone().lerp(p[tip],.72),crease,along,65,
+ model=foldSpatialFlap(model,tip,shoulder,crease,along,35,
+  Math.sign(crease.clone().cross(along).z) as 1|-1,{
+   description:{ja:`${tip===2?'左':'右'}の前脚を、肩から少し持ち上げます。`,en:`Raise the ${tip===2?'left':'right'} front leg slightly at its shoulder.`},
+   caution:{ja:'次の折り下げで、持ち上げた部分の先に関節を作ります。',en:'A later downward fold makes the knee beyond this raised segment.'},
+  });
+ const raised=computeFoldState(model,model.steps.length).positions[tip];
+ frontKnees.set(tip,shoulder.clone().lerp(raised,beetleFrontKneeFraction).toArray());
+}
+export const beetleSpatialFootStart=model.steps.length;
+for(const [tip,,height]of beetleLegRoots){
+ const p=computeFoldState(model,model.steps.length).positions;
+ const knee=frontKnees.get(tip);
+ const root=knee?new Vector3(...knee):new Vector3(0,height,0);
+ const along=p[tip].clone().sub(root).normalize();
+ const face=model.faces.find(f=>f.includes(tip)&&p[f[1]].clone().sub(p[f[0]]).cross(p[f[2]].clone().sub(p[f[0]])).length()>1e-8)!;
+ const normal=p[face[1]].clone().sub(p[face[0]]).cross(p[face[2]].clone().sub(p[face[0]])).normalize();
+ const crease=normal.clone().cross(along).normalize();
+ model=foldSpatialFlap(model,tip,knee?root:root.clone().lerp(p[tip],.72),crease,along,65,
   (-Math.sign(crease.clone().cross(along).z)) as 1|-1,{
-   description:{ja:'一本の脚先を下へ曲げて関節を作ります。',en:'Bend one leg tip down to form its foot joint.'},
+   description:{ja:knee?'持ち上げた前脚の先を下へ曲げ、山形の関節を作ります。':'一本の脚先を下へ曲げて関節を作ります。',en:knee?'Bend the raised front leg downward beyond its shoulder to form its knee.':'Bend one leg tip down to form its foot joint.'},
   });
 }
 export const beetleSpatialHookStart=model.steps.length;
@@ -116,7 +141,7 @@ for(const [tip,angle,zsign]of [[9,85,-1],[10,45,1]]){
 }
 model.steps.push({folds:[{axis:[0,1],moving:model.vertices.map((_,i)=>i),type:'assemble',angle:0,spinZ:180}],
  description:{ja:'角を上に向けて全体を回します。',en:'Turn the model so its horns point upward.'},
- caution:{ja:'構造試作です。背中・脚の層と表裏は確認中で、完成作品ではありません。',en:'Unfinished structural study. The back, leg layers and paper sides are still under review.'},
+ caution:{ja:'未完成の構造試作です。背中・盾・角の付け根・残りの脚と表裏は確認中です。',en:'Unfinished structural study. The back, shield, horn roots, remaining legs and paper sides are still under review.'},
 });
 model.renderLayerSeparation=.000003;
 // The sphere-constrained base is coplanar to within numerical solver drift.

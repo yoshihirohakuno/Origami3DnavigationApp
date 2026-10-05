@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {beetlePleatedStudy as m,beetleSquareOpenStart,beetleSquareCorners,beetlePleatStart,
  beetleFlatNarrowStart,beetleHornHalfStart,beetleLegSpreadStart,beetleLegRoots,
- beetleBackTuckStart,beetleSpatialHornStart,beetleSpatialFootStart,beetleSpatialHookStart} from '../src/experiments/beetlePleatedStudy.ts';
+ beetleBackTuckStart,beetleSpatialHornStart,beetleFrontShoulderStart,beetleFrontShoulderFraction,
+ beetleFrontKneeFraction,beetleSpatialFootStart,beetleSpatialHookStart} from '../src/experiments/beetlePleatedStudy.ts';
+import {Vector3} from 'three';
 import {computeFoldState} from '../src/engine/fold.ts';
 import {paperTriangles} from '../src/engine/mesh.ts';
 import {intersectingPanels} from '../tools/panel-intersections.mjs';
@@ -41,8 +43,8 @@ test('six root folds spread symmetric legs without dragging any other leg or hor
  }
 });
 
-test('all 101 operations preserve the intact sheet and the dimensions of every panel',()=>{
- assert.equal(m.steps.length,101);const initial=computeFoldState(m,0).positions;
+test('all 103 operations preserve the intact sheet and the dimensions of every panel',()=>{
+ assert.equal(m.steps.length,103);const initial=computeFoldState(m,0).positions;
  let area=0;for(const f of m.faces)for(let i=1;i<f.length-1;i++)area+=initial[f[i]].clone().sub(initial[f[0]]).cross(initial[f[i+1]].clone().sub(initial[f[0]])).length()/2;
  assert.ok(Math.abs(area-4)<1e-8);
  for(let tick=0;tick<=m.steps.length*16;tick++){
@@ -73,7 +75,7 @@ test('the opened squares, pleats, legs and spatial hinges have no sampled transv
 });
 
 test('spatial horn, foot and hook folds only move their selected appendage',()=>{
- for(const [start,selected]of [[beetleSpatialHornStart,[9,10]],[beetleSpatialFootStart,beetleLegRoots.map(v=>v[0])],[beetleSpatialHookStart,[9,10]]]){
+ for(const [start,selected]of [[beetleSpatialHornStart,[9,10]],[beetleFrontShoulderStart,[2,4]],[beetleSpatialFootStart,beetleLegRoots.map(v=>v[0])],[beetleSpatialHookStart,[9,10]]]){
   for(let j=0;j<selected.length;j++){
    const t=start+j,before=computeFoldState(m,t).positions;
    for(let tick=1;tick<=8;tick++){
@@ -82,6 +84,34 @@ test('spatial horn, foot and hook folds only move their selected appendage',()=>
    }
   }
  }
+});
+
+test('front legs rise before bending down, with stationary knees one third along the free leg',()=>{
+ const start=computeFoldState(m,beetleFrontShoulderStart).positions;
+ const raised=computeFoldState(m,beetleSpatialFootStart).positions;
+ const finished=computeFoldState(m,beetleSpatialFootStart+2).positions;
+ const knees=[];
+ for(let j=0;j<2;j++){
+  const [tip,,height]=beetleLegRoots[j];
+  const shoulder=new Vector3(0,height,0).lerp(start[tip],beetleFrontShoulderFraction);
+  const knee=shoulder.clone().lerp(raised[tip],beetleFrontKneeFraction);
+  knees.push(knee);
+  assert.ok(knee.z>shoulder.z+.025,'knee must rise above its shoulder');
+  assert.ok(finished[tip].z<knee.z-.1,'lower leg must descend below its knee');
+  const op=m.steps[beetleSpatialFootStart+j].folds[0];
+  for(let tick=0;tick<=16;tick++){
+   const p=computeFoldState(m,beetleSpatialFootStart+j+tick/16).positions;
+   const a=p[op.axis[0]],d=p[op.axis[1]].clone().sub(a).normalize();
+   assert.ok(knee.clone().sub(a).cross(d).length()<eps,'actual knee remains on the material hinge');
+  }
+  const upper=knee.clone().sub(shoulder),lower=finished[tip].clone().sub(knee);
+  assert.ok(Math.abs(upper.angleTo(lower)*180/Math.PI-65)<1e-4);
+  assert.ok(Math.abs(upper.length()+lower.length()-start[tip].distanceTo(shoulder))<eps);
+ }
+ assert.ok(Math.abs(knees[0].x+knees[1].x)<eps);
+ assert.ok(Math.abs(knees[0].y-knees[1].y)<eps&&Math.abs(knees[0].z-knees[1].z)<eps);
+ assert.ok(Math.abs(finished[2].x+finished[4].x)<eps);
+ assert.ok(Math.abs(finished[2].y-finished[4].y)<eps&&Math.abs(finished[2].z-finished[4].z)<eps);
 });
 
 test('this unresolved beetle study stays private and never uses a position morph',()=>{
