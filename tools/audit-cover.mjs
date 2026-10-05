@@ -27,6 +27,7 @@
 
 const IDS = [
   'pudding',
+  'threePieceTree',
   'jumpingFrog', 'fortuneTeller', 'foldingFan',
 
     'sonobeIcosahedron',

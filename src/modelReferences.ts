@@ -3,6 +3,7 @@ import type { LocalizedText } from './engine/types';
 const base = 'https://www.origami-club.com/';
 const diagrams: Record<string, string> = {
   pudding: 'easy/food/puddig/zu.gif',
+  'three-piece-tree': 'easy/flowers/tree/zu/zu.gif',
   'santa-face': 'xmas/santaface3/zu.gif',
   'shirt': 'fashion/shirt/shirt/zu.gif',
   'baseball-jersey': 'fashion/baseball/baseball/zu.gif',
@@ -75,6 +76,7 @@ export const referenceOf = (id: string): string | undefined => id.startsWith('so
 
 /** Known differences found by direct diagram comparison, not a blanket accuracy claim. */
 export const MODEL_NOTES: Record<string, LocalizedText> = {
+  'three-piece-tree': {ja:'同じ大きさの正方形3枚とのりを使います。違う折り方で大・中・小の三角を作る平面の飾りです。',en:'Use three equal-sized squares and glue. Different folds make large, medium and small triangles for a flat decoration.'},
   'jumping-frog': {ja:'縦横2対1の長方形1枚。二つの三角から四本の脚とばねを折ります。跳ぶ動作は画面では再現しません。',en:'One 2:1 rectangle. Two triangular bases form four legs and a spring. Jumping is not simulated.'},
   'fortune-teller': {ja:'正方形1枚。四隅を二度折り込み、指を入れる四つのふくろを開きます。',en:'One square. Fold the corners inward twice, then open four finger pockets.'},
   'folding-fan': {ja:'正方形1枚から作る放射折りの扇子。三角の頂点から広がる蛇腹を、二枚重ねで折ります。',en:'A radial fan from one square. Pleat both layers outward from the triangular pivot.'},

@@ -34,6 +34,7 @@ export const CATEGORIES: { id: CategoryId | 'all'; label: LocalizedText }[] = [
 
 export const CATEGORY_OF: Record<string, CategoryId> = {
   pudding: 'food',
+  'three-piece-tree': 'decorate',
   'jumping-frog': 'play',
   'fortune-teller': 'play',
   'folding-fan': 'useful',
