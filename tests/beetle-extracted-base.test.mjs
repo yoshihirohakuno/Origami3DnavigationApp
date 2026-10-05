@@ -32,7 +32,7 @@ test('coupled extraction moves the selected inner corner and shoulder, keeping e
  const before=computeFoldState(m,extractedBaseLowerStart).positions;
  for(const i of [2,4,6,8])assert.ok(Math.abs(before[i].y)<eps,'petal tips stay raised until extraction finishes');
  const final=computeFoldState(m,m.steps.length).positions;
- for(const i of [2,4,6,8,9,10,11,12])assert.ok(final[i].y<-.8,'all eight tips face the open end');
+ for(const i of [2,4,6,8,9,10,11,12])assert.ok(final[i].distanceTo(final[9])<eps,'all eight tips meet at the same open end');
 });
 
 test('layer parking, extraction and restacking have no sampled transverse panel crossings',()=>{
@@ -55,6 +55,6 @@ test('the new subdivisions keep material seams joined throughout extraction',()=
 
 test('an unfinished insect base never enters the finished catalog or uses crease-preparation reversals',()=>{
  assert.ok(!MODELS.some(model=>model.id===m.id));
- assert.match(m.steps.at(-1).caution.en,/unfinished/);
+ assert.match(m.steps.at(-1).caution.en,/unfinished/i);
  assert.ok(m.steps.every(s=>s.folds.length===1&&s.folds.every(op=>!op.targets&&op.type!=='unfold')));
 });

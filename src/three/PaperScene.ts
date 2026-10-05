@@ -276,7 +276,7 @@ export class PaperScene {
   }
 
   /** 水平回転角(度)を指定してカメラを配置する(検証・デバッグ用にも使う) */
-  setViewAngle(angleDeg: number): void {
+  setViewAngle(angleDeg: number, frameCurrentPose = false): void {
     this.viewAngle = angleDeg;
     this.autoFrame = true;
     const angle = THREE.MathUtils.degToRad(angleDeg);
@@ -292,13 +292,17 @@ export class PaperScene {
     const up = direction.clone().cross(right);
     const tangent = Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     const finished = this.lastState?.fraction === 1 && this.lastState.stepIndex === (this.model?.steps.length ?? 0) - 1;
-    const points = finished && this.model
+    const fitPose = finished || frameCurrentPose;
+    const paperPoints = fitPose && this.model && this.lastState
       ? [...new Set(this.model.faces.flat())].map(vi => this.lastState!.positions[vi])
       : this.framePoints;
-    const center = (finished || this.model?.sheetStartSteps) && points.length
-      ? new THREE.Box3().setFromPoints(points).getCenter(new THREE.Vector3())
+    const points = frameCurrentPose && this.lastState
+      ? [...paperPoints, ...this.lastState.guides.flatMap(g => [...g.axisLine, ...g.arrowPath])]
+      : paperPoints;
+    const center = (fitPose || this.model?.sheetStartSteps) && paperPoints.length
+      ? new THREE.Box3().setFromPoints(paperPoints).getCenter(new THREE.Vector3())
       : new THREE.Vector3();
-    let distance = finished ? this.controls.minDistance : this.camera.position.length();
+    let distance = fitPose ? this.controls.minDistance : this.camera.position.length();
     for (const p of points) {
       const relative = p.clone().sub(center);
       const span = Math.max(Math.abs(relative.dot(right)) / this.camera.aspect, Math.abs(relative.dot(up)));

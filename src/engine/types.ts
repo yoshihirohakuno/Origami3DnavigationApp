@@ -126,4 +126,8 @@ export interface OrigamiModel {
   vertexWelds?: number[][];
   /** Opt-in display-only layer spacing for exactly flat connected mechanisms. */
   renderLayerSeparation?: number;
+  /** Opt-in tolerance for numerical drift in otherwise coplanar mechanisms.
+   * Below this depth spread, render order follows the folding approach instead
+   * of treating solver noise as physical layer thickness. Default: 1e-8. */
+  renderLayerDepthTolerance?: number;
 }

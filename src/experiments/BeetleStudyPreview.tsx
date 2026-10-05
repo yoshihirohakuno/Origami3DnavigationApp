@@ -18,6 +18,7 @@ export function BeetleStudyPreview({ model = defaultBeetleStudy }: { model?: Ori
   const total = beetleStudy.steps.length;
   const index = Math.min(Math.floor(time), total - 1);
   const caption = beetleStudy.steps[index].description;
+  const caution = beetleStudy.steps[index].caution;
 
   useEffect(() => {
     const paper = new PaperScene(canvas.current!, { minDistance: .25 });
@@ -79,6 +80,7 @@ export function BeetleStudyPreview({ model = defaultBeetleStudy }: { model?: Ori
         {beetleStudy.steps.map((step, i) => <option key={i} value={i}>{i + 1}. {step.description.ja}</option>)}
       </select></label><output>{time.toFixed(2)} / {total}</output></div>
       <p>{caption.ja}<span lang="en">{caption.en}</span></p>
+      {caution && <p className="study-caution">{caution.ja}<span lang="en">{caution.en}</span></p>}
       <input type="range" min={0} max={total} step={.01} value={time} aria-label="折りの進行度 / Fold progress" onChange={event => jump(Number(event.target.value))} />
       <div className="study-buttons">
         <button onClick={() => jump(0)}>最初 / Start</button>
@@ -86,10 +88,10 @@ export function BeetleStudyPreview({ model = defaultBeetleStudy }: { model?: Ori
         <button disabled={time >= total} onClick={play}>{playing ? '停止 / Pause' : '1工程をゆっくり再生 / Play one fold slowly'}</button>
         <button disabled={time >= total} onClick={() => jump(Math.min(total, Math.floor(time) + 1))}>次へ / Next</button>
         <button onClick={() => jump(total)}>最終状態 / Last pose</button>
-        <button onClick={() => scene.current?.resetCamera()}>正面 / Front</button>
-        <button onClick={() => scene.current?.setViewAngle(35)}>斜め / Angled</button>
-        <button onClick={() => scene.current?.setViewAngle(75)}>横から / Side</button>
-        <button onClick={() => scene.current?.setViewAngle(180)}>裏側 / Reverse side</button>
+        <button onClick={() => scene.current?.setViewAngle(0,true)}>正面 / Front</button>
+        <button onClick={() => scene.current?.setViewAngle(35,true)}>斜め / Angled</button>
+        <button onClick={() => scene.current?.setViewAngle(75,true)}>横から / Side</button>
+        <button onClick={() => scene.current?.setViewAngle(180,true)}>裏側 / Reverse side</button>
       </div>
     </section>
   </main>;

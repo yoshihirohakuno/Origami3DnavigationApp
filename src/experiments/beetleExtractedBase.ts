@@ -37,8 +37,10 @@ for (const [corner,joint,sx,sy] of [[9,3,1,1],[10,5,-1,1],[11,7,-1,-1],[12,1,1,-
   });
 }
 export const extractedBaseLowerStart=model.steps.length;
-for (const b of [2,4,6,8]) model=foldFlap(model,b,[0,1-Math.SQRT2],0,{
-  description:{ja:'元の花弁折りの先を一枚ずつ下へ折ります。',en:'Fold each original petal tip downward, one at a time.'},
+// Use the petal's actual root. Folding at the side-tuck height (1-sqrt(2))
+// shortened these four tips and made later narrowing pull their neighboring tips.
+for (const b of [2,4,6,8]) model=foldFlap(model,b,[0,-.5],0,{
+  description:{ja:'花弁折りの付け根で先を下げ、他の先端と揃えます。',en:'Fold the petal down at its root, aligning it with the other tips.'},
 });
 model.faces=model.faces.map(f=>{
   const [p,q,r]=f.map(i=>model.vertices[i]);
@@ -48,6 +50,7 @@ model.id='beetle-extracted-base-study';
 model.name={ja:'カブトムシ用・八先端の基本形',en:'Eight-point beetle base'};
 model.faceSheet=model.faces.map(()=>0);
 model.renderLayerSeparation=.000003;
-model.steps.at(-1)!.caution={ja:'基本形の構造試作です。先端を細くする層の選択は未完成です。',
-  en:'Base structure study only. Layer selection for narrowing the points is unfinished.'};
+model.renderLayerDepthTolerance=5e-7;
+model.steps.at(-1)!.caution={ja:'基本形の構造試作です。完成作品ではありません。',
+  en:'Unfinished base structure study; this is not a finished beetle.'};
 export const beetleExtractedBase=model;

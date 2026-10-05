@@ -13,6 +13,7 @@ body { margin: 0; }
 .study-stage label { display: flex; gap: 12px; align-items: center; }
 .study-stage select { max-width: 55vw; padding: 8px; border: 1px solid #b9cdbf; border-radius: 8px; font: inherit; }
 .study-controls p { margin: 10px 0; font-size: 14px; }
+.study-controls .study-caution { color: #785419; }
 .study-controls input { width: 100%; accent-color: #327759; }
 .study-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .study-buttons button { border: 1px solid #b9cdbf; border-radius: 8px; padding: 8px 12px; color: inherit; background: #f1f6ef; font: inherit; font-size: 13px; cursor: pointer; }
