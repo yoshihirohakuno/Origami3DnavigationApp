@@ -2,6 +2,7 @@ import type { LocalizedText } from './engine/types';
 
 const base = 'https://www.origami-club.com/';
 const diagrams: Record<string, string> = {
+  pudding: 'easy/food/puddig/zu.gif',
   'santa-face': 'xmas/santaface3/zu.gif',
   'shirt': 'fashion/shirt/shirt/zu.gif',
   'baseball-jersey': 'fashion/baseball/baseball/zu.gif',

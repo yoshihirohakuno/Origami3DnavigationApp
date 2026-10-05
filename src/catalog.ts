@@ -33,6 +33,7 @@ export const CATEGORIES: { id: CategoryId | 'all'; label: LocalizedText }[] = [
 ];
 
 export const CATEGORY_OF: Record<string, CategoryId> = {
+  pudding: 'food',
   'jumping-frog': 'play',
   'fortune-teller': 'play',
   'folding-fan': 'useful',
