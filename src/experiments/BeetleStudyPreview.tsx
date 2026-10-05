@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
 import { computeFoldState, type FoldState } from '../engine/fold';
 import { PaperScene } from '../three/PaperScene';
 import { beetleStudy } from './beetleStudy';
@@ -85,11 +84,10 @@ export function BeetleStudyPreview() {
         <button disabled={time >= total} onClick={() => jump(Math.min(total, Math.floor(time) + 1))}>次へ / Next</button>
         <button onClick={() => jump(total)}>最終状態 / Last pose</button>
         <button onClick={() => scene.current?.resetCamera()}>正面 / Front</button>
+        <button onClick={() => scene.current?.setViewAngle(35)}>斜め / Angled</button>
         <button onClick={() => scene.current?.setViewAngle(75)}>横から / Side</button>
         <button onClick={() => scene.current?.setViewAngle(180)}>裏側 / Reverse side</button>
       </div>
     </section>
   </main>;
 }
-
-if (import.meta.env.DEV) createRoot(document.getElementById('root')!).render(<BeetleStudyPreview />);

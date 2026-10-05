@@ -4,20 +4,23 @@ const subtract=(a,b)=>[a.x-b.x,a.y-b.y,a.z-b.z];
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 
-function cutsInterior(a,b,triangle,normal,epsilon){
- const da=dot(subtract(a,triangle[0]),normal),db=dot(subtract(b,triangle[0]),normal);
- if(!((da>epsilon&&db< -epsilon)||(da< -epsilon&&db>epsilon)))return false;
- const t=da/(da-db),p={x:a.x+t*(b.x-a.x),y:a.y+t*(b.y-a.y),z:a.z+t*(b.z-a.z)};
- const u=subtract(triangle[1],triangle[0]),v=subtract(triangle[2],triangle[0]),w=subtract(p,triangle[0]);
- const uu=dot(u,u),uv=dot(u,v),vv=dot(v,v),wu=dot(w,u),wv=dot(w,v),den=uu*vv-uv*uv;
- if(den<epsilon**4)return false;
- const s=(vv*wu-uv*wv)/den,r=(uu*wv-uv*wu)/den;
- // Test distance from each edge in paper units, not barycentric fractions.
- // A thin refined triangle can have a large fraction only nanometers from
- // its hinge; treating that as an interior hit misreports numerical contact.
- const area=Math.sqrt(den),opposite=subtract(triangle[2],triangle[1]);
- return s*area/Math.sqrt(vv)>epsilon&&r*area/Math.sqrt(uu)>epsilon
-  &&(1-s-r)*area/Math.hypot(...opposite)>epsilon;
+// Clip the planes' intersection line to the interior of ONE triangle. The
+// margin is a distance in paper units from all three edges. Requiring overlap
+// of BOTH intervals excludes a second triangle's hinge touching the interior
+// of the first, even if a thin triangle's noisy plane extrapolates far away.
+function interiorInterval(triangle,normal,origin,direction,epsilon){
+ let low=-Infinity,high=Infinity;
+ for(let i=0;i<3;i++){
+  const edge=subtract(triangle[(i+1)%3],triangle[i]),length=Math.hypot(...edge);
+  if(length<=epsilon)return null;
+  const distance=dot(cross(edge,subtract(origin,triangle[i])),normal)/length;
+  const slope=dot(cross(edge,direction),normal)/length;
+  if(Math.abs(slope)<1e-12){if(distance<=epsilon)return null;continue;}
+  const cut=(epsilon-distance)/slope;
+  if(slope>0)low=Math.max(low,cut);else high=Math.min(high,cut);
+  if(high<=low)return null;
+ }
+ return [low,high];
 }
 
 export function trianglesCross(a,b,epsilon=1e-7){
@@ -32,8 +35,26 @@ export function trianglesCross(a,b,epsilon=1e-7){
   return Math.min(...distances)<-epsilon&&Math.max(...distances)>epsilon;
  };
  if(!straddles(a,b[0],nb)||!straddles(b,a[0],na))return false;
- for(let i=0;i<3;i++)if(cutsInterior(a[i],a[(i+1)%3],b,nb,epsilon)||cutsInterior(b[i],b[(i+1)%3],a,na,epsilon))return true;
- return false;
+ const line=cross(na,nb),length=Math.hypot(...line);
+ if(length<1e-12)return false;
+ const direction=line.map(v=>v/length);
+ let origin;
+ for(let i=0;i<3;i++){
+  const p=a[i],q=a[(i+1)%3];
+  const dp=dot(subtract(p,b[0]),nb),dq=dot(subtract(q,b[0]),nb);
+  if(dp*dq>=0)continue;
+  const t=dp/(dp-dq);
+  origin={x:p.x+t*(q.x-p.x),y:p.y+t*(q.y-p.y),z:p.z+t*(q.z-p.z)};
+  break;
+ }
+ if(!origin)return false;
+ // A shallow angle amplifies tiny normal drift into a larger displacement
+ // along a hinge. Convert the normal-distance tolerance to that in-plane
+ // margin; otherwise nanometers of contact look like a transverse crossing.
+ const margin=epsilon/length;
+ const ia=interiorInterval(a,na,origin,direction,margin);
+ const ib=interiorInterval(b,nb,origin,direction,margin);
+ return !!(ia&&ib&&Math.min(ia[1],ib[1])-Math.max(ia[0],ib[0])>epsilon);
 }
 
 export function intersectingPanels(triangles,positions,limit=20){

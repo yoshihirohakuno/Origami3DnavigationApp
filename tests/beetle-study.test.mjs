@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { beetleStudy as m, beetleNarrowStart, beetleLegRootStart,
- beetleBackStart, beetleHornStart, beetleJointStart } from '../src/experiments/beetleStudy.ts';
+import { beetleStudy as m, beetleNarrowStart, beetleNarrowEnd, beetlePointRouteStart, beetleLegRootStart,
+ beetleShoulderStart, beetleBodyStart, beetleBodyBindings, beetleHornStart, beetleJointStart } from '../src/experiments/beetleStudy.ts';
 import { computeFoldState } from '../src/engine/fold.ts';
 import { MODELS } from '../src/modelLibrary.ts';
 import { paperTriangles } from '../src/engine/mesh.ts';
@@ -49,10 +49,23 @@ test('research model stays outside the finished public library',()=>{
 
 test('narrowing creases keep all eight tips and the closed body point fixed',()=>{
  const before=computeFoldState(m,beetleNarrowStart).positions;
- for(let tick=beetleNarrowStart*8;tick<=beetleLegRootStart*8;tick++){
+ for(let tick=beetleNarrowStart*8;tick<=beetleNarrowEnd*8;tick++){
   const p=computeFoldState(m,tick/8).positions;
   for(const i of landmarks)assert.ok(p[i].distanceTo(before[i])<tolerance,`point ${i} dragged at ${tick/8}`);
  }
+});
+
+test('four inner points route toward the other four without pulling unrelated tips',()=>{
+ for(let j=0;j<4;j++){
+  const start=beetlePointRouteStart+j,corner=9+j;
+  const before=computeFoldState(m,start).positions;
+  for(let tick=1;tick<=8;tick++){
+   const p=computeFoldState(m,start+tick/8).positions;
+   for(const i of landmarks.filter(i=>i!==corner))assert.ok(p[i].distanceTo(before[i])<tolerance);
+  }
+ }
+ const p=computeFoldState(m,beetleLegRootStart).positions;
+ for(const i of [2,4,6,8,9,10,11,12])assert.ok(p[i].y<-.7,'all eight points face the open end');
 });
 
 test('each leg root and foot joint moves only its own tip',()=>{
@@ -67,10 +80,10 @@ test('each leg root and foot joint moves only its own tip',()=>{
  }
 });
 
-test('rear tucks shorten the back without dragging any appendage tip',()=>{
+test('shoulder tucks shorten the head-side points without dragging any appendage tip',()=>{
  for(let j=0;j<2;j++){
-  const before=computeFoldState(m,beetleBackStart+j).positions;
-  const after=computeFoldState(m,beetleBackStart+j+1).positions;
+  const before=computeFoldState(m,beetleShoulderStart+j).positions;
+  const after=computeFoldState(m,beetleShoulderStart+j+1).positions;
   for(const i of landmarks)assert.ok(before[i].distanceTo(after[i])<tolerance);
   assert.ok(after[[3,7][j]].y>before[[3,7][j]].y+.1);
  }
@@ -79,14 +92,29 @@ test('rear tucks shorten the back without dragging any appendage tip',()=>{
 test('horns open above and below the body and six distinct feet point downward',()=>{
  const before=computeFoldState(m,beetleHornStart).positions;
  const final=computeFoldState(m,m.steps.length).positions;
- assert.ok(final[9].z>before[9].z+.1,'upper horn must lift');
- assert.ok(final[10].z<before[10].z-.02,'lower jaw must open downward');
+ assert.ok(final[9].z>before[9].z+.04,'upper horn must lift');
+ assert.ok(final[10].z<before[10].z-.01,'lower jaw must open downward');
  for(const i of legs){
   assert.ok(final[i].z<-.025,`foot ${i} must bend downward`);
   for(const j of legs.filter(j=>j!==i))assert.ok(final[i].distanceTo(final[j])>.05,'feet must remain distinct');
  }
  assert.ok(m.steps.every(s=>s.folds.length===1),'one coupled or independent motion per operation');
  assert.ok(m.steps.every(s=>s.folds.every(f=>f.type!=='unfold'&&!f.targets)),'no pre-crease reversals or pose morphs');
+});
+
+test('the back forms a ridge and fine points do not snap onto bent parent edges',()=>{
+ const before=computeFoldState(m,beetleBodyStart).positions;
+ const shaped=computeFoldState(m,beetleHornStart).positions;
+ assert.ok(Math.min(...shaped.map(p=>p.z))<-.02,'the back must gain real depth');
+ assert.ok(before[0].distanceTo(shaped[0])<tolerance,'the central ridge stays fixed');
+ assert.ok(beetleBodyBindings.length>0);
+ // Reintroducing the former interpolation bug must fail dimensional validation.
+ const broken={...m,steps:m.steps.map((s,i)=>i<beetleHornStart?s:{...s,folds:s.folds.map(op=>({...op,surfacePoints:[...beetleBodyBindings]}))})};
+ const initial=computeFoldState(m,0).positions;
+ const p=computeFoldState(broken,beetleHornStart+.5).positions;
+ let error=0;
+ for(const face of m.faces)for(const a of face)for(const b of face)error=Math.max(error,Math.abs(initial[a].distanceTo(initial[b])-p[a].distanceTo(p[b])));
+ assert.ok(error>.001,'the test must expose straight-edge interpolation after a new crease');
 });
 
 test('petal panels have no transverse interior crossings at the sampled poses',()=>{

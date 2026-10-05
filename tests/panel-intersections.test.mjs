@@ -22,3 +22,20 @@ test('floating point drift at a crease is not reported as an interior crossing',
  const shallow=triangle([[-.5,0,-2e-9],[.5,0,-2e-9],[0,1,.001]]);
  assert.ok(!trianglesCross(flat,shallow),'a nearly touching hinge does not straddle both planes');
 });
+
+test('a noisy thin panel plane touching another panel hinge is not an interior crossing',()=>{
+ const thin=triangle([[.03549136,-.65,1.38e-9],[.000085596,-.38,-4e-9],[0,-.380085596,0]]);
+ const hinged=triangle([[.07380403,-.45738923,-3.3e-9],[-.10239346,-.55911688,.20478688],[0,-.5,0]]);
+ assert.ok(!trianglesCross(thin,hinged));
+ assert.ok(!trianglesCross(hinged,thin));
+ const shallow=triangle([[0,-.5,-1.175e-8],[-.000493,-.73561,.02007],[-.0586,-.53383,-5.477e-9]]);
+ const flatThin=triangle([[-.030124,-.67698,-1.83e-9],[0,-.604256,2.18e-9],[0,-.380086,0]]);
+ assert.ok(!trianglesCross(flatThin,shallow),'shallow motion must not amplify numerical hinge drift');
+});
+
+test('a thin panel with a real crossing through both interiors is detected',()=>{
+ const thin=triangle([[-1,0,0],[1,0,0],[0,.0001,0]]);
+ const cutting=triangle([[0,-.0001,-1],[0,.0002,-1],[0,.00005,1]]);
+ assert.ok(trianglesCross(thin,cutting));
+ assert.ok(trianglesCross(cutting,thin));
+});
