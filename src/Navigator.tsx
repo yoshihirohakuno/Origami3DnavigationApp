@@ -32,6 +32,7 @@ interface Props {
   model: OrigamiModel;
   onExit: () => void;
   onComplete: () => void;
+  onTryGuided?: () => void;
 }
 
 interface UiState {
@@ -43,7 +44,7 @@ interface UiState {
 /** タイムライン移動速度(工程/秒) */
 const PLAY_SPEED = 0.9;
 
-export function Navigator({ model, onExit, onComplete }: Props) {
+export function Navigator({ model, onExit, onComplete, onTryGuided }: Props) {
   const { t, L, lang } = useLang();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const railRef = useRef<HTMLElement>(null);
@@ -413,6 +414,7 @@ export function Navigator({ model, onExit, onComplete }: Props) {
           <button className="btn-main" onClick={() => { goTo(tRef.current, true); setPreview(true); }}>{L({ja:'完成後のパクパクを見る',en:'Preview the finished toy'})}</button>
         </div>}
         {MODEL_NOTES[model.id] && <p className="model-notice">{L(MODEL_NOTES[model.id])}</p>}
+        {onTryGuided && <button className="guided-trial-link" onClick={onTryGuided}>ひと折りずつの案内を試す / Try guided view</button>}
       </div>
 
       <div className="controls">

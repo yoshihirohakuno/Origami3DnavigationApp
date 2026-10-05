@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigator } from './Navigator';
+import { GuidedNavigator } from './GuidedNavigator';
 import { Editor } from './Editor';
 import type { OrigamiModel } from './engine/types';
 import { FinalShapePreview, GenericPattern } from './CreasePattern';
@@ -80,7 +81,20 @@ function Corners() {
 
 export default function App() {
   const { t, L, lang } = useLang();
-  const [current, setCurrent] = useState<OrigamiModel | null>(null);
+  const [current, setCurrent] = useState<OrigamiModel | null>(() => new URLSearchParams(location.search).get('model') === 'cup' ? MODELS.find(m => m.id === 'cup') ?? null : null);
+  const [guided, setGuided] = useState(() => new URLSearchParams(location.search).get('view') === 'guided');
+  const showGuided = () => {
+    setCurrent(MODELS.find(m => m.id === 'cup')!); setGuided(true);
+    const url = new URL(location.href); url.searchParams.set('model', 'cup'); url.searchParams.set('view', 'guided'); history.replaceState(null, '', url);
+  };
+  const exitModel = () => {
+    setCurrent(null); setGuided(false);
+    const url = new URL(location.href); url.searchParams.delete('model'); url.searchParams.delete('view'); history.replaceState(null, '', url);
+  };
+  const showClassic = () => {
+    setGuided(false);
+    const url = new URL(location.href); url.searchParams.set('view', 'classic'); history.replaceState(null, '', url);
+  };
   const [editing, setEditing] = useState(false);
   const [filter, setFilter] = useState<CategoryId | 'all'>('all');
   const [level, setLevel] = useState<number | 'all'>('all');
@@ -104,10 +118,12 @@ export default function App() {
   }
 
   if (current) {
+    if (guided && current.id === 'cup') return <GuidedNavigator model={current} onExit={exitModel} onClassic={showClassic} onComplete={() => recordComplete(current)} />;
     return (
       <Navigator
         model={current}
-        onExit={() => setCurrent(null)}
+        onExit={exitModel}
+        onTryGuided={current.id === 'cup' ? showGuided : undefined}
         onComplete={() => recordComplete(current)}
       />
     );
@@ -174,6 +190,10 @@ export default function App() {
         <span className="line" />
       </h2>
 
+      <div className="guided-trial-banner">
+        <p>ひと折りずつ、いっしょに。<small lang="en">A new way to fold along. Try the guided paper cup.</small></p>
+        <button onClick={showGuided}>コップで新しい案内を試す →<small lang="en">Try the guided cup →</small></button>
+      </div>
       <div className="filters">
         <div className="filter-row" role="group" aria-label={t('filterLabel')}>
           <span className="filter-key">{t('filterKind')}</span>

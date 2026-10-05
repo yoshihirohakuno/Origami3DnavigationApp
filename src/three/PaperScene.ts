@@ -275,6 +275,17 @@ export class PaperScene {
     this.setViewAngle(this.model?.cameraAngle ?? 0);
   }
 
+  /** Button zoom, with the same limits as pointer/pinch controls. */
+  zoomBy(factor: number): void {
+    if (!Number.isFinite(factor) || factor <= 0) return;
+    const offset = this.camera.position.clone().sub(this.controls.target);
+    const distance = Math.max(this.controls.minDistance, Math.min(this.controls.maxDistance, offset.length() * factor));
+    offset.setLength(distance);
+    this.camera.position.copy(this.controls.target).add(offset);
+    this.autoFrame = false;
+    this.controls.update();
+  }
+
   /** 水平回転角(度)を指定してカメラを配置する(検証・デバッグ用にも使う) */
   setViewAngle(angleDeg: number, frameCurrentPose = false): void {
     this.viewAngle = angleDeg;
