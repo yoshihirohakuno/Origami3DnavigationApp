@@ -1,0 +1,26 @@
+:root { font-family: system-ui, sans-serif; color: #233d32; background: #fafaf5; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+.study-workbench { height: 100dvh; display: grid; grid-template-rows: auto minmax(160px, 1fr) auto; }
+.study-workbench header { padding: 12px 20px; border-bottom: 1px solid #dbe6dd; background: #fff; }
+.study-workbench h1 { margin: 0; font-size: 19px; }
+.study-workbench header p { margin: 6px 0 0; color: #785419; font-size: 13px; }
+.study-workbench span[lang=en] { margin-left: 12px; font-size: .85em; font-weight: 400; }
+.study-view { min-height: 0; }
+.study-view canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.study-controls { padding: 12px 20px; background: #fff; border-top: 1px solid #dbe6dd; }
+.study-stage { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.study-stage label { display: flex; gap: 12px; align-items: center; }
+.study-stage select { max-width: 55vw; padding: 8px; border: 1px solid #b9cdbf; border-radius: 8px; font: inherit; }
+.study-controls p { margin: 10px 0; font-size: 14px; }
+.study-controls input { width: 100%; accent-color: #327759; }
+.study-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.study-buttons button { border: 1px solid #b9cdbf; border-radius: 8px; padding: 8px 12px; color: inherit; background: #f1f6ef; font: inherit; font-size: 13px; cursor: pointer; }
+.study-buttons button:disabled { opacity: .4; cursor: default; }
+.study-buttons button:focus-visible, .study-stage select:focus-visible { outline: 3px solid #74a88c; outline-offset: 2px; }
+@media (max-width: 600px) {
+  .study-workbench span[lang=en] { display: block; margin: 3px 0 0; }
+  .study-stage label { display: block; font-size: 12px; }
+  .study-stage select { display: block; max-width: 75vw; font-size: 13px; }
+  .study-controls { padding: 10px; }
+}

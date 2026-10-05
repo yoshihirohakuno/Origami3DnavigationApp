@@ -53,7 +53,7 @@ export class PaperScene {
 
   private canvas: HTMLCanvasElement;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, { minDistance = 1.5 }: { minDistance?: number } = {}) {
     this.canvas = canvas;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -64,7 +64,7 @@ export class PaperScene {
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
     this.controls.enablePan = false;
-    this.controls.minDistance = 1.5;
+    this.controls.minDistance = minDistance;
     this.controls.maxDistance = 10;
     this.controls.addEventListener('start', () => { this.autoFrame = false; });
 

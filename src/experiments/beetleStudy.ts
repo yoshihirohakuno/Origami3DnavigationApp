@@ -2,6 +2,7 @@ import type { OrigamiModel, FoldOp } from '../engine/types';
 import { squareBaseModel } from '../models/squareBase';
 import { computeFoldState } from '../engine/fold';
 import { foldFlap } from '../engine/foldFlap';
+import { foldConnectedFlap } from '../engine/foldConnectedFlap';
 
 /** Development-only blintz frog-base research; never a finished library model. */
 const vertices:[number,number][]=squareBaseModel.vertices.map(([x,y])=>[x/1.4142,y/1.4142]);
@@ -38,38 +39,66 @@ faces=faces.flatMap(f=>{
  const o=f[0], d=f.find(i=>[...ds.values()].includes(i))!;
  const p=pointOn(ps,o,d,Math.SQRT1_2);
  const a=f.find(i=>[1,3,5,7].includes(i));
- if(a!==undefined)return [[o,a,p],[p,a,d]];
- const b=f.find(i=>[2,4,6,8].includes(i))!,q=pointOn(qs,o,b,.5);
- return [[o,p,q],[p,d,b],[p,b,q]];
+ let panels:number[][];
+ if(a!==undefined)panels=[[o,a,p],[p,a,d]];
+ else {
+  const b=f.find(i=>[2,4,6,8].includes(i))!,q=pointOn(qs,o,b,.5);
+  panels=[[o,p,q],[p,d,b],[p,b,q]];
+ }
+ return panels;
 });
 for(const map of [ps,qs])for(const [key,i]of map){const [o,b]=key.split(',').map(Number);if(o!==0)followers.push([i,map.get(`0,${b}`)!,map.get(`0,${b}`)!,map.get(`0,${b}`)!,1,0,0]);}
 model.faces=faces;
 for(const b of [2,4,6,8]){
  const left=b-1,right=b===8?1:b+1;
  const dl=ds.get(`${left},${b}`)!,dr=ds.get(`${right},${b}`)!,pl=ps.get(`0,${dl}`)!,pr=ps.get(`0,${dr}`)!;
- const before=computeFoldState(model,13).positions;
+ const before=computeFoldState(model,model.steps.length).positions;
  const direction=before[pr].x>before[pl].x?-1:1;
  model.steps.push({folds:[{axis:[pl,pr],moving:[b,dl,dr],type:'valley',angle:180,direction,petal:{tip:b,sides:[[dl,pl,left],[dr,pr,right]]},surfacePoints:[...followers]}],description:{ja:'下の一枚を開き、両側を内側にたたみます。',en:'Lift the lower flap and tuck both sides inward.'}});
+
 }
 // Fold the small lifted flaps down individually; their side tucks remain.
 for(const b of [2,4,6,8])model=foldFlap(model,b,[0,1-Math.SQRT2],0,{description:{ja:'起こした細い先を下へ折り下げます。',en:'Fold the lifted narrow flap down.'}});
 model=foldFlap(model,0,[0,-.25],0,{description:{ja:'中央の閉じた先を折り込み、背中を短く整えます。',en:'Tuck the closed central point inward to shorten the back.'}},'back');
+export const beetleNarrowStart=model.steps.length;
+for(const corner of [2,4,6,8,9,10,11,12])for(const side of [-1,1]) {
+ const p=computeFoldState(model,model.steps.length).positions,tip=p[corner];
+ const degrees=90-side*11.25;
+ const rad=degrees*Math.PI/180;
+ const signed=(i:number)=>Math.cos(rad)*(p[i].y-tip.y)-Math.sin(rad)*(p[i].x-tip.x);
+ const candidates=[...new Set(model.faces.filter(f=>f.includes(corner)).flat())];
+ const sign=corner<9?-side:side;
+ const seeds=candidates.filter(i=>signed(i)*sign>1e-8);
+ if(!seeds.length)continue;
+ model=foldConnectedFlap(model,seeds,[tip.x,tip.y],degrees,{description:{ja:'先端の片側を内側へ折り、幅を細くします。',en:'Fold one edge inward to narrow the point.'}},'back');
+}
+for(const [corner,side]of [[9,-1],[10,1]]){
+ const p=computeFoldState(model,model.steps.length).positions;
+ const seeds=[...new Set(model.faces.filter(f=>f.includes(corner)).flat())].filter(i=>p[i].x*side>1e-8);
+ model=foldConnectedFlap(model,seeds,[0,0],90,{description:{ja:'角を縦に半分に折り、外側を色の面で包みます。',en:'Fold the horn lengthwise in half, keeping the colored surface outside.'}},'back');
+}
+export const beetleLegRootStart=model.steps.length;
 // Six real paper flaps become the legs, leaving the other two for the horns.
 for(const [corner,angle,height] of [[2,45,-.56],[4,-45,-.56],[6,65,-.51],[8,-65,-.51],[11,-30,-.22],[12,30,-.22]]) {
- const p=computeFoldState(model,model.steps.length).positions;
- const rad=angle*Math.PI/180;const signed=(i:number)=>Math.cos(rad)*(p[i].y-height)-Math.sin(rad)*p[i].x;
- const sign=Math.sign(signed(corner)) as 1|-1;
- const moving=new Set([corner]),selected=new Set<number[]>();let changed=true;
- while(changed){changed=false;for(const f of model.faces)if(!selected.has(f)&&f.some(i=>moving.has(i))){selected.add(f);for(const i of f)if(signed(i)*sign>1e-8)moving.add(i);changed=true;}}
- model=foldFlap(model,corner,[0,height],angle,{description:{ja:'脚の根元を斜めに折り、外へ向けます。',en:'Fold the leg diagonally outward at its root.'}},'front',false,sign,f=>selected.has(f));
+ model=foldConnectedFlap(model,corner,[0,height],angle,{description:{ja:'脚の根元を斜めに折り、外へ向けます。',en:'Fold the leg diagonally outward at its root.'}});
 }
+export const beetleBackStart=model.steps.length;
+for(const corner of [3,7])model=foldConnectedFlap(model,corner,[0,-.65],0,{description:{ja:'背中の後ろの角を内側に折り、輪郭を短く整えます。',en:'Tuck the rear point inward to shorten the back.'}},'back');
 for(const corner of [9,10])model=foldFlap(model,corner,[0,-.045],0,{description:{ja:'角の先を小さく折り返します。',en:'Fold back the tip of the horn.'}});
+export const beetleHornStart=model.steps.length;
 for(const [corner,height,angle]of [[9,-.3,55],[10,-.3,15]]) {
- const p=computeFoldState(model,model.steps.length).positions;
- const moving=new Set([corner]),selected=new Set<number[]>();let changed=true;
- while(changed){changed=false;for(const f of model.faces)if(!selected.has(f)&&f.some(i=>moving.has(i))){selected.add(f);for(const i of f)if(p[i].y>height+1e-8)moving.add(i);changed=true;}}
- model=foldFlap(model,corner,[0,height],0,{description:{ja:'角を起こして上下に開きます。',en:'Lift the horn to open the upper and lower jaws.'}},'front',false,1,f=>selected.has(f));
- model.steps.at(-1)!.folds[0].angle=angle;
+ const upper=corner===9;
+ model=foldConnectedFlap(model,corner,[0,height],0,{description:{ja:upper?'上側の角を起こします。':'下側の角を下へ開きます。',en:upper?'Lift the upper horn.':'Open the lower jaw downward.'}},upper?'front':'back',angle);
+}
+// Creases perpendicular to each leg avoid traversing into the horn material.
+// Bend the outer part down, one leg per operation; do not alter its lengths.
+export const beetleJointStart=model.steps.length;
+for(const [corner,rootHeight]of [[2,-.56],[4,-.56],[6,-.51],[8,-.51],[11,-.22],[12,-.22]]) {
+ const p=computeFoldState(model,model.steps.length).positions,tip=p[corner];
+ const ux=tip.x,uy=tip.y-rootHeight;
+ const origin:[number,number]=[ux*.72,rootHeight+uy*.72];
+ const degrees=Math.atan2(ux,-uy)*180/Math.PI;
+ model=foldConnectedFlap(model,corner,origin,degrees,{description:{ja:'脚先を下へ曲げ、接地する関節を作ります。',en:'Bend the outer leg down to form its foot joint.'}},'back',65);
 }
 // Preserve the material winding; every original face starts white-side up.
 model.faces=model.faces.map(f=>{const [p,q,r]=f.map(i=>model.vertices[i]);return (q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0])<0?f:[...f].reverse();});
