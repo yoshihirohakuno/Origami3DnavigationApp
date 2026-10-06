@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { OrigamiModel } from './engine/types';
 import { computeFoldState } from './engine/fold';
 import { computeNavigationState } from './engine/navigation';
@@ -11,22 +11,6 @@ import './GuidedNavigator.css';
 
 function Words({ ja, en }: { ja: string; en: string }) {
   return <><span lang="ja">{ja}</span><small lang="en">{en}</small></>;
-}
-/** Blend step diagrams while keeping their surrounding controls and focus stable. */
-function SoftDiagram({ diagram, stage }: { diagram: ReactNode; stage: number }) {
-  const previous = useRef({ diagram, stage });
-  const [outgoing, setOutgoing] = useState<{ diagram: ReactNode; stage: number } | null>(null);
-  useLayoutEffect(() => {
-    if (previous.current.stage === stage) return;
-    setOutgoing(previous.current);
-    previous.current = { diagram, stage };
-    const timer = window.setTimeout(() => setOutgoing(null), 600);
-    return () => window.clearTimeout(timer);
-  }, [diagram, stage]);
-  return <span className={`guided-figure${outgoing ? ' is-changing' : ''}`}>
-    {outgoing && <span className="guided-figure-outgoing" key={outgoing.stage} aria-hidden="true">{outgoing.diagram}</span>}
-    <span className="guided-figure-current" key={stage}>{diagram}</span>
-  </span>;
 }
 function Icon({ kind }: { kind: 'reset' | 'flip' | 'help' }) {
   return <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -81,9 +65,7 @@ export function GuidedNavigator({ model, onExit, onClassic, onComplete }: {
     return () => { cancelAnimationFrame(frame); observer.disconnect(); scene.dispose(); sceneRef.current = null; };
   }, [model, dispatch]);
   useEffect(() => {
-    if (!state.playing || !window.matchMedia('(max-width: 760px)').matches || !viewerRef.current) return;
-    const bounds = viewerRef.current.getBoundingClientRect();
-    if (bounds.top < 0 || bounds.bottom > window.innerHeight) viewerRef.current.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    if (state.playing && window.matchMedia('(max-width: 760px)').matches) viewerRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
   }, [state.playing]);
   const step = model.steps[state.index];
   const guide = CUP_GUIDE[state.index];
@@ -122,23 +104,23 @@ export function GuidedNavigator({ model, onExit, onClassic, onComplete }: {
         </div>
         <div className="guided-motion-controls">
           <button className="guided-playback" onClick={() => dispatch(allRunning ? { type: 'pause' } : { type: 'watchAll' })} aria-label={allRunning ? '再生を一時停止 / Pause playback' : allPaused ? '全工程の続きから再生 / Resume full preview' : '最初から全工程を見る / Play all folds from the start'}>
-            <span aria-hidden="true">{allRunning ? 'Ⅱ' : '▶'}</span><span className="guided-playback-copy guided-soft-entry" key={`${allRunning}-${allPaused}`}><Words ja={allRunning ? '一時停止' : allPaused ? '続きを見る' : '動きを見る'} en={allRunning ? 'Pause' : allPaused ? 'Resume all' : 'Play all'} /></span>
+            <span aria-hidden="true">{allRunning ? 'Ⅱ' : '▶'}</span><Words ja={allRunning ? '一時停止' : allPaused ? '続きを見る' : '動きを見る'} en={allRunning ? 'Pause' : allPaused ? 'Resume all' : 'Play all'} />
           </button>
           <input className="guided-scrub" aria-label="全工程の再生位置 / Full preview progress" type="range" min="0" max={model.steps.length} step="0.01" value={state.index + state.fraction} onChange={e => dispatch({ type: 'seekAll', progress: Number(e.target.value) })} />
           <span className="guided-play-count" aria-hidden="true">{state.index + 1}/{model.steps.length}</span>
         </div>
       </section>
       <section className="guided-instruction" aria-label="今の工程 / Current step">
-        <h2 className="guided-step-heading" aria-label={state.complete ? 'できあがり / Finished' : `工程 ${state.index + 1} / Step ${state.index + 1}`}><b className="guided-soft-entry" key={`${state.index}-${state.complete}`}>{state.complete ? '✓' : String(state.index + 1).padStart(2, '0')}</b><small>/ {model.steps.length}</small></h2>
+        <h2 className="guided-step-heading" aria-label={state.complete ? 'できあがり / Finished' : `工程 ${state.index + 1} / Step ${state.index + 1}`}><b>{state.complete ? '✓' : String(state.index + 1).padStart(2, '0')}</b><small>/ {model.steps.length}</small></h2>
         {state.complete ? <div className="guided-finished"><FinalShapePreview model={model} /><p><Words ja="できたね！" en="You did it!" /></p></div> : <>
           <div className="guided-shape-pair">
-            <button className={state.fraction === 0 ? 'selected' : ''} onClick={() => dispatch({ type: 'move', target: 0 })} aria-pressed={state.fraction === 0}><Words ja="現在" en="Now" /><SoftDiagram diagram={before[state.index]} stage={state.index} /></button>
+            <button className={state.fraction === 0 ? 'selected' : ''} onClick={() => dispatch({ type: 'move', target: 0 })} aria-pressed={state.fraction === 0}><Words ja="現在" en="Now" />{before[state.index]}</button>
             <span aria-hidden="true">→</span>
-            <button className={state.fraction === 1 ? 'selected' : ''} onClick={() => dispatch({ type: 'move', target: 1 })} aria-pressed={state.fraction === 1}><Words ja="次" en="Next" /><SoftDiagram diagram={after[state.index]} stage={state.index} /></button>
+            <button className={state.fraction === 1 ? 'selected' : ''} onClick={() => dispatch({ type: 'move', target: 1 })} aria-pressed={state.fraction === 1}><Words ja="次" en="Next" />{after[state.index]}</button>
           </div>
-          {guide && <div className="guided-cue-row" role="note" aria-label={`${guide.point.ja} / ${guide.point.en}`}><span className="guided-cue-content guided-soft-entry" key={state.index}><CupCue kind={guide.cue} /><Words ja={guide.badge.ja} en={guide.badge.en} /></span>{guide.backView && <button onClick={() => sceneRef.current?.setViewAngle(180, true)} aria-label="裏の1枚を確認 / Check the back layer" title="裏の1枚を確認 / Check the back layer"><Icon kind="flip" /></button>}</div>}
+          {guide && <div className="guided-cue-row" role="note" aria-label={`${guide.point.ja} / ${guide.point.en}`}><CupCue kind={guide.cue} /><Words ja={guide.badge.ja} en={guide.badge.en} />{guide.backView && <button onClick={() => sceneRef.current?.setViewAngle(180, true)} aria-label="裏の1枚を確認 / Check the back layer" title="裏の1枚を確認 / Check the back layer"><Icon kind="flip" /></button>}</div>}
         </>}
-        <div className="guided-next-row"><button className="guided-previous" onClick={() => dispatch({ type: 'back' })} disabled={state.index === 0 && state.fraction === 0 && !state.complete} aria-label="戻る / Back" title="戻る / Back">←</button><button className="guided-next" onClick={state.complete ? onExit : confirm} disabled={state.playing}><span className="guided-next-label guided-soft-entry" key={nextJa}><Words ja={nextJa} en={nextEn} /></span><span aria-hidden="true">{state.complete ? '→' : state.index === model.steps.length - 1 && state.fraction === 1 ? '✓' : '→'}</span></button></div>
+        <div className="guided-next-row"><button className="guided-previous" onClick={() => dispatch({ type: 'back' })} disabled={state.index === 0 && state.fraction === 0 && !state.complete} aria-label="戻る / Back" title="戻る / Back">←</button><button className="guided-next" onClick={state.complete ? onExit : confirm} disabled={state.playing}><Words ja={nextJa} en={nextEn} /><span aria-hidden="true">{state.complete ? '→' : state.index === model.steps.length - 1 && state.fraction === 1 ? '✓' : '→'}</span></button></div>
         {!state.complete && <details className="guided-detail" key={state.index}><summary><Icon kind="help" /><Words ja="ヒント" en="Hint" /></summary><div><p><Words ja={guide?.action.ja ?? step.description.ja} en={guide?.action.en ?? step.description.en} /></p>{guide ? <p><Words ja={guide.point.ja} en={guide.point.en} /></p> : step.caution && <p><Words ja={step.caution.ja} en={step.caution.en} /></p>}</div></details>}
       </section>
     </div>
