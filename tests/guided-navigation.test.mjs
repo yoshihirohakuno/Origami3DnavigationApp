@@ -126,3 +126,60 @@ test('all cup step boundaries preserve geometry and keep the selected instructio
     assert.deepEqual(goal.positions, computeFoldState(cupModel, i + 1).positions);
   }
 });
+
+test('full preview starts at the beginning from any selected fold and plays all six folds', () => {
+  let state = reduce({ ...initialGuidedState, index: 4, fraction: .5 }, { type: 'watchAll' });
+  assert.equal(state.index, 0);
+  assert.equal(state.fraction, 0);
+  const visited = new Set();
+  for (let n = 0; n < 100 && state.playing; n++) {
+    const progress = state.index + state.fraction;
+    state = reduce(state, { type: 'tick', seconds: .1 });
+    assert.ok(Math.abs(state.index + state.fraction - progress - .09) < 1e-8 || !state.playing);
+    if (state.fraction > 0 && state.fraction < 1) visited.add(state.index);
+    assert.equal(state.complete, false, 'watching is not a finished paper record');
+  }
+  assert.deepEqual([...visited], [0, 1, 2, 3, 4, 5]);
+  assert.equal(state.index, 5);
+  assert.equal(state.fraction, 1);
+  assert.equal(state.playing, false);
+  const replay = reduce(state, { type: 'watchAll' });
+  assert.equal(replay.index, 0);
+  assert.equal(replay.fraction, 0);
+});
+
+test('full preview pauses and resumes at the same pose and carries remaining time across boundaries', () => {
+  let state = reduce(initialGuidedState, { type: 'watchAll' });
+  for (let n = 0; n < 11; n++) state = reduce(state, { type: 'tick', seconds: .1 });
+  assert.ok(Math.abs(state.fraction - .99) < 1e-8);
+  state = reduce(state, { type: 'pause' });
+  const pose = positions(state);
+  const resumed = reduce(state, { type: 'watchAll' });
+  assert.deepEqual(positions(resumed), pose);
+  const next = reduce(resumed, { type: 'tick', seconds: .1 });
+  assert.equal(next.index, 1);
+  assert.ok(Math.abs(next.fraction - .08) < 1e-8);
+  const restarted = reduce(next, { type: 'watchAll', restart: true });
+  assert.equal(restarted.index, 0);
+  assert.equal(restarted.fraction, 0);
+});
+
+test('global scrub seeks all folds; local previews return to single-fold playback', () => {
+  let state = reduce(initialGuidedState, { type: 'seekAll', progress: 4.5 });
+  assert.equal(state.index, 4);
+  assert.equal(state.fraction, .5);
+  assert.equal(state.sequence, true);
+  assert.equal(state.playing, false);
+  state = reduce(state, { type: 'move', target: 1 });
+  assert.equal(state.sequence, false);
+  state = finish(state);
+  assert.equal(state.index, 4);
+  assert.equal(state.fraction, 1);
+  state = reduce(state, { type: 'seekAll', progress: 99 });
+  assert.equal(state.index, 5);
+  assert.equal(state.fraction, 1);
+  assert.equal(state.complete, false);
+  state = reduce(state, { type: 'seekAll', progress: -1 });
+  assert.equal(state.index, 0);
+  assert.equal(state.fraction, 0);
+});

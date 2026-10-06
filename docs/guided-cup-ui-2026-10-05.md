@@ -1,5 +1,7 @@
 # コップの工程ガイド UI 試作（2026-10-06更新）
 
+この文書は途中の再生を復旧した時点の旧仕様記録。最新の通し再生とシンプルな画面は [guided-cup-simple-ui-2026-10-06.md](guided-cup-simple-ui-2026-10-06.md) を参照。
+
 URL: http://127.0.0.1:5173/?model=cup&view=guided
 
 ## 目的と範囲
