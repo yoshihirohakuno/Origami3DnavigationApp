@@ -7,7 +7,7 @@ import { cupModel } from '../src/models/cup.ts';
 
 const reduce = (state, action) => guidedNavigation(state, action, 6);
 function finish(state) {
-  for (let n = 0; n < 40 && state.playing; n++) state = reduce(state, { type: 'tick', seconds: .1 });
+  for (let n = 0; n < 80 && state.playing; n++) state = reduce(state, { type: 'tick', seconds: .1 });
   return state;
 }
 const positions = state => computeFoldState(cupModel, state.index + state.fraction).positions;
@@ -132,10 +132,10 @@ test('full preview starts at the beginning from any selected fold and plays all 
   assert.equal(state.index, 0);
   assert.equal(state.fraction, 0);
   const visited = new Set();
-  for (let n = 0; n < 100 && state.playing; n++) {
+  for (let n = 0; n < 200 && state.playing; n++) {
     const progress = state.index + state.fraction;
     state = reduce(state, { type: 'tick', seconds: .1 });
-    assert.ok(Math.abs(state.index + state.fraction - progress - .09) < 1e-8 || !state.playing);
+    assert.ok(Math.abs(state.index + state.fraction - progress - .05) < 1e-8 || !state.playing);
     if (state.fraction > 0 && state.fraction < 1) visited.add(state.index);
     assert.equal(state.complete, false, 'watching is not a finished paper record');
   }
@@ -149,16 +149,15 @@ test('full preview starts at the beginning from any selected fold and plays all 
 });
 
 test('full preview pauses and resumes at the same pose and carries remaining time across boundaries', () => {
-  let state = reduce(initialGuidedState, { type: 'watchAll' });
-  for (let n = 0; n < 11; n++) state = reduce(state, { type: 'tick', seconds: .1 });
-  assert.ok(Math.abs(state.fraction - .99) < 1e-8);
+  let state = reduce(initialGuidedState, { type: 'seekAll', progress: .98 });
+  state = reduce(state, { type: 'watchAll' });
   state = reduce(state, { type: 'pause' });
   const pose = positions(state);
   const resumed = reduce(state, { type: 'watchAll' });
   assert.deepEqual(positions(resumed), pose);
   const next = reduce(resumed, { type: 'tick', seconds: .1 });
   assert.equal(next.index, 1);
-  assert.ok(Math.abs(next.fraction - .08) < 1e-8);
+  assert.ok(Math.abs(next.fraction - .03) < 1e-8);
   const restarted = reduce(next, { type: 'watchAll', restart: true });
   assert.equal(restarted.index, 0);
   assert.equal(restarted.fraction, 0);

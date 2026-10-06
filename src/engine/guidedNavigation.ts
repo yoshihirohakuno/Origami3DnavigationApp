@@ -45,7 +45,8 @@ export function guidedNavigation(state: GuidedState, action: GuidedAction, total
     case 'pose': return { ...state, fraction: Math.max(0, Math.min(1, action.fraction)), playing: false, sequence: false };
     case 'tick': {
       if (!state.playing) return state;
-      const delta = Math.max(0, Math.min(action.seconds, 0.1)) * (action.slow ? .45 : .9);
+      // Give each fold time to read: two seconds, or four in slow mode.
+      const delta = Math.max(0, Math.min(action.seconds, 0.1)) * (action.slow ? .25 : .5);
       if (state.sequence) {
         const progress = Math.min(total, state.index + state.fraction + delta);
         const index = Math.min(total - 1, Math.floor(progress));
