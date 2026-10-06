@@ -8,28 +8,33 @@ import type { OrigamiModel } from '../engine/types';
 import { createBeetlePleatedCore } from './beetlePleatedCore';
 
 /** Development-only integration of the faceted body, material horn roots and six supporting legs. The closed body pockets still need anatomical and paper-folding verification. */
-const core=createBeetlePleatedCore(11,'half',{narrowLegs:true,tuckLegEdges:true});
-export const beetlePoseCore=core;
-const body=createBeetleBodyShell(core.model,.15);
-export const beetlePoseBody=body;
-let model:OrigamiModel=structuredClone(body.model);
+export function createBeetleSupportPose(
+ core: ReturnType<typeof createBeetlePleatedCore>,
+ body: ReturnType<typeof createBeetleBodyShell>,
+ prepared?: OrigamiModel,
+) {
+const beetlePoseCore=core;
+const beetlePoseBody=body;
+let model:OrigamiModel=structuredClone(prepared ?? body.model);
 // Each page shares only the fixed spine with the other pages. They can be
 // opened separately, so let the viewer inspect one material fold at a time.
+if (!prepared) {
 const opening=model.steps.pop()!;
 for(const [index,fold]of opening.folds.entries())model.steps.push({
  folds:[fold],
  description:{ja:`胴体の${index<2?'上':'下'}側の${index%2===0?'右':'左'}の層を開きます。`,en:`Open the ${index%2===0?'right':'left'} ${index<2?'upper':'lower'} body layer.`},
  caution:opening.caution,
 });
+}
 model.id='beetle-pose-study';
 model.name={ja:'カブトムシ・背中と接地姿勢の試作',en:'Beetle body and support pose study'};
-export const beetlePoseCoreEnd=model.steps.length;
-export const beetlePoseLegs=core.beetleLegRoots;
+const beetlePoseCoreEnd=model.steps.length;
+const beetlePoseLegs=core.beetleLegRoots;
 
-export const beetlePoseLegVertices=new Map<number,number>();
+const beetlePoseLegVertices=new Map<number,number>();
 type HingeReference={axis:[number,number];weight:number};
-export const beetlePoseHornReferences=new Map<number,HingeReference>();
-export const beetlePoseHornStart=model.steps.length;
+const beetlePoseHornReferences=new Map<number,HingeReference>();
+const beetlePoseHornStart=model.steps.length;
 for(const [tip,corner,height,angle,up] of [[9,62,-.6,45,1],[11,78,-.65,15,-1]]){
  const p=computeFoldState(model,model.steps.length).positions;
  const origin=new Vector3(0,height,0);
@@ -61,9 +66,9 @@ for(const [tip,corner,height,angle,up] of [[9,62,-.6,45,1],[11,78,-.65,15,-1]]){
  beetlePoseHornReferences.set(tip,{axis,weight});
 }
 
-export const beetlePoseShoulderStart=model.steps.length;
-export const beetlePoseShoulderFraction=.4;
-export const beetlePoseKneeFraction=1/3;
+const beetlePoseShoulderStart=model.steps.length;
+const beetlePoseShoulderFraction=.4;
+const beetlePoseKneeFraction=1/3;
 const knees=new Map<number,[number,number,number]>();
 for(const [tip] of beetlePoseLegs.slice(0,2)){
  const p=computeFoldState(model,model.steps.length).positions;
@@ -82,10 +87,10 @@ for(const [tip] of beetlePoseLegs.slice(0,2)){
  knees.set(tip,shoulder.clone().lerp(raised,beetlePoseKneeFraction).toArray());
 }
 
-export const beetlePoseFootStart=model.steps.length;
-export const beetlePoseOtherLegFraction=1/4;
-export const beetleFootPlane=-.1;
-export const beetleFootAngles=new Map<number,number>();
+const beetlePoseFootStart=model.steps.length;
+const beetlePoseOtherLegFraction=1/4;
+const beetleFootPlane=-.1;
+const beetleFootAngles=new Map<number,number>();
 for(const [tip] of beetlePoseLegs){
  const p=computeFoldState(model,model.steps.length).positions;
  const knee=knees.get(tip);
@@ -115,7 +120,7 @@ for(const [tip] of beetlePoseLegs){
   });
 }
 
-export const beetlePoseHookStart=model.steps.length;
+const beetlePoseHookStart=model.steps.length;
 for(const [tip,angle,up] of [[9,85,-1],[11,45,1]]){
  const p=computeFoldState(model,model.steps.length).positions;
  const {axis,weight}=beetlePoseHornReferences.get(tip)!;
@@ -131,7 +136,7 @@ for(const [tip,angle,up] of [[9,85,-1],[11,45,1]]){
   });
 }
 
-export const beetlePoseBackTuckStart=model.steps.length;
+const beetlePoseBackTuckStart=model.steps.length;
 model.steps.push({folds:[{axis:[0,1],moving:model.vertices.map((_,i)=>i),type:'assemble',angle:0,spinZ:90}],
  description:{ja:'角を右に向けて全体を回します。',en:'Turn the model so its horns point to the right.'},
  caution:{ja:'背中は直線の折り面による近似です。袋の開き方と完成シルエットは確認中で、未完成の試作です。',en:'Unfinished study: the back uses straight folded panels. Pocket opening and the final silhouette are still under review.'},
@@ -144,4 +149,16 @@ model.renderLayerSeparation=.00004;
 model.renderLayerDepthTolerance=5e-7;
 model.renderCoherentPanels=true;
 model.cameraPos=[0,-2,4];
-export const beetlePoseStudy=model;
+const beetlePoseStudy=model;
+return { beetlePoseCore, beetlePoseBody, beetlePoseStudy, beetlePoseCoreEnd, beetlePoseLegs,
+ beetlePoseLegVertices, beetlePoseHornReferences, beetlePoseHornStart, beetlePoseShoulderStart,
+ beetlePoseShoulderFraction, beetlePoseKneeFraction, beetlePoseFootStart, beetlePoseOtherLegFraction,
+ beetleFootPlane, beetleFootAngles, beetlePoseHookStart, beetlePoseBackTuckStart };
+}
+
+const core=createBeetlePleatedCore(11,'half',{narrowLegs:true,tuckLegEdges:true});
+const pose=createBeetleSupportPose(core, createBeetleBodyShell(core.model,.15));
+export const { beetlePoseCore, beetlePoseBody, beetlePoseStudy, beetlePoseCoreEnd, beetlePoseLegs,
+ beetlePoseLegVertices, beetlePoseHornReferences, beetlePoseHornStart, beetlePoseShoulderStart,
+ beetlePoseShoulderFraction, beetlePoseKneeFraction, beetlePoseFootStart, beetlePoseOtherLegFraction,
+ beetleFootPlane, beetleFootAngles, beetlePoseHookStart, beetlePoseBackTuckStart }=pose;

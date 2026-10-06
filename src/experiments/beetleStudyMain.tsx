@@ -7,11 +7,25 @@ import { beetleSourceBase } from './beetleSourceBase';
 import { beetleBodyStudy } from './beetleBodyStudy';
 import { beetlePoseStudy } from './beetlePoseStudy';
 import { beetleBodyMeshStudy } from './beetleBodyMeshStudy';
+import { beetleCurvedBodyStudy } from './beetleCurvedBodyStudy';
+import { beetleCurvedPoseStudy } from './beetleCurvedPoseStudy';
+import type { OrigamiModel } from '../engine/types';
 
 // Keep mounting separate from the component so Fast Refresh updates the existing
 // root instead of creating a second renderer and animation loop on every edit.
 if (import.meta.env.DEV) {
   const stage = new URLSearchParams(location.search).get('stage');
-  const model = stage === 'body-mesh' ? beetleBodyMeshStudy : stage === 'pose-study' ? beetlePoseStudy : stage === 'body-study' ? beetleBodyStudy : stage === 'source-base' ? beetleSourceBase : stage === 'root-study' ? beetleHornRootStudy : stage === 'pleated-study' ? beetlePleatedStudy : stage === 'extracted-base' ? beetleExtractedBase : undefined;
+  const studies: Record<string, OrigamiModel> = {
+    'curved-pose': beetleCurvedPoseStudy,
+    'curved-body': beetleCurvedBodyStudy,
+    'body-mesh': beetleBodyMeshStudy,
+    'pose-study': beetlePoseStudy,
+    'body-study': beetleBodyStudy,
+    'source-base': beetleSourceBase,
+    'root-study': beetleHornRootStudy,
+    'pleated-study': beetlePleatedStudy,
+    'extracted-base': beetleExtractedBase,
+  };
+  const model = stage ? studies[stage] : undefined;
   createRoot(document.getElementById('root')!).render(<BeetleStudyPreview model={model} />);
 }
