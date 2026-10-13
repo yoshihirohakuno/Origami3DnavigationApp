@@ -12,7 +12,10 @@ export function createBeetleSupportPose(
  core: ReturnType<typeof createBeetlePleatedCore>,
  body: ReturnType<typeof createBeetleBodyShell>,
  prepared?: OrigamiModel,
+ options: { upperHornRootHeight?: number; frontShoulderFraction?: number } = {},
 ) {
+if(options.upperHornRootHeight!==undefined&&!Number.isFinite(options.upperHornRootHeight))throw new Error('Invalid upper horn root height');
+if(options.frontShoulderFraction!==undefined&&(!Number.isFinite(options.frontShoulderFraction)||options.frontShoulderFraction<=0||options.frontShoulderFraction>=1))throw new Error('Invalid front shoulder fraction');
 const beetlePoseCore=core;
 const beetlePoseBody=body;
 let model:OrigamiModel=structuredClone(prepared ?? body.model);
@@ -35,7 +38,7 @@ const beetlePoseLegVertices=new Map<number,number>();
 type HingeReference={axis:[number,number];weight:number};
 const beetlePoseHornReferences=new Map<number,HingeReference>();
 const beetlePoseHornStart=model.steps.length;
-for(const [tip,corner,height,angle,up] of [[9,62,-.6,45,1],[11,78,-.65,15,-1]]){
+for(const [tip,corner,height,angle,up] of [[9,62,options.upperHornRootHeight ?? -.6,45,1],[11,78,-.65,15,-1]]){
  const p=computeFoldState(model,model.steps.length).positions;
  const origin=new Vector3(0,height,0);
  // Narrowing a connected leg can fold the old outer corner onto the spine.
@@ -67,7 +70,7 @@ for(const [tip,corner,height,angle,up] of [[9,62,-.6,45,1],[11,78,-.65,15,-1]]){
 }
 
 const beetlePoseShoulderStart=model.steps.length;
-const beetlePoseShoulderFraction=.4;
+const beetlePoseShoulderFraction=options.frontShoulderFraction ?? .4;
 const beetlePoseKneeFraction=1/3;
 const knees=new Map<number,[number,number,number]>();
 for(const [tip] of beetlePoseLegs.slice(0,2)){

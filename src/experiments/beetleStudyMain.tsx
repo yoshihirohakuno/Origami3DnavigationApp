@@ -10,12 +10,14 @@ import { beetleBodyMeshStudy } from './beetleBodyMeshStudy';
 import { beetleCurvedBodyStudy } from './beetleCurvedBodyStudy';
 import { beetleCurvedPoseStudy } from './beetleCurvedPoseStudy';
 import type { OrigamiModel } from '../engine/types';
+import { beetleArchedPoseStudy } from './beetleArchedPoseStudy';
 
 // Keep mounting separate from the component so Fast Refresh updates the existing
 // root instead of creating a second renderer and animation loop on every edit.
 if (import.meta.env.DEV) {
   const stage = new URLSearchParams(location.search).get('stage');
   const studies: Record<string, OrigamiModel> = {
+    'arched-back': beetleArchedPoseStudy,
     'curved-pose': beetleCurvedPoseStudy,
     'curved-body': beetleCurvedBodyStudy,
     'body-mesh': beetleBodyMeshStudy,

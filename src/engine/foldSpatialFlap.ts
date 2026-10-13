@@ -1,5 +1,5 @@
 import { Vector3 } from 'three';
-import { computeFoldState } from './fold';
+import { computeFoldState, type FoldState } from './fold';
 import type { FoldOp, FoldStep, OrigamiModel } from './types';
 
 /** Cut and rotate a connected, planar flap in its current 3D plane.
@@ -10,6 +10,7 @@ export function foldSpatialFlap(
   model: OrigamiModel, seed: number, origin: Vector3, crease: Vector3,
   towardTip: Vector3, angle: number, direction: 1 | -1,
   caption: Pick<FoldStep, 'description' | 'caution'>,
+  stateAt: (model: OrigamiModel, time: number) => FoldState = computeFoldState,
 ): OrigamiModel {
   if (!Number.isInteger(seed) || seed < 0 || seed >= model.vertices.length ||
     ![...origin.toArray(), ...crease.toArray(), ...towardTip.toArray(), angle].every(Number.isFinite) ||
@@ -18,7 +19,8 @@ export function foldSpatialFlap(
   const axisDirection = crease.clone().normalize(), across = towardTip.clone().normalize();
   if (Math.abs(axisDirection.dot(across)) > 1e-8) throw new Error(`${model.id}: crease frame must be perpendicular`);
   const normal = axisDirection.clone().cross(across);
-  const p = computeFoldState(model, model.steps.length).positions;
+  // Authoring adds intersection points; never mutate a cached caller pose.
+  const p = stateAt(model, model.steps.length).positions.map(point=>point.clone());
   const side = (i: number) => p[i].clone().sub(origin).dot(across);
   if (side(seed) <= 1e-8) throw new Error(`${model.id}: seed must be on the moving side`);
   const reached = new Set([seed]), selected = new Set<number[]>();

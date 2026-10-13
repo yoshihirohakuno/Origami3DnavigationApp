@@ -6,8 +6,10 @@ import { createBeetlePleatedCore } from './beetlePleatedCore';
 
 /** Private study of actual narrow panel folds on the back. This does not
  * establish that the beetle's pocket opens like the source model. */
-export function createBeetleCurvedBodyStudy() {
-  const angle = 8;
+export function createBeetleCurvedBodyStudy(bendInward = false) {
+  // Keep the inward comparison from curling through the opposite layers.
+  // Five 4-degree folds bring the initial 20-degree rim back to horizontal.
+  const angle = bendInward ? 4 : 8;
   const core = createBeetlePleatedCore(11, 'half', { narrowLegs: true, tuckLegEdges: true });
   const body = createBeetleBodyShell(core.model, .15);
   let model = structuredClone(body.model);
@@ -23,7 +25,7 @@ export function createBeetleCurvedBodyStudy() {
     across.y = 0;
     const width = across.length();
     across.normalize();
-    const direction = Math.sign(across.z * crease.clone().cross(across).z) as 1 | -1;
+    const direction = Math.sign(across.z * crease.clone().cross(across).z) * (bendInward ? -1 : 1) as 1 | -1;
     const origin = initial[0].clone();
     let previous = 0;
     for (const fraction of creaseFractions) {
@@ -41,7 +43,7 @@ export function createBeetleCurvedBodyStudy() {
   }
   model.id = 'beetle-curved-body-study';
   model.name = { ja: 'カブトムシ・背中の曲面試作', en: 'Beetle faceted curved-back study' };
-  return { model, curveStart, body, core, creaseFractions };
+  return { model, curveStart, body, core, creaseFractions, bendInward };
 }
 
 export const beetleCurvedBody = createBeetleCurvedBodyStudy();
