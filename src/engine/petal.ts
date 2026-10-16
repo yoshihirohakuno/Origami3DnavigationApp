@@ -17,7 +17,13 @@ export function petalSide(point: Vector3, anchor: Vector3, neighbor: Vector3,
   const y = (r * r - rt * rt + i * i + j * j - 2 * i * x) / (2 * j);
   const height2 = r * r - x * x - y * y;
   if (height2 < -1e-8) throw new Error('Petal crease distances cannot meet');
+  // At a flat closure this subtraction cancels equal squared distances.
+  // Taking sqrt of positive roundoff invents a tiny raised point, which then
+  // tilts the next crease. Bound cancellation by machine precision and the
+  // squared lengths involved; do not relax the paper-edge constraints.
+  const roundoff = 32 * Number.EPSILON * (r * r + x * x + y * y);
+  const height = Math.abs(height2) <= roundoff ? 0 : Math.sqrt(Math.max(0, height2));
   const sign = point.clone().sub(anchor).dot(ez) < 0 ? -1 : 1;
   return anchor.clone().addScaledVector(ex, x).addScaledVector(ey, y)
-    .addScaledVector(ez, sign * Math.sqrt(Math.max(0, height2)));
+    .addScaledVector(ez, sign * height);
 }

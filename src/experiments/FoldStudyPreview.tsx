@@ -16,6 +16,7 @@ export function FoldStudyPreview({ model, title, stateAt = computeFoldState }: {
   const canvas = useRef<HTMLCanvasElement>(null);
   const scene = useRef<PaperScene | null>(null);
   const pose = useRef<FoldState | null>(null);
+  const showGuides = useRef(true);
   const [time, setTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const limit = useRef(0);
@@ -26,14 +27,14 @@ export function FoldStudyPreview({ model, title, stateAt = computeFoldState }: {
   const caution = beetleStudy.steps[index].caution;
 
   useEffect(() => {
-    const paper = new PaperScene(canvas.current!, { minDistance: .25 });
+    const paper = new PaperScene(canvas.current!, { minDistance: .25, zoomToCursor: true });
     paper.setModel(beetleStudy);
     pose.current = stateAt(beetleStudy, 0);
     paper.update(pose.current);
     scene.current = paper;
     let frame = 0;
     const draw = () => {
-      if (pose.current) paper.update(pose.current);
+      if (pose.current) paper.update(showGuides.current ? pose.current : { ...pose.current, guides: [], movingFaces: new Set() });
       frame = requestAnimationFrame(draw);
     };
     frame = requestAnimationFrame(draw);
@@ -97,6 +98,7 @@ export function FoldStudyPreview({ model, title, stateAt = computeFoldState }: {
         <button onClick={() => scene.current?.setViewAngle(35,true)}>斜め / Angled</button>
         <button onClick={() => scene.current?.setViewAngle(75,true)}>横から / Side</button>
         <button onClick={() => scene.current?.setViewAngle(180,true)}>裏側 / Reverse side</button>
+        <label><input type="checkbox" defaultChecked onChange={event => { showGuides.current = event.target.checked; }} /> ガイド / Guides</label>
       </div>
     </section>
   </main>;
