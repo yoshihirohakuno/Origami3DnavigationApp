@@ -99,6 +99,46 @@ function normals(model: OrigamiModel, positions: Vector3[]): Vector3[] {
   });
 }
 
+/** A rigid flap reverses its existing layer order when turned over. Centroid
+ * approach heights cannot order a stack: panels with different outlines have
+ * different centroid distances from the hinge even when they overlap. */
+function foldedStackOffsets(model: OrigamiModel, before: Vector3[], end: Vector3[],
+  near: Vector3[], previous: number[], thickness: number): number[] | undefined {
+  const startNormals=normals(model,before),endNormals=normals(model,end);
+  if(!startNormals.every(n=>Math.abs(n.z)>1-1e-8))return;
+  const tolerance=model.renderLayerDepthTolerance??1e-8;
+  for(const positions of [before,end]){
+    const depths=faceDepths(model,positions).map(f=>f.depth);
+    if(Math.max(...depths)-Math.min(...depths)>tolerance)return;
+  }
+  const moving=startNormals.map((n,i)=>n.dot(endNormals[i])< -1+1e-8);
+  if(!moving.some(Boolean)||moving.every(Boolean))return;
+  // Only accept a planar half-turn. Coupled and partially folded mechanisms
+  // continue using the existing approach-based renderer.
+  if(startNormals.some((n,i)=>Math.abs(n.dot(endNormals[i]))<1-1e-8))return;
+  let sweep=0;
+  for(let fi=0;fi<model.faces.length;fi++)if(moving[fi])for(const vi of model.faces[fi]){
+    const dz=near[vi].z-end[vi].z;
+    if(Math.abs(dz)>Math.abs(sweep))sweep=dz;
+  }
+  if(Math.abs(sweep)<1e-10)return;
+  const groups: {moving:boolean;depth:number;ids:number[]}[]=[];
+  model.faces.forEach((_,fi)=>{
+    const depth=previous[fi]*startNormals[fi].z;
+    let group=groups.find(g=>g.moving===moving[fi]&&Math.abs(g.depth-depth)<1e-10);
+    if(!group){group={moving:moving[fi],depth,ids:[]};groups.push(group);}
+    group.ids.push(fi);
+  });
+  const fixed=groups.filter(g=>!g.moving).sort((a,b)=>a.depth-b.depth);
+  const folded=groups.filter(g=>g.moving).sort((a,b)=>b.depth-a.depth);
+  const order=sweep>0?[...fixed,...folded]:[...folded,...fixed];
+  const next=[...previous];
+  order.forEach((g,rank)=>g.ids.forEach(fi=>{
+    next[fi]=(rank-(order.length-1)/2)*thickness*Math.sign(endNormals[fi].z);
+  }));
+  return next;
+}
+
 /** Tiny display offsets for zero-thickness, connected paper. Determine the
  * order as panels approach a flat pose, retaining the preceding order for a
  * rigid stack. This never modifies the physical vertices or fold constraints. */
@@ -128,6 +168,12 @@ export function renderFaceOffsets(model: OrigamiModel, state: FoldState): Vector
       const rigid = before.every((a, i) => before.every((b, j) =>
         Math.abs(a.distanceToSquared(b) - near[i].distanceToSquared(near[j])) < 1e-10));
       if (rigid) { layers.push([...previous]); continue; }
+      const op=model.steps[step].folds.length===1?model.steps[step].folds[0]:undefined;
+      const straight=op&&op.angle===180&&!op.translate&&!op.spinZ&&!op.targets&&!op.pocket
+        &&!op.petal&&!op.fingerPockets&&!op.waterbombCollapse&&!model.steps[step].motionRange;
+      const stack=model.renderFoldStack&&straight
+        ?foldedStackOffsets(model,before,end,near,previous,thickness):undefined;
+      if(stack){layers.push(stack);continue;}
       const nearNormals = normals(model, near);
       if (neighbors) {
         layers.push(coherentOffsets(model, neighbors, end, near, normal, nearNormals, previous, thickness));

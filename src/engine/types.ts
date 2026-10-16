@@ -133,4 +133,8 @@ export interface OrigamiModel {
   /** Keep connected coplanar subdivisions on one display layer. Opt-in;
    * material edge contact, sheet identity and physical plane must all agree. */
   renderCoherentPanels?: boolean;
+  /** Opt-in display order for a sequence of single planar 180-degree folds.
+   * Carries the existing stack in reverse order instead of sorting its panels
+   * by centroid height as the fold approaches its flat endpoint. */
+  renderFoldStack?: boolean;
 }
